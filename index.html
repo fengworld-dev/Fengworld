@@ -362,8 +362,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 </div>
 
 <script>
-const GROQ_KEY = 'AIzaSyD4PymIqx-lQ1QAJ3AQ0Pl6RKVoKtU9qmw';
-const GROQ_MODEL = 'gemini-2.0-flash';
+const GROQ_KEY = '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';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT =
   "You are Feng AI — a brilliant, versatile assistant. Detect what the user needs and respond accordingly.\n" +
@@ -371,10 +371,14 @@ const SYSTEM_PROMPT =
   "- Design/UI/colors/fonts/branding → senior designer\n" +
   "- Learning/explaining/science/history/math → world-class educator\n" +
   "- Anything else → knowledgeable assistant\n\n" +
-  "For heavy tasks (full app, essay, design system): complete them fully.\n" +
-  "For code: production-quality, well-commented.\n" +
-  "For design: specific hex codes, font names.\n" +
-  "For education: analogies, structure, real examples.\n\n" +
+  "RESPONSE RULES — VERY IMPORTANT:\n" +
+  "- Always give LONG, DETAILED, THOROUGH answers. Never cut short.\n" +
+  "- For heavy tasks (full app, essay, design system): write the COMPLETE thing fully.\n" +
+  "- For code: write ALL the code, fully working, well-commented, with explanations.\n" +
+  "- For education: explain deeply with examples, analogies, steps, history, and context.\n" +
+  "- For design: give specific hex codes, font names, spacing values, full system.\n" +
+  "- Never say 'here is a summary' — always give the FULL answer.\n" +
+  "- Use markdown: headers (##), bold (**), bullet points (-), code blocks (```).\n\n" +
   "End every response with:\n" +
   "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
 
@@ -770,24 +774,21 @@ async function sendMessage() {
   const handle = startThinking(text, tag);
 
   try {
-    // Google Gemini API — free, no CORS issues
-    const geminiMessages = history.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
-
-    const res = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/' + GROQ_MODEL + ':generateContent?key=' + GROQ_KEY,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: geminiMessages,
-          generationConfig: { maxOutputTokens: 1024 },
-        }),
-      }
-    );
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + GROQ_KEY,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 8000,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...history,
+        ],
+      }),
+    });
 
     const secs = Math.max(1, Math.round((Date.now()-t0)/1000));
     const data = await res.json();
@@ -796,7 +797,7 @@ async function sendMessage() {
     if (data.error) {
       streamAnswer('⚠️ Error: ' + (data.error.message || 'Unknown error') + '\n<suggestions>["Try again","Ask differently","Check connection"]</suggestions>', tag);
     } else {
-      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response. Please try again.';
+      const reply = data?.choices?.[0]?.message?.content || 'No response. Please try again.';
       history.push({ role: 'assistant', content: reply });
       saveSession(history[0]?.content || 'Chat');
       streamAnswer(reply, tag);

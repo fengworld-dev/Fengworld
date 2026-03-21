@@ -1051,8 +1051,8 @@ function generateWordDoc(content, filename) {
 }
 
 function generatePDFDoc(content, filename) {
-  // Use browser print to PDF
   const win = window.open('', '_blank');
+  if (!win) { alert('Please allow popups to download PDF.'); return; }
   const clean = content
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -1061,14 +1061,14 @@ function generatePDFDoc(content, filename) {
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
-  win.document.write(`<!DOCTYPE html><html><head><title>${filename||'Feng Document'}</title>
-    <style>body{font-family:Georgia,serif;max-width:750px;margin:40px auto;font-size:14pt;line-height:1.7;color:#111;}
-    h1{font-size:22pt;margin-top:20px;}h2{font-size:17pt;margin-top:16px;}
-    p{margin:8px 0;}li{margin:4px 0;}
-    @media print{body{margin:0;}}</style></head>
-    <body><p>${clean}</p>
-    <script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  const html = '<!DOCTYPE html><html><head><title>' + (filename||'Feng Document') + '</title>' +
+    '<style>body{font-family:Georgia,serif;max-width:750px;margin:40px auto;font-size:14pt;line-height:1.7;color:#111;}' +
+    'h1{font-size:22pt;margin-top:20px;}h2{font-size:17pt;margin-top:16px;}' +
+    'p{margin:8px 0;}li{margin:4px 0;}@media print{body{margin:0;}}</style></head>' +
+    '<body><p>' + clean + '</p></body></html>';
+  win.document.write(html);
   win.document.close();
+  win.setTimeout(function(){ win.print(); }, 500);
 }
 
 function addDocButtons(body, content, filename) {
@@ -1335,8 +1335,7 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // Add disclaimer note
-      addDisclaimer(body);
+      // suggestions below
 
       if (sugs.length) {
         const wrap = document.createElement('div');

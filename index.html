@@ -1789,7 +1789,12 @@ async function sendMessage() {
     });
 
     const secs = Math.max(1, Math.round((Date.now()-t0)/1000));
-    const data = await res.json();
+    let data;
+    try { data = await res.json(); } catch(e) {
+      finalizeThinking(handle, secs);
+      streamAnswer('⚠️ Could not parse response (HTTP ' + res.status + '). Check your API key.\n<suggestions>["Try again","Check connection","Ask something else"]</suggestions>', tag);
+      busy = false; document.getElementById('send-btn').disabled = false; inp.focus(); return;
+    }
     finalizeThinking(handle, secs);
 
     if (data.error) {

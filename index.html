@@ -807,28 +807,11 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION SYSTEM ──
-const APP_VERSION_BASE = [1, 0, 1];
-function getVersion() {
-  const stored = localStorage.getItem('feng_version');
-  if (stored) return stored;
-  const v = APP_VERSION_BASE.join('.');
-  localStorage.setItem('feng_version', v);
-  return v;
-}
-function bumpVersion() {
-  const v = getVersion().split('.').map(Number);
-  v[2]++; // increment patch
-  if (v[2] > 9) { v[2] = 0; v[1]++; }
-  if (v[1] > 9) { v[1] = 0; v[0]++; }
-  const newV = v.join('.');
-  localStorage.setItem('feng_version', newV);
-  const el = document.getElementById('app-version');
-  if (el) el.textContent = 'v' + newV;
-  return newV;
-}
+// ── VERSION — change this number whenever you push a new update ──
+const APP_VERSION = '1.0.1';
 function initVersion() {
   const el = document.getElementById('app-version');
-  if (el) el.textContent = 'v' + getVersion();
+  if (el) el.textContent = 'v' + APP_VERSION;
 }
 
 // ── MIC / VOICE INPUT ──
@@ -1638,9 +1621,8 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // Add TTS player + bump version once
+      // Add TTS player
       addTTSPlayer(body, stripSugs(rawText));
-      bumpVersion();
 
       if (sugs.length) {
         const wrap = document.createElement('div');

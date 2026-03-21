@@ -344,7 +344,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .help-detail{font-size:0.78rem;color:var(--muted);}
 .help-arr{color:var(--muted2);}
 
-/* DISCLAIMER NOTE */
+/* PREVIEW STRIP */
+#preview-strip{
+  padding:10px 12px 0;
+  display:none;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+#preview-strip.visible{display:flex;}
+.preview-item{
+  position:relative;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid var(--border2);
+  background:var(--surface2);
+  flex-shrink:0;
+}
+.preview-item img{
+  width:72px;height:72px;
+  object-fit:cover;display:block;
+}
+.preview-item .prev-file{
+  width:72px;height:72px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:4px;padding:6px;
+}
+.preview-item .prev-file-icon{font-size:1.6rem;}
+.preview-item .prev-file-name{
+  font-size:0.6rem;color:var(--muted);
+  text-align:center;word-break:break-all;
+  line-height:1.3;max-width:64px;
+  overflow:hidden;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.preview-remove{
+  position:absolute;top:3px;right:3px;
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(0,0,0,0.7);color:#fff;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;line-height:1;
+  transition:background 0.15s;
+}
+.preview-remove:hover{background:rgba(239,68,68,0.8);}
+.preview-processing{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.55);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;color:#fff;
+  flex-direction:column;gap:3px;
+}
+.prev-spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
 .ai-disclaimer{
   display:flex;align-items:flex-start;gap:8px;
   padding:8px 12px;border-radius:8px;
@@ -539,6 +598,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
   <div class="input-area">
     <div class="input-box">
+      <!-- FILE PREVIEW STRIP — shows thumbnail/icon before sending -->
+      <div id="preview-strip" style="display:none;padding:10px 12px 0;display:none;gap:8px;flex-wrap:wrap;"></div>
+
       <div class="attach-menu" id="attach-menu">
         <div class="attach-item" onclick="document.getElementById('inp-camera').click();closeAttach();">
           <div class="a-icon">📷</div>Camera
@@ -568,18 +630,20 @@ const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a brilliant, versatile assistant. Detect what the user needs and respond accordingly.\n" +
+  "You are Feng AI — a brilliant, versatile assistant for students and professionals.\n" +
   "- Code/programming/apps/debugging → elite software engineer\n" +
   "- Design/UI/colors/fonts/branding → senior designer\n" +
   "- Learning/explaining/science/history/math → world-class educator\n" +
   "- Anything else → knowledgeable assistant\n\n" +
-  "RESPONSE RULES — VERY IMPORTANT:\n" +
+  "SPECIAL CAPABILITIES:\n" +
+  "- If the user message contains [ATTACHED FILE: ...], read and analyze that content fully.\n" +
+  "- For student assignments: write complete essays, reports, summaries, answers.\n" +
+  "- For document requests: write the FULL document content with proper structure.\n\n" +
+  "RESPONSE RULES:\n" +
   "- Always give LONG, DETAILED, THOROUGH answers. Never cut short.\n" +
-  "- For heavy tasks (full app, essay, design system): write the COMPLETE thing fully.\n" +
-  "- For code: write ALL the code, fully working, well-commented, with explanations.\n" +
-  "- For education: explain deeply with examples, analogies, steps, history, and context.\n" +
-  "- For design: give specific hex codes, font names, spacing values, full system.\n" +
-  "- Never say 'here is a summary' — always give the FULL answer.\n" +
+  "- For code: write ALL the code, fully working, well-commented.\n" +
+  "- For education: explain deeply with examples, analogies, steps.\n" +
+  "- For documents/essays/reports: write complete, properly structured content.\n" +
   "- Use markdown: headers (##), bold (**), bullet points (-), code blocks (```).\n\n" +
   "End every response with:\n" +
   "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
@@ -781,17 +845,206 @@ function addDisclaimer(body) {
 function openSettings() { closeSB(); document.getElementById('settings').classList.add('open'); }
 function closeSettings() { document.getElementById('settings').classList.remove('open'); }
 
-// ── ATTACH ──
+// ── FILE HANDLING WITH PREVIEW ──
+let attachedFileContent = null;
+let attachedFileName = '';
+let attachedPreviewUrl = null;
+
+function handleFile(inp, type) {
+  const f = inp.files[0]; if (!f) return;
+  attachedFileName = f.name;
+  closeAttach();
+  inp.value = '';
+  showPreview(f, type);
+}
+
+function showPreview(file, type) {
+  const strip = document.getElementById('preview-strip');
+  strip.innerHTML = '';
+  strip.classList.add('visible');
+
+  const item = document.createElement('div');
+  item.className = 'preview-item';
+
+  const isImage = file.type.startsWith('image/');
+
+  if (isImage) {
+    // Show image thumbnail immediately
+    const reader = new FileReader();
+    reader.onload = e => {
+      attachedPreviewUrl = e.target.result;
+      item.innerHTML =
+        '<img src="' + e.target.result + '" alt="' + file.name + '"/>' +
+        '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading…</span></div>' +
+        '<button class="preview-remove" onclick="clearAttach()">✕</button>';
+      strip.innerHTML = '';
+      strip.appendChild(item);
+      // Start OCR
+      runOCR(e.target.result, file.name, item);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Show file icon thumbnail
+    const ext = file.name.split('.').pop().toUpperCase();
+    const icons = { PDF:'📕', DOC:'📄', DOCX:'📄', TXT:'📝', CSV:'📊', DEFAULT:'📎' };
+    const icon = icons[ext] || icons.DEFAULT;
+    item.innerHTML =
+      '<div class="prev-file">' +
+        '<div class="prev-file-icon">' + icon + '</div>' +
+        '<div class="prev-file-name">' + file.name + '</div>' +
+      '</div>' +
+      '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading…</span></div>' +
+      '<button class="preview-remove" onclick="clearAttach()">✕</button>';
+    strip.appendChild(item);
+    // Read file content
+    if (file.type === 'application/pdf') {
+      readPDF(file, item);
+    } else {
+      readTextFile(file, item);
+    }
+  }
+
+  document.getElementById('user-input').focus();
+}
+
+function clearAttach() {
+  attachedFileContent = null;
+  attachedFileName = '';
+  attachedPreviewUrl = null;
+  const strip = document.getElementById('preview-strip');
+  strip.innerHTML = '';
+  strip.classList.remove('visible');
+}
+
+function markPreviewDone(item, msg) {
+  const status = item.querySelector('.preview-processing') || document.getElementById('prev-status');
+  if (status) {
+    status.innerHTML = '<span style="font-size:0.65rem;">✓ ' + msg + '</span>';
+    setTimeout(() => { if(status) status.style.display='none'; }, 1800);
+  }
+}
+function markPreviewError(item, msg) {
+  const status = item.querySelector('.preview-processing') || document.getElementById('prev-status');
+  if (status) status.innerHTML = '<span style="font-size:0.6rem;color:#ff6b6b;">⚠️ ' + msg + '</span>';
+}
+
+function runOCR(dataUrl, filename, item) {
+  // Store base64 image — AI will analyze it visually via the prompt
+  attachedFileContent = dataUrl;
+  attachedFileName = filename;
+  markPreviewDone(item, 'Ready to analyze');
+}
+
+function readTextFile(file, item) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    attachedFileContent = e.target.result.slice(0, 6000);
+    markPreviewDone(item, 'File read!');
+  };
+  reader.onerror = () => markPreviewError(item, 'Failed');
+  reader.readAsText(file);
+}
+
+function readPDF(file, item) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const bytes = new Uint8Array(e.target.result);
+      let raw = '';
+      for (let i = 0; i < bytes.length; i++) {
+        const c = bytes[i];
+        if (c >= 32 && c <= 126) raw += String.fromCharCode(c);
+        else if (c === 10 || c === 13) raw += ' ';
+      }
+      // Clean PDF junk, extract readable text
+      const clean = raw
+        .replace(/<<[^>]*>>/g, ' ')
+        .replace(/\/(Type|Subtype|Font|Width|Height|Filter|Length|BBox|Matrix|Resources|ColorSpace|XObject|ExtGState|ProcSet|Encoding|BaseFont|ToUnicode|FontDescriptor|Flags|Ascent|Descent|ItalicAngle|StemV|FontBBox|FirstChar|LastChar|Widths|Name|Producer|Creator|CreationDate|ModDate|Trapped)[^\s]*/g, ' ')
+        .replace(/[^\x20-\x7E ]/g, ' ')
+        .replace(/\s{3,}/g, ' ')
+        .trim();
+      if (clean.length > 80) {
+        attachedFileContent = '[PDF: ' + file.name + ']\n' + clean.slice(0, 6000);
+        markPreviewDone(item, 'PDF read!');
+      } else {
+        attachedFileContent = '[PDF attached: ' + file.name + ' — appears to be a scanned image PDF]';
+        markPreviewDone(item, 'PDF attached');
+      }
+    } catch(e) { markPreviewError(item, 'Read failed'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function addSystemNote(msg) {
+  hideHero();
+  const list = document.getElementById('msg-list');
+  const el = document.createElement('div');
+  el.style.cssText = 'text-align:center;padding:8px 16px;';
+  el.innerHTML = '<span style="font-size:0.75rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:50px;padding:4px 12px;">' + msg + '</span>';
+  list.appendChild(el);
+  scrollDown();
+}
+
+// ── DOCUMENT GENERATION ──
+function isDocRequest(text) {
+  const t = text.toLowerCase();
+  return /\b(create|generate|make|write|produce|export)\b.*\b(word|doc|docx|document|report|essay|pdf|letter|cv|resume)\b/.test(t)
+    || /\b(word|docx|pdf)\b.*\b(file|document|version)\b/.test(t)
+    || /\bdownload.*\b(word|pdf|doc)\b/.test(t)
+    || /\bsave.*\b(word|pdf|doc)\b/.test(t);
+}
+
+function generateWordDoc(content, filename) {
+  // Build RTF which opens in Word/Docs
+  const rtf = '{\\rtf1\\ansi\\deff0\n{\\fonttbl{\\f0 Times New Roman;}}\n\\f0\\fs24\n' +
+    content
+      .replace(/\*\*(.*?)\*\*/g, '{\\b $1}')
+      .replace(/\*(.*?)\*/g, '{\\i $1}')
+      .replace(/^## (.+)$/gm, '{\\b\\fs28 $1}\\par')
+      .replace(/^# (.+)$/gm, '{\\b\\fs32 $1}\\par')
+      .replace(/\n/g, '\\par\n') +
+    '\n}';
+  const blob = new Blob([rtf], { type: 'application/rtf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = (filename || 'Feng-Document') + '.rtf';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function generatePDFDoc(content, filename) {
+  // Use browser print to PDF
+  const win = window.open('', '_blank');
+  const clean = content
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  win.document.write(`<!DOCTYPE html><html><head><title>${filename||'Feng Document'}</title>
+    <style>body{font-family:Georgia,serif;max-width:750px;margin:40px auto;font-size:14pt;line-height:1.7;color:#111;}
+    h1{font-size:22pt;margin-top:20px;}h2{font-size:17pt;margin-top:16px;}
+    p{margin:8px 0;}li{margin:4px 0;}
+    @media print{body{margin:0;}}</style></head>
+    <body><p>${clean}</p>
+    <script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  win.document.close();
+}
+
+function addDocButtons(body, content, filename) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;';
+  wrap.innerHTML =
+    '<button onclick="generateWordDoc('+JSON.stringify(content)+','+JSON.stringify(filename)+')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.8rem;font-family:\'DM Sans\',sans-serif;">📄 Download Word</button>' +
+    '<button onclick="generatePDFDoc('+JSON.stringify(content)+','+JSON.stringify(filename)+')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.8rem;font-family:\'DM Sans\',sans-serif;">📕 Download PDF</button>';
+  body.appendChild(wrap);
+}
+
+// ── ATTACH TOGGLE ──
 function toggleAttach() { attachOpen = !attachOpen; document.getElementById('attach-menu').classList.toggle('open', attachOpen); }
 function closeAttach() { attachOpen = false; document.getElementById('attach-menu').classList.remove('open'); }
 document.addEventListener('click', e => { if (attachOpen && !e.target.closest('#attach-menu') && !e.target.closest('#attach-btn')) closeAttach(); });
-function handleFile(inp, type) {
-  const f = inp.files[0]; if (!f) return;
-  const icons = {camera:'📷',gallery:'🖼️',doc:'📎'};
-  document.getElementById('user-input').placeholder = icons[type]+' '+f.name+' — ask something about it…';
-  document.getElementById('user-input').focus();
-  inp.value = '';
-}
 
 // ── HERO ──
 function hideHero() {
@@ -815,7 +1068,14 @@ function parseSugs(text) {
   try { return JSON.parse(m[1].trim()); } catch { return []; }
 }
 function stripSugs(text) { return text.replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim(); }
-function scrollDown() { const w = document.getElementById('chat-wrap'); w.scrollTo({top:w.scrollHeight,behavior:'smooth'}); }
+function scrollDown() {
+  const w = document.getElementById('chat-wrap');
+  const threshold = 120; // px from bottom
+  const isNearBottom = w.scrollHeight - w.scrollTop - w.clientHeight < threshold;
+  if (isNearBottom) {
+    w.scrollTo({ top: w.scrollHeight, behavior: 'smooth' });
+  }
+}
 
 function md(text) {
   text = stripSugs(text);
@@ -860,11 +1120,20 @@ function cubeHTML(tag, spin) {
 }
 
 // ── ADD MESSAGES ──
-function addUserBubble(text, scroll=true) {
+function addUserBubble(text, scroll=true, imgPreview=null, fname='') {
   const list = document.getElementById('msg-list');
   const el = document.createElement('div');
   el.className = 'msg user';
-  el.innerHTML = '<div class="user-av">You</div><div class="msg-body"><div class="bubble">' + esc(text) + '</div></div>';
+  let inner = '';
+  if (imgPreview) {
+    inner += '<div style="margin-bottom:6px;border-radius:10px;overflow:hidden;max-width:200px;">' +
+      '<img src="' + imgPreview + '" style="width:100%;display:block;border-radius:10px;" alt="' + esc(fname) + '"/>' +
+      '</div>';
+  } else if (fname) {
+    inner += '<div style="font-size:0.75rem;opacity:0.8;margin-bottom:4px;">📎 ' + esc(fname) + '</div>';
+  }
+  if (text) inner += esc(text);
+  el.innerHTML = '<div class="user-av">You</div><div class="msg-body"><div class="bubble">' + inner + '</div></div>';
   list.appendChild(el);
   if (scroll) scrollDown();
 }
@@ -1020,6 +1289,13 @@ function streamAnswer(rawText, tag) {
       const cube = el.querySelector('.cube');
       if (cube) cube.classList.remove('spin');
 
+      // Add doc download buttons if this was a document request
+      const lastUserMsg = history.filter(m=>m.role==='user').slice(-1)[0]?.content || '';
+      if (isDocRequest(lastUserMsg)) {
+        const fname = lastUserMsg.match(/\b(essay|report|letter|cv|resume|assignment|document)\b/i)?.[1] || 'Feng-Document';
+        addDocButtons(body, stripSugs(rawText), fname);
+      }
+
       // Add disclaimer note
       addDisclaimer(body);
 
@@ -1114,12 +1390,34 @@ async function sendMessage() {
   inp.placeholder = 'Type a message…';
 
   const tag = detectTag(text);
-  addUserBubble(text);
-  history.push({ role:'user', content:text });
+
+  // Build message — for images store base64 temporarily, for text store content
+  let msgContent = text;
+  let previewUrl = attachedPreviewUrl;
+  let isImageAttach = attachedFileContent && attachedFileContent.startsWith('data:image');
+
+  if (isImageAttach) {
+    msgContent = attachedFileContent; // base64 — handled specially in fetch
+  } else if (attachedFileContent) {
+    msgContent = text + '\n\n[ATTACHED FILE: ' + attachedFileName + ']\n' + attachedFileContent;
+  }
+
+  // Show user bubble with optional image preview
+  addUserBubble(text, true, previewUrl, attachedFileName);
+
+  history.push({ role:'user', content: msgContent });
   if (history.length===1) saveSession(text);
 
+  // After push, clear attach state
+  attachedFileContent = null;
+  attachedFileName = '';
+  attachedPreviewUrl = null;
+  clearAttach();
+
   // Image request
-  if (isImgReq(text)) { generateImage(text); return; }
+  if (isImgReq(text) && !msgContent.includes('[ATTACHED FILE:')) {
+    generateImage(text); busy=false; document.getElementById('send-btn').disabled=false; inp.focus(); return;
+  }
 
   busy = true;
   document.getElementById('send-btn').disabled = true;
@@ -1127,6 +1425,24 @@ async function sendMessage() {
   const handle = startThinking(text, tag);
 
   try {
+    // Build messages — handle image attachments specially
+    const apiMessages = history.map((m, idx) => {
+      if (idx === history.length - 1 && m.role === 'user' && m.content && m.content.startsWith('data:image')) {
+        // Last user message has a base64 image — use vision format
+        const base64 = m.content.split(',')[1];
+        const mimeMatch = m.content.match(/data:(image\/\w+);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        return {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: m.content } },
+            { type: 'text', text: text || 'Describe and analyze this image in detail.' }
+          ]
+        };
+      }
+      return m;
+    });
+
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -1134,11 +1450,11 @@ async function sendMessage() {
         'Authorization': 'Bearer ' + GROQ_KEY,
       },
       body: JSON.stringify({
-        model: GROQ_MODEL,
+        model: attachedPreviewUrl ? 'llama-3.2-11b-vision-preview' : GROQ_MODEL,
         max_tokens: 8000,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          ...history,
+          ...apiMessages,
         ],
       }),
     });

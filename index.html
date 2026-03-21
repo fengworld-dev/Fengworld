@@ -362,8 +362,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 </div>
 
 <script>
-const GROQ_KEY = '';
-const GROQ_MODEL = '';
+const GROQ_KEY = 'AIzaSyD4PymIqx-lQ1QAJ3AQ0Pl6RKVoKtU9qmw';
+const GROQ_MODEL = 'gemini-2.0-flash';
 
 const SYSTEM_PROMPT =
   "You are Feng AI — a brilliant, versatile assistant. Detect what the user needs and respond accordingly.\n" +
@@ -770,32 +770,35 @@ async function sendMessage() {
   const handle = startThinking(text, tag);
 
   try {
-    // Pollinations AI — completely free, no API key needed, works from any browser
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...history
-    ];
+    // Google Gemini API — free, no CORS issues
+    const geminiMessages = history.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
 
-    const res = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'openai',
-        messages: messages,
-        seed: Math.floor(Math.random() * 99999),
-      }),
-    });
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + GROQ_MODEL + ':generateContent?key=' + GROQ_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: geminiMessages,
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
+      }
+    );
 
     const secs = Math.max(1, Math.round((Date.now()-t0)/1000));
     const data = await res.json();
     finalizeThinking(handle, secs);
 
     if (data.error) {
-      streamAnswer('⚠️ Error: '+(data.error.message||'Unknown error')+'\n<suggestions>["Try again","Ask differently","Check connection"]</suggestions>', tag);
+      streamAnswer('⚠️ Error: ' + (data.error.message || 'Unknown error') + '\n<suggestions>["Try again","Ask differently","Check connection"]</suggestions>', tag);
     } else {
-      const reply = data?.choices?.[0]?.message?.content || 'No response. Please try again.';
-      history.push({ role:'assistant', content:reply });
-      saveSession(history[0]?.content||'Chat');
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response. Please try again.';
+      history.push({ role: 'assistant', content: reply });
+      saveSession(history[0]?.content || 'Chat');
       streamAnswer(reply, tag);
     }
 

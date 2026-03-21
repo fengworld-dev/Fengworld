@@ -362,8 +362,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 </div>
 
 <script>
-const GROQ_KEY = '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';
-const GROQ_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+const GROQ_KEY = '';
+const GROQ_MODEL = '';
 
 const SYSTEM_PROMPT =
   "You are Feng AI — a brilliant, versatile assistant. Detect what the user needs and respond accordingly.\n" +
@@ -770,21 +770,19 @@ async function sendMessage() {
   const handle = startThinking(text, tag);
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Pollinations AI — completely free, no API key needed, works from any browser
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...history
+    ];
+
+    const res = await fetch('https://text.pollinations.ai/openai', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer '+GROQ_KEY,
-        'HTTP-Referer': 'https://fengworld-dev.github.io',
-        'X-Title': 'Feng AI',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: GROQ_MODEL,
-        max_tokens: 1024,
-        messages: [
-          { role:'system', content:SYSTEM_PROMPT },
-          ...history
-        ],
+        model: 'openai',
+        messages: messages,
+        seed: Math.floor(Math.random() * 99999),
       }),
     });
 

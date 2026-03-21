@@ -746,16 +746,26 @@ function applyAppearance(mode) {
     root.style.setProperty('--bg','#0f0f11');
     root.style.setProperty('--surface','#18181b');
     root.style.setProperty('--surface2','#222226');
+    root.style.setProperty('--surface3','#2a2a2f');
+    root.style.setProperty('--border','#2e2e34');
+    root.style.setProperty('--border2','#3a3a42');
     root.style.setProperty('--text','#f2f1ea');
     root.style.setProperty('--muted','#6e6e78');
+    root.style.setProperty('--muted2','#44444c');
+    // Fix nav background for dark
+    document.querySelectorAll('.nav').forEach(el => el.style.background = 'rgba(15,15,17,0.95)');
   } else {
-    root.style.setProperty('--bg','#f8f8fa');
+    root.style.setProperty('--bg','#f5f5f7');
     root.style.setProperty('--surface','#ffffff');
-    root.style.setProperty('--surface2','#f0f0f4');
-    root.style.setProperty('--text','#1a1a1e');
-    root.style.setProperty('--muted','#6e6e78');
-    root.style.setProperty('--border','#e0e0e6');
-    root.style.setProperty('--border2','#d0d0d8');
+    root.style.setProperty('--surface2','#ebebef');
+    root.style.setProperty('--surface3','#e0e0e6');
+    root.style.setProperty('--border','#d8d8e0');
+    root.style.setProperty('--border2','#c8c8d2');
+    root.style.setProperty('--text','#0d0d10');
+    root.style.setProperty('--muted','#5a5a66');
+    root.style.setProperty('--muted2','#8a8a98');
+    // Fix nav background for light
+    document.querySelectorAll('.nav').forEach(el => el.style.background = 'rgba(245,245,247,0.95)');
   }
 }
 
@@ -1062,7 +1072,7 @@ function generateImage(text) {
   const stopCube = () => { if (cubeEl) cubeEl.classList.remove('spin'); };
 
   const img = new Image();
-  img.crossOrigin = 'anonymous';
+  // Do NOT set crossOrigin — it causes errors with Pollinations
 
   const timeout = setTimeout(() => {
     stopCube();

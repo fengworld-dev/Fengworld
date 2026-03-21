@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Feng AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -420,7 +421,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 <!-- hidden file inputs -->
 <input type="file" id="inp-camera" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this,'camera')"/>
 <input type="file" id="inp-gallery" accept="image/*" style="display:none" onchange="handleFile(this,'gallery')"/>
-<input type="file" id="inp-doc" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleFile(this,'doc')"/>
+<input type="file" id="inp-doc" accept=".pdf,.doc,.docx,.txt,.csv,.rtf" style="display:none" onchange="handleFile(this,'doc')"/>
 
 <!-- SIDEBAR -->
 <div id="sb-overlay" onclick="closeSB()"></div>
@@ -869,9 +870,9 @@ function showPreview(file, type) {
   item.className = 'preview-item';
 
   const isImage = file.type.startsWith('image/');
+  const ext = file.name.split('.').pop().toLowerCase();
 
   if (isImage) {
-    // Show image thumbnail immediately
     const reader = new FileReader();
     reader.onload = e => {
       attachedPreviewUrl = e.target.result;
@@ -881,15 +882,12 @@ function showPreview(file, type) {
         '<button class="preview-remove" onclick="clearAttach()">✕</button>';
       strip.innerHTML = '';
       strip.appendChild(item);
-      // Start OCR
       runOCR(e.target.result, file.name, item);
     };
     reader.readAsDataURL(file);
   } else {
-    // Show file icon thumbnail
-    const ext = file.name.split('.').pop().toUpperCase();
-    const icons = { PDF:'📕', DOC:'📄', DOCX:'📄', TXT:'📝', CSV:'📊', DEFAULT:'📎' };
-    const icon = icons[ext] || icons.DEFAULT;
+    const icons = { pdf:'📕', doc:'📄', docx:'📄', txt:'📝', csv:'📊' };
+    const icon = icons[ext] || '📎';
     item.innerHTML =
       '<div class="prev-file">' +
         '<div class="prev-file-icon">' + icon + '</div>' +
@@ -898,9 +896,11 @@ function showPreview(file, type) {
       '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading…</span></div>' +
       '<button class="preview-remove" onclick="clearAttach()">✕</button>';
     strip.appendChild(item);
-    // Read file content
-    if (file.type === 'application/pdf') {
+
+    if (ext === 'pdf') {
       readPDF(file, item);
+    } else if (ext === 'docx' || ext === 'doc') {
+      readDOCX(file, item);
     } else {
       readTextFile(file, item);
     }
@@ -947,6 +947,29 @@ function readTextFile(file, item) {
   reader.readAsText(file);
 }
 
+function readDOCX(file, item) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (typeof mammoth === 'undefined') {
+      markPreviewError(item, 'DOCX reader not loaded');
+      return;
+    }
+    mammoth.extractRawText({ arrayBuffer: e.target.result })
+      .then(result => {
+        const text = result.value.trim().slice(0, 6000);
+        if (text.length > 20) {
+          attachedFileContent = '[DOCX: ' + file.name + ']\n' + text;
+          markPreviewDone(item, 'Document read!');
+        } else {
+          attachedFileContent = '[DOCX: ' + file.name + ' — empty or unreadable document]';
+          markPreviewDone(item, 'File attached');
+        }
+      })
+      .catch(() => markPreviewError(item, 'Could not read DOCX'));
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function readPDF(file, item) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -958,10 +981,9 @@ function readPDF(file, item) {
         if (c >= 32 && c <= 126) raw += String.fromCharCode(c);
         else if (c === 10 || c === 13) raw += ' ';
       }
-      // Clean PDF junk, extract readable text
       const clean = raw
         .replace(/<<[^>]*>>/g, ' ')
-        .replace(/\/(Type|Subtype|Font|Width|Height|Filter|Length|BBox|Matrix|Resources|ColorSpace|XObject|ExtGState|ProcSet|Encoding|BaseFont|ToUnicode|FontDescriptor|Flags|Ascent|Descent|ItalicAngle|StemV|FontBBox|FirstChar|LastChar|Widths|Name|Producer|Creator|CreationDate|ModDate|Trapped)[^\s]*/g, ' ')
+        .replace(/\/(Type|Subtype|Font|Width|Height|Filter|Length|BBox|Matrix)[^\s]*/g, ' ')
         .replace(/[^\x20-\x7E ]/g, ' ')
         .replace(/\s{3,}/g, ' ')
         .trim();
@@ -969,10 +991,10 @@ function readPDF(file, item) {
         attachedFileContent = '[PDF: ' + file.name + ']\n' + clean.slice(0, 6000);
         markPreviewDone(item, 'PDF read!');
       } else {
-        attachedFileContent = '[PDF attached: ' + file.name + ' — appears to be a scanned image PDF]';
+        attachedFileContent = '[PDF: ' + file.name + ' — scanned image PDF, no text]';
         markPreviewDone(item, 'PDF attached');
       }
-    } catch(e) { markPreviewError(item, 'Read failed'); }
+    } catch(err) { markPreviewError(item, 'Read failed'); }
   };
   reader.readAsArrayBuffer(file);
 }

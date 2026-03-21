@@ -1621,8 +1621,7 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // Add TTS player
-      addTTSPlayer(body, stripSugs(rawText));
+      // suggestions below
 
       if (sugs.length) {
         const wrap = document.createElement('div');

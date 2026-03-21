@@ -1427,23 +1427,31 @@ async function sendMessage() {
   const handle = startThinking(text, tag);
 
   try {
-    // Build messages — handle image attachments specially
-    const apiMessages = history.map((m, idx) => {
-      if (idx === history.length - 1 && m.role === 'user' && m.content && m.content.startsWith('data:image')) {
-        // Last user message has a base64 image — use vision format
-        const base64 = m.content.split(',')[1];
-        const mimeMatch = m.content.match(/data:(image\/\w+);/);
-        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-        return {
+    let model = GROQ_MODEL;
+    let apiMessages;
+
+    if (isImageAttach) {
+      // Vision model — send image + question as ONE fresh message, not full history
+      model = 'llama-3.2-11b-vision-preview';
+      apiMessages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        {
           role: 'user',
           content: [
-            { type: 'image_url', image_url: { url: m.content } },
-            { type: 'text', text: text || 'Describe and analyze this image in detail.' }
+            { type: 'image_url', image_url: { url: msgContent } },
+            { type: 'text', text: text || 'Please read and extract all the text from this image. Then describe what you see.' }
           ]
-        };
-      }
-      return m;
-    });
+        }
+      ];
+      // Replace the base64 in history with a readable summary
+      history[history.length - 1].content = '[Image attached] ' + (text || 'Extract text from image');
+    } else {
+      // Normal text — send full history
+      apiMessages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...history
+      ];
+    }
 
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -1452,12 +1460,9 @@ async function sendMessage() {
         'Authorization': 'Bearer ' + GROQ_KEY,
       },
       body: JSON.stringify({
-        model: attachedPreviewUrl ? 'llama-3.2-11b-vision-preview' : GROQ_MODEL,
+        model: model,
         max_tokens: 8000,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...apiMessages,
-        ],
+        messages: apiMessages,
       }),
     });
 

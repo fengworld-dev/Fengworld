@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Feng AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -589,7 +588,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <div id="chat-wrap">
     <div id="hero">
       <div class="hero-greeting" id="hero-greeting">Good afternoon</div>
-      <div class="hero-sub" id="hero-sub">Your personal education & learning assistant</div>
+      <div class="hero-sub" id="hero-sub">Ask me anything — I'm here to help</div>
     </div>
     <div class="msg-list" id="msg-list"></div>
   </div>
@@ -628,23 +627,28 @@ const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a dedicated educational assistant designed to help students and learners of all ages.\n\n" +
-  "YOUR PURPOSE: You exist solely to support education, learning, research, studying, and academic growth.\n\n" +
-  "YOU EXCEL AT:\n" +
-  "- Explaining any academic subject: science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, law, medicine, languages, and more\n" +
-  "- Helping with homework, assignments, essays, and reports — writing them fully and professionally\n" +
-  "- Answering any question a student or curious mind might have\n" +
-  "- Summarizing documents, books, articles, or files attached by the user\n" +
-  "- Breaking down complex topics into clear, understandable explanations with examples and analogies\n" +
-  "- Helping with exam preparation, study guides, and revision\n\n" +
-  "IF ASKED TO: generate images, write code, build apps or websites, create designs, logos, or UI — respond professionally:\n" +
-  "\"I appreciate your request, however that falls outside my area of focus. As Feng AI, I am specifically designed to support education and learning. I am not able to generate images, write software code, or assist with design tasks. I would be happy to help you with any academic questions, assignments, essays, research, or study-related topics instead.\"\n\n" +
+  "You are Feng AI — a brilliant, knowledgeable assistant that helps with virtually anything.\n\n" +
+  "YOU CAN HELP WITH:\n" +
+  "- Education & learning: any subject, any level — science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, languages, law, medicine and more\n" +
+  "- Homework, assignments, essays, reports, study guides, exam preparation\n" +
+  "- General knowledge: answer any question on any topic\n" +
+  "- Research and explanations: break down complex topics clearly\n" +
+  "- Writing: essays, letters, emails, summaries, creative writing, proofreading\n" +
+  "- Advice: career, life, health awareness, relationships, personal development\n" +
+  "- Analysis: reading and analyzing documents, files, or images the user attaches\n" +
+  "- Technology explanations: explaining how things work, what programming concepts mean, how the internet works etc.\n" +
+  "- Business & finance: concepts, plans, strategies, explanations\n" +
+  "- Any other topic a curious, intelligent person might ask about\n\n" +
+  "YOU CANNOT DO:\n" +
+  "- Build websites, web apps, or mobile apps for someone\n" +
+  "- Write full project source code (e.g. 'build me a todo app', 'create a login system')\n" +
+  "- If asked for these, respond professionally: 'I appreciate your request. Unfortunately, building websites, applications, or writing full project code falls outside what I am able to assist with. However, I am happy to explain how things work, help you understand programming concepts, or assist with any other topic.'\n\n" +
   "RESPONSE RULES:\n" +
   "- Always give thorough, well-structured, detailed answers\n" +
-  "- Use clear headings, bullet points, and examples\n" +
+  "- Use clear headings (##), bullet points (-), bold (**text**) where helpful\n" +
   "- For essays/reports/assignments: write complete, professionally structured content\n" +
-  "- If a file or image is attached: read and analyze it fully, then answer the user's question about it\n" +
-  "- Maintain an encouraging, supportive, professional tone at all times\n\n" +
+  "- If a file or image is attached: read and analyze it fully, then answer the question about it\n" +
+  "- Be warm, encouraging, and professional at all times\n\n" +
   "End every response with:\n" +
   "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
 
@@ -945,25 +949,39 @@ function readTextFile(file, item) {
 }
 
 function readDOCX(file, item) {
+  // DOCX files are ZIP archives containing XML — extract text from the XML directly
   const reader = new FileReader();
   reader.onload = e => {
-    if (typeof mammoth === 'undefined') {
-      markPreviewError(item, 'DOCX reader not loaded');
-      return;
+    try {
+      const bytes = new Uint8Array(e.target.result);
+      // Convert bytes to string and look for XML text content
+      let raw = '';
+      for (let i = 0; i < Math.min(bytes.length, 500000); i++) {
+        if (bytes[i] >= 32 && bytes[i] <= 126) raw += String.fromCharCode(bytes[i]);
+        else raw += ' ';
+      }
+      // Extract text between <w:t> XML tags (Word text nodes)
+      const matches = raw.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || [];
+      let text = matches
+        .map(m => m.replace(/<[^>]+>/g, '').trim())
+        .filter(t => t.length > 0)
+        .join(' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+      if (text.length > 30) {
+        attachedFileContent = '[DOCX: ' + file.name + ']\n' + text.slice(0, 6000);
+        markPreviewDone(item, 'Document read!');
+      } else {
+        // Fallback — send filename and ask AI to note it
+        attachedFileContent = '[DOCX attached: ' + file.name + ' — content could not be extracted. Please describe what you need help with regarding this document.]';
+        markPreviewDone(item, 'File attached');
+      }
+    } catch(err) {
+      markPreviewError(item, 'Could not read');
     }
-    mammoth.extractRawText({ arrayBuffer: e.target.result })
-      .then(result => {
-        const text = result.value.trim().slice(0, 6000);
-        if (text.length > 20) {
-          attachedFileContent = '[DOCX: ' + file.name + ']\n' + text;
-          markPreviewDone(item, 'Document read!');
-        } else {
-          attachedFileContent = '[DOCX: ' + file.name + ' — empty or unreadable document]';
-          markPreviewDone(item, 'File attached');
-        }
-      })
-      .catch(() => markPreviewError(item, 'Could not read DOCX'));
   };
+  reader.onerror = () => markPreviewError(item, 'Failed to read');
   reader.readAsArrayBuffer(file);
 }
 

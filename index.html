@@ -238,7 +238,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 /* SETTINGS */
 #settings{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;}
 #settings.open{transform:translateX(0);}
-.set-head{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);}
+.set-head{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1;}
 .set-back{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;}
 .set-title{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;}
 .set-body{padding:16px 18px 40px;}
@@ -255,6 +255,105 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .set-danger .set-row{color:#ef4444;}
 .set-danger .s-icon{background:rgba(239,68,68,0.1);}
 .set-note{text-align:center;font-size:0.7rem;color:var(--muted);margin-top:18px;}
+
+/* SUB-PAGES (login, language, appearance, data, help) */
+.subpage{position:fixed;inset:0;background:var(--bg);z-index:400;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;display:flex;flex-direction:column;}
+.subpage.open{transform:translateX(0);}
+.sub-head{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1;flex-shrink:0;}
+.sub-back{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.sub-title{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;}
+.sub-body{padding:24px 20px 40px;flex:1;}
+
+/* LOGIN */
+.login-logo{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;text-align:center;margin-bottom:6px;}
+.login-logo span{color:var(--accent);}
+.login-sub{text-align:center;font-size:0.85rem;color:var(--muted);margin-bottom:32px;}
+.login-form{display:flex;flex-direction:column;gap:14px;max-width:380px;margin:0 auto;}
+.login-input{
+  width:100%;padding:13px 16px;border-radius:var(--r);
+  border:1.5px solid var(--border);background:var(--surface);
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;
+  transition:border-color 0.2s;
+}
+.login-input:focus{border-color:var(--accent);}
+.login-input::placeholder{color:var(--muted2);}
+.login-btn{
+  width:100%;padding:13px;border-radius:var(--r);border:none;
+  background:var(--accent);color:#fff;font-family:'Syne',sans-serif;
+  font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.15s;
+}
+.login-btn:hover{background:#3d7ef0;}
+.login-divider{display:flex;align-items:center;gap:10px;margin:4px 0;}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.login-divider span{font-size:0.75rem;color:var(--muted);}
+.login-toggle{text-align:center;font-size:0.82rem;color:var(--muted);margin-top:8px;}
+.login-toggle a{color:var(--accent);cursor:pointer;text-decoration:none;}
+.login-profile{text-align:center;padding:20px 0;}
+.profile-av{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:#fff;margin:0 auto 14px;}
+.profile-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:4px;}
+.profile-email{font-size:0.82rem;color:var(--muted);}
+.logout-btn{margin-top:24px;width:100%;padding:12px;border-radius:var(--r);border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.06);color:#ef4444;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;transition:all 0.15s;}
+.logout-btn:hover{background:rgba(239,68,68,0.12);}
+
+/* LANGUAGE LIST */
+.lang-search{width:100%;padding:11px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;margin-bottom:14px;transition:border-color 0.2s;}
+.lang-search:focus{border-color:var(--accent);}
+.lang-list{display:flex;flex-direction:column;gap:2px;}
+.lang-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:9px;cursor:pointer;font-size:0.87rem;transition:background 0.12s;}
+.lang-item:hover{background:var(--surface);}
+.lang-item.selected{background:var(--surface);color:var(--accent);}
+.lang-check{color:var(--accent);font-size:1rem;}
+
+/* APPEARANCE OPTIONS */
+.appear-option{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);cursor:pointer;margin-bottom:10px;transition:all 0.15s;}
+.appear-option.selected{border-color:var(--accent);}
+.appear-option:hover{border-color:var(--border2);}
+.appear-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.appear-info{flex:1;}
+.appear-name{font-weight:600;font-size:0.9rem;margin-bottom:2px;}
+.appear-desc{font-size:0.75rem;color:var(--muted);}
+.appear-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.appear-option.selected .appear-radio{border-color:var(--accent);background:var(--accent);}
+.appear-option.selected .appear-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;}
+
+/* DATA CONTROLS */
+.data-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.data-card-title{font-weight:600;font-size:0.9rem;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.data-card-desc{font-size:0.8rem;color:var(--muted);line-height:1.6;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0;}
+.toggle-label{font-size:0.87rem;}
+.toggle-sub{font-size:0.74rem;color:var(--muted);margin-top:2px;}
+.toggle{width:44px;height:24px;border-radius:50px;background:var(--border2);border:none;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left 0.2s;}
+.toggle.on::after{left:23px;}
+
+/* HELP */
+.help-contact-btn{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 18px;border-radius:var(--r);
+  border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;text-decoration:none;color:var(--text);
+  margin-bottom:12px;transition:all 0.15s;
+}
+.help-contact-btn:hover{border-color:var(--border2);background:var(--surface2);}
+.help-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.help-info{flex:1;}
+.help-name{font-weight:600;font-size:0.9rem;margin-bottom:2px;}
+.help-detail{font-size:0.78rem;color:var(--muted);}
+.help-arr{color:var(--muted2);}
+
+/* DISCLAIMER NOTE */
+.ai-disclaimer{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 12px;border-radius:8px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  font-size:0.73rem;color:var(--muted);
+  margin-top:6px;line-height:1.5;
+  max-width:86%;
+}
 </style>
 </head>
 <body>
@@ -292,24 +391,127 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <div class="set-body">
     <span class="set-label">Profile</span>
     <div class="set-group">
-      <div class="set-row"><div class="s-icon">👤</div><div class="s-label">Account</div><div class="s-arr">›</div></div>
-      <div class="set-row"><div class="s-icon">🛡️</div><div class="s-label">Data controls</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-login')"><div class="s-icon">👤</div><div class="s-label">Account</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-data')"><div class="s-icon">🛡️</div><div class="s-label">Data controls</div><div class="s-arr">›</div></div>
     </div>
     <span class="set-label">App</span>
     <div class="set-group">
-      <div class="set-row"><div class="s-icon">🌐</div><div class="s-label">Language</div><div class="s-val">English</div><div class="s-arr">›</div></div>
-      <div class="set-row"><div class="s-icon">🌙</div><div class="s-label">Appearance</div><div class="s-val">Dark</div><div class="s-arr">›</div></div>
-      <div class="set-row"><div class="s-icon">🔤</div><div class="s-label">Font size</div><div class="s-val">Default</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-lang')"><div class="s-icon">🌐</div><div class="s-label">Language</div><div class="s-val" id="cur-lang">English</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-appear')"><div class="s-icon">🌙</div><div class="s-label">Appearance</div><div class="s-val" id="cur-appear">Dark</div><div class="s-arr">›</div></div>
     </div>
     <span class="set-label">About</span>
     <div class="set-group">
-      <div class="set-row"><div class="s-icon">ℹ️</div><div class="s-label">Version</div><div class="s-val">v1.0.0</div><div class="s-arr">›</div></div>
-      <div class="set-row"><div class="s-icon">❓</div><div class="s-label">Help & Feedback</div><div class="s-arr">›</div></div>
+      <div class="set-row"><div class="s-icon">ℹ️</div><div class="s-label">Version</div><div class="s-val">v1.0.1</div></div>
+      <div class="set-row" onclick="openSubpage('page-help')"><div class="s-icon">❓</div><div class="s-label">Help & Feedback</div><div class="s-arr">›</div></div>
     </div>
     <div class="set-group set-danger" style="margin-top:8px;">
       <div class="set-row" onclick="clearHistory();closeSettings();"><div class="s-icon">🗑️</div><div class="s-label">Clear all history</div></div>
     </div>
     <div class="set-note">AI-generated content. Use responsibly.</div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="subpage" id="page-login">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-login')">←</button>
+    <div class="sub-title">Account</div>
+  </div>
+  <div class="sub-body" id="login-body">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<!-- DATA CONTROLS PAGE -->
+<div class="subpage" id="page-data">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-data')">←</button>
+    <div class="sub-title">Data Controls</div>
+  </div>
+  <div class="sub-body">
+    <div class="data-card">
+      <div class="data-card-title">🔒 Privacy</div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Save chat history</div><div class="toggle-sub">Store conversations on this device</div></div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Improve Feng AI</div><div class="toggle-sub">Allow anonymous usage data to improve responses</div></div>
+        <button class="toggle" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+    <div class="data-card">
+      <div class="data-card-title">🧹 Data Management</div>
+      <div class="data-card-desc">Your conversations are stored locally on your device only. We never send your personal data to third-party services without your consent.</div>
+    </div>
+    <div class="data-card">
+      <div class="data-card-title">📋 Usage Policy</div>
+      <div class="data-card-desc">Feng AI uses Groq AI to process your messages. Your queries are sent to Groq's servers to generate responses. Do not share sensitive personal information.</div>
+    </div>
+    <div class="set-group set-danger" style="margin-top:8px;">
+      <div class="set-row" onclick="clearHistory()"><div class="s-icon">🗑️</div><div class="s-label">Delete all data</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LANGUAGE PAGE -->
+<div class="subpage" id="page-lang">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-lang')">←</button>
+    <div class="sub-title">Language</div>
+  </div>
+  <div class="sub-body">
+    <input class="lang-search" type="text" placeholder="Search language…" oninput="filterLangs(this.value)"/>
+    <div class="lang-list" id="lang-list"></div>
+  </div>
+</div>
+
+<!-- APPEARANCE PAGE -->
+<div class="subpage" id="page-appear">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-appear')">←</button>
+    <div class="sub-title">Appearance</div>
+  </div>
+  <div class="sub-body">
+    <div class="appear-option selected" id="ap-dark" onclick="setAppearance('dark')">
+      <div class="appear-icon" style="background:#1a1a2e;">🌙</div>
+      <div class="appear-info"><div class="appear-name">Dark</div><div class="appear-desc">Easy on the eyes in low light</div></div>
+      <div class="appear-radio"></div>
+    </div>
+    <div class="appear-option" id="ap-light" onclick="setAppearance('light')">
+      <div class="appear-icon" style="background:#f0f4ff;">☀️</div>
+      <div class="appear-info"><div class="appear-name">Light</div><div class="appear-desc">Bright and clean</div></div>
+      <div class="appear-radio"></div>
+    </div>
+    <div class="appear-option" id="ap-system" onclick="setAppearance('system')">
+      <div class="appear-icon" style="background:linear-gradient(135deg,#1a1a2e 50%,#f0f4ff 50%);">📱</div>
+      <div class="appear-info"><div class="appear-name">System Default</div><div class="appear-desc">Matches your device settings</div></div>
+      <div class="appear-radio"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HELP PAGE -->
+<div class="subpage" id="page-help">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-help')">←</button>
+    <div class="sub-title">Help & Feedback</div>
+  </div>
+  <div class="sub-body">
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:20px;line-height:1.6;">Have a question, found a bug, or want to share feedback? Reach us through any of the channels below.</p>
+    <a class="help-contact-btn" href="mailto:fengworld8@gmail.com">
+      <div class="help-icon" style="background:rgba(234,67,53,0.12);">📧</div>
+      <div class="help-info"><div class="help-name">Email us</div><div class="help-detail">fengworld8@gmail.com</div></div>
+      <div class="help-arr">›</div>
+    </a>
+    <a class="help-contact-btn" href="https://wa.me/260770605003" target="_blank">
+      <div class="help-icon" style="background:rgba(37,211,102,0.12);">💬</div>
+      <div class="help-info"><div class="help-name">WhatsApp</div><div class="help-detail">+260 770 605 003</div></div>
+      <div class="help-arr">›</div>
+    </a>
+    <div style="margin-top:24px;padding:14px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);font-size:0.8rem;color:var(--muted);line-height:1.6;">
+      💡 <strong style="color:var(--text);">Tip:</strong> When reporting a bug, please describe what you asked Feng AI and what went wrong. Screenshots help too!
+    </div>
   </div>
 </div>
 
@@ -450,6 +652,119 @@ function loadSession(id) {
 function clearHistory() {
   sessions = []; localStorage.removeItem('feng_s');
   newChat();
+}
+
+// ── SUBPAGES ──
+function openSubpage(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'page-login') renderLoginPage();
+  if (id === 'page-lang') renderLangList('');
+}
+function closeSubpage(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── LOGIN ──
+let currentUser = JSON.parse(localStorage.getItem('feng_user') || 'null');
+let loginMode = 'login';
+
+function renderLoginPage() {
+  const body = document.getElementById('login-body');
+  if (currentUser) {
+    body.innerHTML =
+      '<div class="login-profile">' +
+        '<div class="profile-av">' + currentUser.name.charAt(0).toUpperCase() + '</div>' +
+        '<div class="profile-name">' + esc(currentUser.name) + '</div>' +
+        '<div class="profile-email">' + esc(currentUser.email) + '</div>' +
+        '<button class="logout-btn" onclick="logoutUser()">Sign Out</button>' +
+      '</div>';
+    return;
+  }
+  body.innerHTML =
+    '<div class="login-logo">Feng<span>.</span></div>' +
+    '<div class="login-sub">' + (loginMode==='login'?'Welcome back! Sign in to continue.':'Create your Feng AI account.') + '</div>' +
+    '<div class="login-form">' +
+      (loginMode==='signup'?'<input class="login-input" id="li-name" type="text" placeholder="Your name"/>':'') +
+      '<input class="login-input" id="li-email" type="email" placeholder="Email address"/>' +
+      '<input class="login-input" id="li-pass" type="password" placeholder="Password"/>' +
+      '<button class="login-btn" onclick="submitLogin()">' + (loginMode==='login'?'Sign In':'Create Account') + '</button>' +
+      '<div class="login-divider"><span>or</span></div>' +
+      '<div class="login-toggle">' + (loginMode==='login'?'Don\'t have an account? <a onclick="switchLogin()">Sign up</a>':'Already have an account? <a onclick="switchLogin()">Sign in</a>') + '</div>' +
+    '</div>';
+}
+function switchLogin() { loginMode = loginMode==='login'?'signup':'login'; renderLoginPage(); }
+function submitLogin() {
+  const email = document.getElementById('li-email')?.value.trim();
+  const pass = document.getElementById('li-pass')?.value.trim();
+  const name = document.getElementById('li-name')?.value.trim() || email.split('@')[0];
+  if (!email || !pass) { alert('Please fill in all fields.'); return; }
+  if (pass.length < 6) { alert('Password must be at least 6 characters.'); return; }
+  currentUser = { name, email };
+  localStorage.setItem('feng_user', JSON.stringify(currentUser));
+  const sb = document.querySelector('.sb-name');
+  if (sb) sb.textContent = name;
+  renderLoginPage();
+}
+function logoutUser() {
+  currentUser = null; localStorage.removeItem('feng_user');
+  loginMode = 'login'; renderLoginPage();
+}
+
+// ── LANGUAGES ──
+const LANGUAGES = ['Afrikaans','Albanian','Amharic','Arabic','Armenian','Azerbaijani','Basque','Belarusian','Bengali','Bosnian','Bulgarian','Catalan','Cebuano','Chichewa','Chinese (Simplified)','Chinese (Traditional)','Corsican','Croatian','Czech','Danish','Dutch','English','Esperanto','Estonian','Filipino','Finnish','French','Frisian','Galician','Georgian','German','Greek','Gujarati','Haitian Creole','Hausa','Hawaiian','Hebrew','Hindi','Hmong','Hungarian','Icelandic','Igbo','Indonesian','Irish','Italian','Japanese','Javanese','Kannada','Kazakh','Khmer','Kinyarwanda','Korean','Kurdish','Kyrgyz','Lao','Latin','Latvian','Lithuanian','Luxembourgish','Macedonian','Malagasy','Malay','Malayalam','Maltese','Maori','Marathi','Mongolian','Myanmar (Burmese)','Nepali','Norwegian','Odia','Pashto','Persian','Polish','Portuguese','Punjabi','Romanian','Russian','Samoan','Scots Gaelic','Serbian','Sesotho','Shona','Sindhi','Sinhala','Slovak','Slovenian','Somali','Spanish','Sundanese','Swahili','Swedish','Tajik','Tamil','Tatar','Telugu','Thai','Turkish','Turkmen','Ukrainian','Urdu','Uyghur','Uzbek','Vietnamese','Welsh','Xhosa','Yiddish','Yoruba','Zulu'];
+let selectedLang = localStorage.getItem('feng_lang') || 'English';
+
+function renderLangList(filter) {
+  const list = document.getElementById('lang-list');
+  const filtered = LANGUAGES.filter(l => l.toLowerCase().includes(filter.toLowerCase()));
+  list.innerHTML = filtered.map(l =>
+    '<div class="lang-item' + (l===selectedLang?' selected':'') + '" onclick="selectLang(\'' + l + '\')">' +
+      '<span>' + l + '</span>' +
+      (l===selectedLang ? '<span class="lang-check">✓</span>' : '') +
+    '</div>'
+  ).join('');
+}
+function filterLangs(val) { renderLangList(val); }
+function selectLang(lang) {
+  selectedLang = lang;
+  localStorage.setItem('feng_lang', lang);
+  document.getElementById('cur-lang').textContent = lang;
+  renderLangList('');
+}
+
+// ── APPEARANCE ──
+let currentAppear = localStorage.getItem('feng_appear') || 'dark';
+function setAppearance(mode) {
+  currentAppear = mode;
+  localStorage.setItem('feng_appear', mode);
+  document.getElementById('cur-appear').textContent = mode.charAt(0).toUpperCase()+mode.slice(1);
+  ['dark','light','system'].forEach(m => document.getElementById('ap-'+m).classList.toggle('selected', m===mode));
+  applyAppearance(mode);
+}
+function applyAppearance(mode) {
+  const root = document.documentElement;
+  const isDark = mode==='system' ? window.matchMedia('(prefers-color-scheme:dark)').matches : mode==='dark';
+  if (isDark) {
+    root.style.setProperty('--bg','#0f0f11');
+    root.style.setProperty('--surface','#18181b');
+    root.style.setProperty('--surface2','#222226');
+    root.style.setProperty('--text','#f2f1ea');
+    root.style.setProperty('--muted','#6e6e78');
+  } else {
+    root.style.setProperty('--bg','#f8f8fa');
+    root.style.setProperty('--surface','#ffffff');
+    root.style.setProperty('--surface2','#f0f0f4');
+    root.style.setProperty('--text','#1a1a1e');
+    root.style.setProperty('--muted','#6e6e78');
+    root.style.setProperty('--border','#e0e0e6');
+    root.style.setProperty('--border2','#d0d0d8');
+  }
+}
+
+// ── DISCLAIMER NOTE after AI answer ──
+function addDisclaimer(body) {
+  const note = document.createElement('div');
+  note.className = 'ai-disclaimer';
+  note.innerHTML = '⚠️ Feng AI can make mistakes sometimes. Always verify important information.';
+  body.appendChild(note);
 }
 
 // ── SETTINGS ──
@@ -695,6 +1010,9 @@ function streamAnswer(rawText, tag) {
       const cube = el.querySelector('.cube');
       if (cube) cube.classList.remove('spin');
 
+      // Add disclaimer note
+      addDisclaimer(body);
+
       if (sugs.length) {
         const wrap = document.createElement('div');
         wrap.className = 'sugs';
@@ -716,34 +1034,59 @@ function streamAnswer(rawText, tag) {
 // ── IMAGE GENERATION ──
 function generateImage(text) {
   hideHero();
-  const clean = text.replace(/^(generate|create|draw|make|show me|paint|illustrate|render|make me)\s+(a|an)?\s*/i,'').replace(/\b(image|picture|photo|art)\s+(of|showing|with)?\s*/i,'').trim() || text;
-  const url = 'https://image.pollinations.ai/prompt/'+encodeURIComponent(clean+', high quality, detailed')+('?width=512&height=512&nologo=true&seed='+Math.floor(Math.random()*99999));
+  const clean = text
+    .replace(/^(generate|create|draw|make|show me|paint|illustrate|render|make me|give me)\s+(a|an|me)?\s*/i,'')
+    .replace(/\b(image|picture|photo|artwork|illustration|painting|drawing)\s*(of|showing|with|featuring|depicting)?\s*/i,'')
+    .trim() || text;
+
+  const seed = Math.floor(Math.random()*99999);
+  const encoded = encodeURIComponent(clean + ', high quality, detailed, 4k');
+  const url = 'https://image.pollinations.ai/prompt/' + encoded + '?width=512&height=512&nologo=true&seed=' + seed + '&model=flux';
+
   const list = document.getElementById('msg-list');
   const el = document.createElement('div');
   el.className = 'msg ai';
+  const uid = 'img'+Date.now();
   el.innerHTML =
-    '<div>'+cubeHTML('design',false)+'</div>' +
+    '<div>' + cubeHTML('design', true) + '</div>' +
     '<div class="msg-body">' +
       '<div class="msg-tag tag-design">🎨 Image</div>' +
-      '<div class="img-status" id="img-st">Generating<span class="dots-anim"></span></div>' +
-      '<div id="img-out"></div>' +
+      '<div class="img-status" id="ist'+uid+'">Generating image<span class="dots-anim"></span></div>' +
+      '<div id="iout'+uid+'"></div>' +
     '</div>';
-  list.appendChild(el); scrollDown();
+  list.appendChild(el);
+  scrollDown();
+
+  // Stop cube after 30s regardless
+  const cubeEl = el.querySelector('.cube');
+  const stopCube = () => { if (cubeEl) cubeEl.classList.remove('spin'); };
 
   const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  const timeout = setTimeout(() => {
+    stopCube();
+    const st = document.getElementById('ist'+uid);
+    if (st) st.innerHTML = '⚠️ Taking too long. <a style="color:var(--accent);cursor:pointer;" onclick="this.parentElement.innerHTML=\'Retrying…\';generateImageDirect(\''+encoded+'\',\''+uid+'\')">Retry</a>';
+  }, 25000);
+
   img.onload = () => {
-    const st = document.getElementById('img-st');
-    const out = document.getElementById('img-out');
+    clearTimeout(timeout);
+    stopCube();
+    const st = document.getElementById('ist'+uid);
+    const out = document.getElementById('iout'+uid);
     if (st) st.remove();
     if (out) out.innerHTML =
       '<img src="'+url+'" alt="'+esc(clean)+'" class="gen-img"/>' +
-      '<div style="font-size:0.73rem;color:var(--muted);font-style:italic;margin-top:4px;">'+esc(clean)+'</div>' +
-      '<a href="'+url+'" download="feng.jpg" class="img-dl">⬇ Download</a>';
-    el.removeAttribute('id'); scrollDown();
+      '<div style="font-size:0.73rem;color:var(--muted);font-style:italic;margin:4px 0 6px;">'+esc(clean)+'</div>' +
+      '<a href="'+url+'" target="_blank" class="img-dl">⬇ Download</a>';
+    scrollDown();
   };
   img.onerror = () => {
-    const st = document.getElementById('img-st');
-    if (st) st.textContent = '⚠️ Could not generate. Try a different description.';
+    clearTimeout(timeout);
+    stopCube();
+    const st = document.getElementById('ist'+uid);
+    if (st) st.textContent = '⚠️ Could not generate image. Try a different description.';
   };
   img.src = url;
 }
@@ -820,6 +1163,11 @@ ta.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){e.p
 
 // ── INIT ──
 setGreeting();
+applyAppearance(currentAppear);
+document.getElementById('ap-'+currentAppear).classList.add('selected');
+document.getElementById('cur-appear').textContent = currentAppear.charAt(0).toUpperCase()+currentAppear.slice(1);
+document.getElementById('cur-lang').textContent = selectedLang;
+if (currentUser) { const sb = document.querySelector('.sb-name'); if (sb) sb.textContent = currentUser.name; }
 </script>
 </body>
 </html>

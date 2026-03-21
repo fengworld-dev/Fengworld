@@ -265,16 +265,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .attach-item:last-child{border-bottom:none;}
 .attach-item:hover{background:var(--surface);}
 .a-icon{width:28px;height:28px;border-radius:7px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
-.attach-btn,.send-btn{
+.attach-btn,.send-btn,.mic-btn{
   width:34px;height:34px;border-radius:9px;border:1px solid var(--border);
   background:transparent;color:var(--muted);cursor:pointer;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;transition:all 0.15s;
 }
 .send-btn{background:var(--text);color:var(--bg);border:none;}
-.attach-btn:hover{background:var(--surface2);color:var(--text);}
+.attach-btn:hover,.mic-btn:hover{background:var(--surface2);color:var(--text);}
 .send-btn:hover{background:#d8d7d0;}
 .send-btn:disabled{background:var(--muted2);cursor:not-allowed;}
-.attach-btn svg,.send-btn svg{width:15px;height:15px;}
+.attach-btn svg,.send-btn svg,.mic-btn svg{width:15px;height:15px;}
+.mic-btn.listening{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.5);color:#ef4444;animation:micPulse 1s ease-in-out infinite;}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
 #user-input{
   flex:1;border:none;outline:none;background:transparent;
   font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);
@@ -476,6 +478,59 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   margin-top:10px;line-height:1.5;
   padding:0;background:none;border:none;
 }
+
+/* ── MIC BUTTON ── */
+.mic-btn{
+  width:34px;height:34px;border-radius:9px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+}
+.mic-btn svg{width:15px;height:15px;}
+.mic-btn:hover{background:rgba(79,142,247,0.12);color:var(--accent);border-color:var(--accent);}
+.mic-btn.listening{
+  background:rgba(239,68,68,0.12);color:#ef4444;border-color:#ef4444;
+  animation:micPulse 1s ease-in-out infinite;
+}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+
+/* ── TTS PLAYER ── */
+.tts-player{
+  display:flex;align-items:center;gap:10px;
+  margin-top:10px;padding:10px 14px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+}
+.tts-play-btn{
+  width:34px;height:34px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#5eb8ff,#2563eb);
+  color:#fff;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;box-shadow:0 2px 8px rgba(79,142,247,0.35);
+}
+.tts-play-btn:hover{transform:scale(1.08);}
+.tts-play-btn svg{width:14px;height:14px;}
+.tts-info{flex:1;}
+.tts-label{font-size:0.72rem;color:var(--muted);margin-bottom:3px;}
+.tts-bar{width:100%;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;}
+.tts-progress{height:100%;background:linear-gradient(90deg,#5eb8ff,#2563eb);border-radius:2px;width:0%;transition:width 0.1s;}
+.tts-stop-btn{
+  width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);
+  background:transparent;color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:0.65rem;
+  transition:all 0.15s;flex-shrink:0;
+}
+.tts-stop-btn:hover{background:var(--surface3);color:var(--text);}
+
+/* ── ENHANCED AI RESPONSE STYLES ── */
+.msg-tag{
+  font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  padding:3px 9px;border-radius:50px;width:fit-content;margin-bottom:2px;
+}
+.tag-edu{background:rgba(79,142,247,0.1);color:var(--accent);border:1px solid rgba(79,142,247,0.2);}
+.tag-code{background:rgba(52,211,153,0.1);color:var(--accent2);border:1px solid rgba(52,211,153,0.2);}
+.tag-design{background:rgba(192,132,252,0.1);color:var(--accent3);border:1px solid rgba(192,132,252,0.2);}
+.bubble h2,.bubble h3{color:var(--accent);-webkit-text-fill-color:var(--accent);}
+.bubble strong{color:var(--accent);font-weight:700;}
+.bubble pre{border-left:3px solid var(--accent);}
 </style>
 </head>
 <body>
@@ -532,7 +587,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     </div>
     <span class="set-label">About</span>
     <div class="set-group">
-      <div class="set-row"><div class="s-icon">ℹ️</div><div class="s-label">Version</div><div class="s-val">v1.0.1</div></div>
+      <div class="set-row"><div class="s-icon">ℹ️</div><div class="s-label">Version</div><div class="s-val" id="app-version">v1.0.1</div></div>
       <div class="set-row" onclick="openSubpage('page-help')"><div class="s-icon">❓</div><div class="s-label">Help & Feedback</div><div class="s-arr">›</div></div>
     </div>
     <div class="set-group set-danger" style="margin-top:8px;">
@@ -703,6 +758,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
         <textarea id="user-input" placeholder="Type a message…" rows="1"></textarea>
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Speak">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
         <button class="send-btn" id="send-btn" onclick="sendMessage()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -748,7 +806,154 @@ let sessions = JSON.parse(localStorage.getItem('feng_s') || '[]');
 let curSession = null;
 let attachOpen = false;
 
-// ── GREETING ──
+// ── VERSION SYSTEM ──
+const APP_VERSION_BASE = [1, 0, 1];
+function getVersion() {
+  const stored = localStorage.getItem('feng_version');
+  if (stored) return stored;
+  const v = APP_VERSION_BASE.join('.');
+  localStorage.setItem('feng_version', v);
+  return v;
+}
+function bumpVersion() {
+  const v = getVersion().split('.').map(Number);
+  v[2]++; // increment patch
+  if (v[2] > 9) { v[2] = 0; v[1]++; }
+  if (v[1] > 9) { v[1] = 0; v[0]++; }
+  const newV = v.join('.');
+  localStorage.setItem('feng_version', newV);
+  const el = document.getElementById('app-version');
+  if (el) el.textContent = 'v' + newV;
+  return newV;
+}
+function initVersion() {
+  const el = document.getElementById('app-version');
+  if (el) el.textContent = 'v' + getVersion();
+}
+
+// ── MIC / VOICE INPUT ──
+let recognition = null;
+let isListening = false;
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice input is not supported on this browser. Try Chrome.');
+    return;
+  }
+  if (isListening) {
+    stopMic();
+  } else {
+    startMic();
+  }
+}
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = localStorage.getItem('feng_lang') === 'English' || !localStorage.getItem('feng_lang') ? 'en-US' : 'en-US';
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('mic-btn').classList.add('listening');
+    document.getElementById('user-input').placeholder = '🎤 Listening…';
+  };
+  recognition.onresult = e => {
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    document.getElementById('user-input').value = transcript;
+  };
+  recognition.onend = () => {
+    stopMic();
+    // Auto-send if there's text
+    const val = document.getElementById('user-input').value.trim();
+    if (val) sendMessage();
+  };
+  recognition.onerror = () => { stopMic(); };
+  recognition.start();
+}
+function stopMic() {
+  isListening = false;
+  document.getElementById('mic-btn').classList.remove('listening');
+  document.getElementById('user-input').placeholder = 'Type a message…';
+  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+}
+
+// ── TEXT TO SPEECH PLAYER ──
+let ttsUtterance = null;
+let ttsActive = false;
+
+function addTTSPlayer(body, text) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').trim();
+  const pid = 'tts-' + Date.now();
+
+  const player = document.createElement('div');
+  player.className = 'tts-player';
+  player.id = pid;
+  player.innerHTML =
+    '<button class="tts-play-btn" id="tts-btn-'+pid+'" onclick="toggleTTS(\''+pid+'\','+JSON.stringify(clean)+')" title="Listen">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+    '</button>' +
+    '<div class="tts-info">' +
+      '<div class="tts-label">🔊 Listen to this answer</div>' +
+      '<div class="tts-bar"><div class="tts-progress" id="tts-prog-'+pid+'"></div></div>' +
+    '</div>' +
+    '<button class="tts-stop-btn" onclick="stopTTS(\''+pid+'\')" title="Stop">■</button>';
+  body.appendChild(player);
+}
+
+function toggleTTS(pid, text) {
+  if (ttsActive) { stopTTS(pid); return; }
+  playTTS(pid, text);
+}
+
+function playTTS(pid, text) {
+  if (!('speechSynthesis' in window)) { alert('Text-to-speech not supported on this browser.'); return; }
+  stopTTS(pid);
+  ttsUtterance = new SpeechSynthesisUtterance(text);
+  ttsUtterance.rate = 0.95;
+  ttsUtterance.pitch = 1.0;
+  ttsUtterance.lang = 'en-US';
+
+  const btn = document.getElementById('tts-btn-' + pid);
+  const prog = document.getElementById('tts-prog-' + pid);
+
+  // Swap to pause icon
+  if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  ttsActive = true;
+
+  // Animate progress bar
+  let progress = 0;
+  const words = text.split(' ').length;
+  const estMs = words * 350; // ~350ms per word
+  const startTime = Date.now();
+  const progIv = setInterval(() => {
+    const pct = Math.min(((Date.now() - startTime) / estMs) * 100, 98);
+    if (prog) prog.style.width = pct + '%';
+    if (!ttsActive) clearInterval(progIv);
+  }, 100);
+
+  ttsUtterance.onend = () => {
+    ttsActive = false;
+    clearInterval(progIv);
+    if (prog) prog.style.width = '100%';
+    if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+    setTimeout(() => { if (prog) prog.style.width = '0%'; }, 800);
+  };
+  ttsUtterance.onerror = () => { ttsActive = false; clearInterval(progIv); };
+
+  window.speechSynthesis.speak(ttsUtterance);
+}
+
+function stopTTS(pid) {
+  window.speechSynthesis?.cancel();
+  ttsActive = false;
+  ttsUtterance = null;
+  const btn = document.getElementById('tts-btn-' + pid);
+  if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+}
+
 function setGreeting() {
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Working late?';
@@ -1433,7 +1638,9 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // suggestions below
+      // Add TTS player + bump version once
+      addTTSPlayer(body, stripSugs(rawText));
+      bumpVersion();
 
       if (sugs.length) {
         const wrap = document.createElement('div');
@@ -1630,6 +1837,7 @@ ta.addEventListener('keydown', function(e){ if(e.key==='Enter'&&e.shiftKey){e.pr
 
 // ── INIT ──
 setGreeting();
+initVersion();
 applyAppearance(currentAppear);
 document.getElementById('ap-'+currentAppear).classList.add('selected');
 document.getElementById('cur-appear').textContent = currentAppear.charAt(0).toUpperCase()+currentAppear.slice(1);

@@ -245,12 +245,59 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .msg.user{flex-direction:row-reverse;}
 
 .msg-avatar{
-  width:30px;height:30px;border-radius:9px;
+  width:30px;height:30px;
+  flex-shrink:0;margin-top:4px;
   display:flex;align-items:center;justify-content:center;
-  font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:2px;
 }
-.msg.user .msg-avatar{background:var(--accent);color:#fff;font-family:'Syne',sans-serif;}
-.msg.ai .msg-avatar{background:var(--surface2);border:1px solid var(--border2);font-family:'Syne',sans-serif;font-size:0.78rem;}
+.msg.user .msg-avatar .cube-wrap,
+.msg.user .msg-avatar{
+  /* user keeps plain avatar */
+}
+
+/* ── USER AVATAR (plain) ── */
+.user-av{
+  width:30px;height:30px;border-radius:9px;
+  background:var(--accent);color:#fff;
+  font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── CUBOID AVATAR ── */
+.cube-wrap{
+  width:22px;height:22px;
+  perspective:60px;
+  flex-shrink:0;
+}
+.cube{
+  width:14px;height:14px;
+  position:relative;
+  transform-style:preserve-3d;
+  margin:4px auto;
+  transform:rotateX(20deg) rotateY(0deg);
+}
+.cube.spinning{
+  animation:cubeRotate 1.2s linear infinite;
+}
+@keyframes cubeRotate{
+  0%  {transform:rotateX(20deg) rotateY(0deg)   rotateZ(0deg);}
+  100%{transform:rotateX(200deg) rotateY(360deg) rotateZ(60deg);}
+}
+.cube-face{
+  position:absolute;
+  width:14px;height:14px;
+  border:1.5px solid rgba(79,142,247,0.7);
+  background:rgba(79,142,247,0.1);
+}
+.cube-face.front {transform:translateZ(7px);}
+.cube-face.back  {transform:rotateY(180deg) translateZ(7px);}
+.cube-face.left  {transform:rotateY(-90deg) translateZ(7px);}
+.cube-face.right {transform:rotateY(90deg)  translateZ(7px);}
+.cube-face.top   {transform:rotateX(90deg)  translateZ(7px);}
+.cube-face.bottom{transform:rotateX(-90deg) translateZ(7px);}
+.cube.mode-code .cube-face{border-color:rgba(52,211,153,0.7);background:rgba(52,211,153,0.08);}
+.cube.mode-design .cube-face{border-color:rgba(192,132,252,0.7);background:rgba(192,132,252,0.08);}
+.cube.mode-edu .cube-face,
+.cube.mode-general .cube-face{border-color:rgba(79,142,247,0.7);background:rgba(79,142,247,0.1);}
 
 .msg-body{max-width:86%;display:flex;flex-direction:column;gap:6px;}
 .msg.user .msg-body{align-items:flex-end;}
@@ -432,6 +479,52 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .think-content.open{display:block;}
 .think-content ul{padding-left:14px;}
 .think-content li{margin:3px 0;}
+
+/* ── IMAGE GENERATION ── */
+.img-generating{
+  font-size:0.82rem;color:var(--muted);
+  padding:10px 0;display:flex;align-items:center;gap:6px;
+}
+.img-dots{animation:dotPulse 1.2s infinite;}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.img-wrap{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.gen-img{
+  width:100%;max-width:320px;border-radius:10px;
+  border:1px solid var(--border2);
+  display:block;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+.img-caption{font-size:0.75rem;color:var(--muted);font-style:italic;}
+.img-download-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:8px;
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);font-size:0.78rem;text-decoration:none;
+  transition:all 0.15s;width:fit-content;
+}
+.img-download-btn:hover{background:var(--surface3);border-color:var(--border);}
+
+/* ── THINK CURSOR (while typing thoughts) ── */
+#live-think-content::after{
+  content:'▋';
+  display:inline-block;
+  animation:blink 0.7s step-end infinite;
+  font-size:0.75rem;
+  color:var(--accent);
+  margin-left:2px;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── STREAMING ANSWER CURSOR ── */
+.msg-bubble.streaming::after{
+  content:'▋';
+  display:inline-block;
+  animation:blink 0.7s step-end infinite;
+  font-size:0.85rem;
+  color:var(--accent);
+  margin-left:2px;
+  vertical-align:middle;
+}
 
 /* Ambient */
 .ambient{position:fixed;border-radius:50%;filter:blur(110px);opacity:0.05;pointer-events:none;z-index:0;transition:background 1s;}
@@ -823,12 +916,33 @@ const TAG_MAP = {
   general: { text: 'Feng AI',   cls: 'tag-edu' },
 };
 
+// ── CUBOID AVATAR HTML ──
+function cubeHTML(mode, spinning) {
+  const m = mode || 'general';
+  const spin = spinning ? ' spinning' : '';
+  return '<div class="cube-wrap"><div class="cube mode-' + m + spin + '" id="feng-cube">' +
+    '<div class="cube-face front"></div>' +
+    '<div class="cube-face back"></div>' +
+    '<div class="cube-face left"></div>' +
+    '<div class="cube-face right"></div>' +
+    '<div class="cube-face top"></div>' +
+    '<div class="cube-face bottom"></div>' +
+    '</div></div>';
+}
+
+function startCubeSpin() {
+  document.querySelectorAll('#feng-cube').forEach(c => c.classList.add('spinning'));
+}
+function stopCubeSpin() {
+  document.querySelectorAll('#feng-cube').forEach(c => c.classList.remove('spinning'));
+}
+
 function addUserMsg(text, scroll = true) {
   const list = document.getElementById('msg-list');
   const el = document.createElement('div');
   el.className = 'msg user';
   el.innerHTML =
-    '<div class="msg-avatar">You</div>' +
+    '<div class="msg-avatar"><div class="user-av">You</div></div>' +
     '<div class="msg-body"><div class="msg-bubble">' + escHtml(text) + '</div></div>';
   list.appendChild(el);
   if (scroll) scrollDown();
@@ -866,7 +980,7 @@ function addAIMsg(text, tag, scroll, thinkText, thinkSecs) {
   }
 
   el.innerHTML =
-    '<div class="msg-avatar">F</div>' +
+    '<div class="msg-avatar">' + cubeHTML(tag, false) + '</div>' +
     '<div class="msg-body">' +
       '<div class="msg-tag ' + t.cls + '">' + t.text + '</div>' +
       thinkHtml +
@@ -921,13 +1035,13 @@ function startLiveThinking(userText, tag) {
     'Okay, I have a clear plan. Generating the answer now…'
   ];
 
-  // Create the live thinking message block
+  // Create the live thinking message block with SPINNING cuboid
   const el = document.createElement('div');
   el.className = 'msg ai';
   el.id = 'live-think-msg';
   const TAG_M = TAG_MAP[tag] || TAG_MAP.general;
   el.innerHTML =
-    '<div class="msg-avatar">F</div>' +
+    '<div class="msg-avatar">' + cubeHTML(tag, true) + '</div>' +
     '<div class="msg-body">' +
       '<div class="msg-tag ' + TAG_M.cls + '">' + TAG_M.text + '</div>' +
       '<div class="think-block">' +
@@ -972,19 +1086,17 @@ function startLiveThinking(userText, tag) {
 }
 
 function finalizeLiveThinking(thinkHandle, thinkSecs) {
-  // Stop typewriter and timer
   if (thinkInterval) { clearInterval(thinkInterval); thinkInterval = null; }
   if (thinkHandle) clearInterval(thinkHandle.timerIv);
 
-  // Finish typing remaining text instantly
   const contentEl = document.getElementById('live-think-content');
   if (contentEl && thinkHandle) contentEl.textContent = thinkHandle.fullText;
 
-  // Update toggle label to final time
   const timerEl = document.getElementById('live-think-timer');
   if (timerEl) timerEl.textContent = 'Thought for ' + thinkSecs + ' second' + (thinkSecs !== 1 ? 's' : '');
 
-  // Make toggle clickable
+  // Cube keeps spinning — will stop only when answer finishes streaming
+
   const toggle = document.getElementById('live-think-toggle');
   if (toggle) {
     toggle.style.cursor = 'pointer';
@@ -1006,6 +1118,63 @@ function removeLiveThinking() {
   }
 }
 
+// ── IMAGE GENERATION ──
+function isImageRequest(text) {
+  const t = text.toLowerCase();
+  return /\b(generate|create|draw|make|show|paint|illustrate|design|render)\b.*\b(image|picture|photo|illustration|art|artwork|painting|drawing|portrait|wallpaper|logo|icon|poster|banner)\b/.test(t)
+    || /\b(image|picture|photo|illustration|art)\b.*\b(of|showing|with|featuring|depicting)\b/.test(t)
+    || /^(generate|draw|create|paint|illustrate|make me|show me)\s+.{5,}/i.test(t);
+}
+
+function generateImage(prompt) {
+  hideHero();
+  const list = document.getElementById('msg-list');
+
+  // Extract the image prompt — strip fluff words
+  const cleanPrompt = prompt
+    .replace(/^(generate|create|draw|make|show me|paint|illustrate|design|render|make me)\s+(a|an|me)?\s*/i, '')
+    .replace(/\b(image|picture|photo|illustration|artwork|painting|drawing)\s+(of|showing|with|featuring)?\s*/i, '')
+    .trim() || prompt;
+
+  const encodedPrompt = encodeURIComponent(cleanPrompt + ', high quality, detailed, professional');
+  const imageUrl = 'https://image.pollinations.ai/prompt/' + encodedPrompt + '?width=512&height=512&nologo=true&seed=' + Math.floor(Math.random() * 99999);
+
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  const TAG_M = TAG_MAP['design'];
+  el.innerHTML =
+    '<div class="msg-avatar">' + cubeHTML('design', false) + '</div>' +
+    '<div class="msg-body">' +
+      '<div class="msg-tag ' + TAG_M.cls + '">🎨 Image</div>' +
+      '<div class="img-generating" id="img-gen-status">Generating image<span class="img-dots">...</span></div>' +
+      '<div id="img-result"></div>' +
+    '</div>';
+  list.appendChild(el);
+  scrollDown();
+
+  const img = new Image();
+  img.onload = () => {
+    const status = document.getElementById('img-gen-status');
+    const result = document.getElementById('img-result');
+    if (status) status.remove();
+    if (result) {
+      result.innerHTML =
+        '<div class="img-wrap">' +
+          '<img src="' + imageUrl + '" alt="' + escHtml(cleanPrompt) + '" class="gen-img"/>' +
+          '<div class="img-caption">' + escHtml(cleanPrompt) + '</div>' +
+          '<a href="' + imageUrl + '" download="feng-image.jpg" class="img-download-btn">⬇ Download</a>' +
+        '</div>';
+    }
+    el.querySelectorAll('.img-gen-status').forEach(e => e.remove());
+    scrollDown();
+  };
+  img.onerror = () => {
+    const status = document.getElementById('img-gen-status');
+    if (status) status.textContent = '⚠️ Could not generate image. Try a different description.';
+  };
+  img.src = imageUrl;
+}
+
 // ── SEND ──
 async function sendMessage() {
   if (isLoading) return;
@@ -1019,6 +1188,19 @@ async function sendMessage() {
   inp.placeholder = 'Type a message…';
 
   const tag = detectTag(text);
+
+  // ── IMAGE GENERATION CHECK ──
+  if (isImageRequest(text)) {
+    addUserMsg(text);
+    conversationHistory.push({ role: 'user', content: text });
+    if (conversationHistory.length === 1) saveSession(text);
+    generateImage(text);
+    isLoading = false;
+    document.getElementById('send-btn').disabled = false;
+    inp.focus();
+    return;
+  }
+
   addUserMsg(text);
   conversationHistory.push({ role: 'user', content: text });
   if (conversationHistory.length === 1) saveSession(text);
@@ -1031,9 +1213,15 @@ async function sendMessage() {
   const thinkHandle = startLiveThinking(text, tag);
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Use CORS proxy so GitHub Pages can reach the Anthropic API
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const res = await fetch(proxyUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 'ea593c3fa4d4942ece315977cd7e32c9',
+        'anthropic-version': '2023-06-01',
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
@@ -1071,33 +1259,40 @@ function appendAnswerToThinkMsg(rawText, tag) {
   if (!body) { addAIMsg(rawText, tag); return; }
 
   const suggestions = parseSuggestions(rawText);
-  // Strip suggestions block from display text
   const displayText = rawText.replace(/<suggestions>[\s\S]*?<\/suggestions>/g, '').trim();
 
-  // Create the answer bubble (starts empty)
+  // Create empty bubble with streaming cursor
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble streaming';
   body.appendChild(bubble);
   scrollDown();
 
-  // Split into words — stream word by word
-  const words = displayText.split(/(\s+)/); // keep whitespace tokens
-  let wordIndex = 0;
+  // Split into small chunks: words + punctuation + newlines
+  const chunks = displayText.match(/\S+|\s+/g) || [];
+  let idx = 0;
   let accumulated = '';
 
   const streamIv = setInterval(() => {
-    if (wordIndex < words.length) {
-      accumulated += words[wordIndex];
-      wordIndex++;
-      // Render markdown on accumulated text so formatting appears as it types
-      bubble.innerHTML = formatMd(accumulated);
-      scrollDown();
-    } else {
-      // Done streaming
+    // Add 1-3 chunks per tick for natural variation
+    const batch = Math.floor(Math.random() * 2) + 1;
+    for (let b = 0; b < batch && idx < chunks.length; b++) {
+      accumulated += chunks[idx];
+      idx++;
+    }
+
+    // Render as plain text while streaming (avoids broken mid-markdown)
+    bubble.textContent = accumulated;
+    scrollDown();
+
+    if (idx >= chunks.length) {
       clearInterval(streamIv);
       bubble.classList.remove('streaming');
+      bubble.innerHTML = formatMd(displayText);
 
-      // Append suggestions
+      // ── STOP CUBE — answer fully done ──
+      const cube = el ? el.querySelector('.cube') : null;
+      if (cube) cube.classList.remove('spinning');
+
       if (suggestions.length) {
         const wrap = document.createElement('div');
         wrap.className = 'suggestions-wrap';
@@ -1114,7 +1309,7 @@ function appendAnswerToThinkMsg(rawText, tag) {
       el.removeAttribute('id');
       scrollDown();
     }
-  }, 28); // ~28ms per word chunk = natural reading pace
+  }, 22); // ~22ms = smooth natural typing pace
 }
 
 // ── INPUT AUTO-RESIZE ──

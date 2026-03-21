@@ -26,17 +26,83 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 ::-webkit-scrollbar{width:3px;height:3px;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
 
-/* NAV */
+/* ── LOGO COMPONENT ── */
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.logo-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#5eb8ff 0%,#2563eb 100%);
+  display:flex;flex-direction:column;justify-content:center;
+  padding:6px 6px 4px;gap:3px;flex-shrink:0;
+}
+.logo-bar{height:3.5px;border-radius:2px;background:rgba(255,255,255,0.95);}
+.logo-bar.long{width:100%;}
+.logo-bar.mid{width:72%;}
+.logo-dots{display:flex;gap:4px;margin-top:1px;}
+.logo-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.92);}
+.logo-dot.small{width:4px;height:4px;opacity:0.65;}
+.logo-text{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;
+  letter-spacing:0.2px;
+  background:linear-gradient(90deg,#7ec8f8 0%,#4f8ef7 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;white-space:nowrap;
+}
+.logo-ai{
+  background:linear-gradient(90deg,#4f8ef7 0%,#2563eb 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* Hero logo */
+.hero-logo-wrap{margin-bottom:22px;}
+.hero-icon-lg{width:68px;height:68px;border-radius:18px;padding:14px 14px 10px;gap:8px;}
+.hero-icon-lg .logo-bar{height:7px;border-radius:4px;}
+.hero-icon-lg .logo-dots{gap:7px;margin-top:2px;}
+.hero-icon-lg .logo-dot{width:9px;height:9px;}
+.hero-icon-lg .logo-dot.small{width:7px;height:7px;}
+
+.nav-logo span{color:var(--accent);}
+
+/* ── RESPONSIVE LAYOUT ── */
+html,body{
+  height:100%;
+  overflow:hidden;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+
+/* Prevent text stretching in landscape */
+@media screen and (orientation:landscape) and (max-height:500px){
+  #hero{min-height:calc(100vh - 160px);padding:20px 24px;}
+  .hero-icon-lg{width:50px;height:50px;border-radius:14px;padding:10px 10px 8px;gap:6px;}
+  .hero-icon-lg .logo-bar{height:5px;}
+  .hero-icon-lg .logo-dot{width:7px;height:7px;}
+  .hero-greeting{font-size:1.6rem;}
+  #chat-wrap{padding:0 0 130px;}
+}
+
+/* Tablet and larger */
+@media(min-width:768px){
+  #chat-wrap{max-width:720px;margin:0 auto;width:100%;}
+  .input-area{padding:10px calc(50% - 350px) 24px;}
+  .msg{padding:8px 0;}
+}
+
+/* Wide screens */
+@media(min-width:1024px){
+  #chat-wrap{max-width:800px;}
+  .input-area{padding:10px calc(50% - 390px) 24px;}
+}
+
+/* ── NAV ── */
 .nav{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 18px;height:56px;
+  padding:0 16px;height:56px;
   background:rgba(15,15,17,0.95);
   border-bottom:1px solid var(--border);
-  flex-shrink:0;
-  position:relative;z-index:10;
+  flex-shrink:0;position:relative;z-index:10;
 }
-.nav-logo{display:flex;align-items:center;}
-.nav-logo span{color:var(--accent);}
 .nav-btn{
   width:34px;height:34px;border-radius:10px;border:1px solid var(--border);
   background:transparent;color:var(--muted);cursor:pointer;
@@ -424,22 +490,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 <div id="sidebar">
   <div class="sb-head">
     <div class="sb-title">
-      <svg width="110" height="32" viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="sbIconG" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#5eb8ff"/><stop offset="100%" stop-color="#2563eb"/>
-          </linearGradient>
-          <linearGradient id="sbTextG" x1="0" y1="0" x2="80" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#94c8f5"/><stop offset="100%" stop-color="#4f8ef7"/>
-          </linearGradient>
-        </defs>
-        <rect width="32" height="32" rx="9" fill="url(#sbIconG)"/>
-        <rect x="7" y="8" width="17" height="3.8" rx="1.9" fill="white" opacity="0.95"/>
-        <rect x="7" y="15" width="12" height="3.8" rx="1.9" fill="white" opacity="0.95"/>
-        <circle cx="10" cy="24.5" r="2.3" fill="white" opacity="0.9"/>
-        <circle cx="21" cy="24.5" r="1.8" fill="white" opacity="0.7"/>
-        <text x="40" y="22" font-family="Syne,sans-serif" font-weight="800" font-size="15" fill="url(#sbTextG)" letter-spacing="0.2">Feng AI</text>
-      </svg>
+      <div class="nav-logo">
+        <div class="logo-icon">
+          <div class="logo-bar long"></div>
+          <div class="logo-bar mid"></div>
+          <div class="logo-dots"><div class="logo-dot"></div><div class="logo-dot small"></div></div>
+        </div>
+        <span class="logo-text">Feng <span class="logo-ai">AI</span></span>
+      </div>
     </div>
     <button class="sb-new" onclick="newChat();closeSB();" title="New chat">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -596,31 +654,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div class="nav-logo">
-        <svg width="110" height="34" viewBox="0 0 110 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="iconGrad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#5eb8ff"/>
-              <stop offset="100%" stop-color="#2563eb"/>
-            </linearGradient>
-            <linearGradient id="textGrad" x1="0" y1="0" x2="80" y2="0" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#94c8f5"/>
-              <stop offset="60%" stop-color="#6aabee"/>
-              <stop offset="100%" stop-color="#4f8ef7"/>
-            </linearGradient>
-          </defs>
-          <!-- Icon box -->
-          <rect width="34" height="34" rx="9" fill="url(#iconGrad)"/>
-          <!-- Top long bar -->
-          <rect x="8" y="9" width="18" height="4" rx="2" fill="white" opacity="0.95"/>
-          <!-- Middle bar -->
-          <rect x="8" y="16" width="13" height="4" rx="2" fill="white" opacity="0.95"/>
-          <!-- Bottom dot (small) -->
-          <circle cx="11" cy="26" r="2.5" fill="white" opacity="0.9"/>
-          <!-- Chat bubble dot -->
-          <circle cx="23" cy="26" r="2" fill="white" opacity="0.7"/>
-          <!-- Wordmark -->
-          <text x="42" y="23" font-family="Syne,sans-serif" font-weight="800" font-size="16" fill="url(#textGrad)" letter-spacing="0.2">Feng AI</text>
-        </svg>
+        <div class="logo-icon">
+          <div class="logo-bar long"></div>
+          <div class="logo-bar mid"></div>
+          <div class="logo-dots"><div class="logo-dot"></div><div class="logo-dot small"></div></div>
+        </div>
+        <span class="logo-text">Feng <span class="logo-ai">AI</span></span>
       </div>
     </div>
     <button class="nav-btn" onclick="newChat()" title="New chat">
@@ -630,20 +669,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
   <div id="chat-wrap">
     <div id="hero">
-      <div style="margin-bottom:22px;">
-        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="heroIconG" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#5eb8ff"/>
-              <stop offset="100%" stop-color="#2563eb"/>
-            </linearGradient>
-          </defs>
-          <rect width="72" height="72" rx="20" fill="url(#heroIconG)"/>
-          <rect x="15" y="18" width="38" height="8" rx="4" fill="white" opacity="0.95"/>
-          <rect x="15" y="32" width="27" height="8" rx="4" fill="white" opacity="0.95"/>
-          <circle cx="21" cy="54" r="5" fill="white" opacity="0.9"/>
-          <circle cx="37" cy="54" r="4" fill="white" opacity="0.65"/>
-        </svg>
+      <div class="hero-logo-wrap">
+        <div class="logo-icon hero-icon-lg">
+          <div class="logo-bar long"></div>
+          <div class="logo-bar mid"></div>
+          <div class="logo-dots"><div class="logo-dot"></div><div class="logo-dot small"></div></div>
+        </div>
       </div>
       <div class="hero-greeting" id="hero-greeting">Good afternoon</div>
       <div class="hero-sub" id="hero-sub">Ask me anything — I'm here to help</div>
@@ -805,19 +836,15 @@ function renderLoginPage() {
     return;
   }
   body.innerHTML =
-    '<div style="text-align:center;margin-bottom:6px;">' +
-      '<svg width="130" height="42" viewBox="0 0 130 42" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-        '<defs>' +
-          '<linearGradient id="lgIG" x1="0" y1="0" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5eb8ff"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>' +
-          '<linearGradient id="lgTG" x1="0" y1="0" x2="90" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#94c8f5"/><stop offset="100%" stop-color="#4f8ef7"/></linearGradient>' +
-        '</defs>' +
-        '<rect width="42" height="42" rx="12" fill="url(#lgIG)"/>' +
-        '<rect x="9" y="10" width="22" height="5" rx="2.5" fill="white" opacity="0.95"/>' +
-        '<rect x="9" y="19" width="16" height="5" rx="2.5" fill="white" opacity="0.95"/>' +
-        '<circle cx="13" cy="32" r="3" fill="white" opacity="0.9"/>' +
-        '<circle cx="24" cy="32" r="2.5" fill="white" opacity="0.65"/>' +
-        '<text x="51" y="28" font-family="Syne,sans-serif" font-weight="800" font-size="20" fill="url(#lgTG)" letter-spacing="0.3">Feng AI</text>' +
-      '</svg>' +
+    '<div style="display:flex;justify-content:center;margin-bottom:8px;">' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#5eb8ff,#2563eb);display:flex;flex-direction:column;justify-content:center;padding:9px 9px 7px;gap:5px;flex-shrink:0;">' +
+          '<div style="height:4.5px;border-radius:2px;background:rgba(255,255,255,0.95);width:100%;"></div>' +
+          '<div style="height:4.5px;border-radius:2px;background:rgba(255,255,255,0.95);width:72%;"></div>' +
+          '<div style="display:flex;gap:5px;margin-top:1px;"><div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.92);"></div><div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.6);"></div></div>' +
+        '</div>' +
+        '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:1.5rem;background:linear-gradient(90deg,#7ec8f8,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Feng AI</span>' +
+      '</div>' +
     '</div>' +
     '<div class="login-sub">' + (loginMode==='login'?'Welcome back! Sign in to continue.':'Create your Feng AI account.') + '</div>' +
     '<div class="login-form">' +

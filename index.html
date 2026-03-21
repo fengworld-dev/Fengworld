@@ -1432,7 +1432,7 @@ async function sendMessage() {
 
     if (isImageAttach) {
       // Vision model — send image + question as ONE fresh message, not full history
-      model = 'llama-3.2-11b-vision-preview';
+      model = 'meta-llama/llama-4-scout-17b-16e-instruct';
       apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
         {
@@ -1492,7 +1492,7 @@ async function sendMessage() {
 // ── INPUT RESIZE ──
 const ta = document.getElementById('user-input');
 ta.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,180)+'px'; });
-ta.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} });
+ta.addEventListener('keydown', function(e){ if(e.key==='Enter'&&e.shiftKey){e.preventDefault();sendMessage();} });
 
 // ── INIT ──
 setGreeting();

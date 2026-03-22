@@ -2378,7 +2378,12 @@ function md(text) {
   text = text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
   text = text.replace(/\*(.+?)\*/g,'<em>$1</em>');
 
-  // 4. Split into blocks by double newline
+  // 4. Normalize: ensure headings, lists, tables each start a new block
+  text = text.replace(/\n(#{1,3} )/g, '\n\n$1');
+  text = text.replace(/\n([-*] |\d+\. )/g, '\n\n$1');
+  text = text.replace(/\n(\|)/g, '\n\n$1');
+
+  // 5. Split into blocks by double newline
   const blocks = text.split(/\n{2,}/);
   const html = blocks.map(block => {
     block = block.trim();
@@ -2680,7 +2685,8 @@ function streamAnswer(rawText, tag) {
   const iv = setInterval(() => {
     const batch = Math.floor(Math.random()*2)+1;
     for (let b=0; b<batch && idx<chunks.length; b++) { acc+=chunks[idx]; idx++; }
-    bubble.textContent = acc;
+    // Show clean text during streaming — strip markdown symbols
+    bubble.textContent = acc.replace(/#{1,3} /g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[-*] /gm,'').replace(/^\d+\. /gm,'');
     scrollDown();
 
     if (idx >= chunks.length) {

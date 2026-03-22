@@ -774,28 +774,28 @@ const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a brilliant, knowledgeable assistant that helps with virtually anything.\n\n" +
-  "YOU CAN HELP WITH:\n" +
-  "- Education & learning: any subject, any level — science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, languages, law, medicine and more\n" +
-  "- Homework, assignments, essays, reports, study guides, exam preparation\n" +
-  "- General knowledge: answer any question on any topic\n" +
-  "- Research and explanations: break down complex topics clearly\n" +
-  "- Writing: essays, letters, emails, summaries, creative writing, proofreading\n" +
-  "- Advice: career, life, health awareness, relationships, personal development\n" +
-  "- Analysis: reading and analyzing documents, files, or images the user attaches\n" +
-  "- Technology explanations: explaining how things work, what programming concepts mean, how the internet works etc.\n" +
-  "- Business & finance: concepts, plans, strategies, explanations\n" +
-  "- Any other topic a curious, intelligent person might ask about\n\n" +
-  "YOU CANNOT DO:\n" +
-  "- Build websites, web apps, or mobile apps for someone\n" +
-  "- Write full project source code (e.g. 'build me a todo app', 'create a login system')\n" +
-  "- If asked for these, respond professionally: 'I appreciate your request. Unfortunately, building websites, applications, or writing full project code falls outside what I am able to assist with. However, I am happy to explain how things work, help you understand programming concepts, or assist with any other topic.'\n\n" +
-  "RESPONSE RULES:\n" +
+  "You are Feng AI — a brilliant, friendly assistant who can help with absolutely anything. You never refuse a question or say you cannot help.\n\n" +
+  "YOU HELP WITH EVERYTHING INCLUDING:\n" +
+  "- Education: science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, languages, law, medicine\n" +
+  "- Homework, assignments, essays, reports, study guides, exam prep\n" +
+  "- General knowledge: any question on any topic\n" +
+  "- Writing: essays, letters, emails, stories, creative writing, proofreading\n" +
+  "- Advice: career, life, health, relationships, personal development\n" +
+  "- Technology: explaining code, how things work, programming concepts\n" +
+  "- Business & finance: plans, strategies, explanations\n" +
+  "- Location, weather, time questions: if the user's location/weather/time is provided in the message, use it to give a real answer\n" +
+  "- Coding help, explaining code, debugging concepts\n" +
+  "- ANY other topic — always try your best to help\n\n" +
+  "STRICT RULES:\n" +
+  "- NEVER say 'I am unable to', 'I cannot', 'I am not able to', 'that is outside my capabilities' or any refusal\n" +
+  "- If asked about current time: use the time provided in the context\n" +
+  "- If asked about weather: use the weather data provided in the context\n" +
+  "- If asked about location: use the location provided in the context\n" +
   "- Always give thorough, well-structured, detailed answers\n" +
-  "- Use clear headings (##), bullet points (-), bold (**text**) where helpful\n" +
-  "- For essays/reports/assignments: write complete, professionally structured content\n" +
-  "- If a file or image is attached: read and analyze it fully, then answer the question about it\n" +
-  "- Be warm, encouraging, and professional at all times\n\n" +
+  "- Use headings (##), bullet points (-), bold (**text**) where helpful\n" +
+  "- For essays/reports: write complete, professionally structured content\n" +
+  "- If a file or image is attached: read and analyze it fully\n" +
+  "- Be warm, encouraging and professional at all times\n\n" +
   "End every response with:\n" +
   "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
 
@@ -806,12 +806,64 @@ let sessions = JSON.parse(localStorage.getItem('feng_s') || '[]');
 let curSession = null;
 let attachOpen = false;
 
-// ── VERSION SYSTEM ──
-// ── VERSION — change this number whenever you push a new update ──
-const APP_VERSION = '1.0.1';
+// ── VERSION ──
+const APP_VERSION = '1.0.2';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
+}
+
+// ── LOCATION / WEATHER / TIME CONTEXT ──
+let userContext = { time: '', location: '', weather: '' };
+
+function getTimeContext() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() +
+    ' at ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+async function fetchWeather(lat, lon) {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current_weather=true&hourly=relativehumidity_2m&timezone=auto');
+    const data = await res.json();
+    const w = data.current_weather;
+    const codes = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Foggy',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Rain showers',82:'Heavy rain showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Thunderstorm with hail'};
+    const desc = codes[w.weathercode] || 'Unknown';
+    return desc + ', ' + w.temperature + '°C, wind ' + w.windspeed + ' km/h';
+  } catch { return ''; }
+}
+
+async function fetchLocation(lat, lon) {
+  try {
+    const res = await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json');
+    const data = await res.json();
+    const city = data.address.city || data.address.town || data.address.village || data.address.county || '';
+    const country = data.address.country || '';
+    return city + (city && country ? ', ' : '') + country;
+  } catch { return ''; }
+}
+
+async function initContext() {
+  userContext.time = getTimeContext();
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      const [loc, weather] = await Promise.all([fetchLocation(lat, lon), fetchWeather(lat, lon)]);
+      userContext.location = loc;
+      userContext.weather = weather;
+    }, () => {});
+  }
+}
+
+function buildContextString() {
+  const parts = [];
+  if (userContext.time) parts.push('Current time: ' + userContext.time);
+  if (userContext.location) parts.push('User location: ' + userContext.location);
+  if (userContext.weather) parts.push('Current weather: ' + userContext.weather);
+  if (!parts.length) return '';
+  return '\n\n[CONTEXT: ' + parts.join(' | ') + ']';
 }
 
 // ── MIC / VOICE INPUT ──
@@ -1768,10 +1820,17 @@ async function sendMessage() {
       // Replace the base64 in history with a readable summary
       history[history.length - 1].content = '[Image attached] ' + (text || 'Extract text from image');
     } else {
-      // Normal text — send full history
+      // Normal text — send full history with context injected into last message
+      const ctx = buildContextString();
+      const messagesWithCtx = history.map((m, i) => {
+        if (i === history.length - 1 && m.role === 'user' && ctx) {
+          return { role: 'user', content: m.content + ctx };
+        }
+        return m;
+      });
       apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...history
+        ...messagesWithCtx
       ];
     }
 
@@ -1824,6 +1883,7 @@ ta.addEventListener('keydown', function(e){ if(e.key==='Enter'&&e.shiftKey){e.pr
 // ── INIT ──
 setGreeting();
 initVersion();
+initContext();
 applyAppearance(currentAppear);
 document.getElementById('ap-'+currentAppear).classList.add('selected');
 document.getElementById('cur-appear').textContent = currentAppear.charAt(0).toUpperCase()+currentAppear.slice(1);

@@ -213,6 +213,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .tag-edu{background:rgba(79,142,247,0.12);color:var(--accent);}
 .tag-code{background:rgba(52,211,153,0.12);color:var(--accent2);}
 .tag-design{background:rgba(192,132,252,0.12);color:var(--accent3);}
+/* TIMESTAMPS */
+.msg-time{font-size:0.68rem;color:var(--muted);margin-top:5px;padding:0 2px;}
+.msg.user .msg-time{text-align:right;}
+.msg.ai .msg-time{text-align:left;}
+
+/* LIGHT MODE FIXES */
+body.light .bubble strong{color:#1d4ed8;}
+body.light .bubble h2,body.light .bubble h3{color:#1d4ed8;}
+body.light .tbl-wrap th{background:#f1f5f9;color:#0f172a;}
+body.light .tbl-wrap td{color:#0f172a;}
+body.light .bubble code{background:rgba(0,0,0,0.06);border-color:#e2e8f0;color:#1e293b;}
+body.light .bubble pre{background:#f8fafc;border-color:#e2e8f0;}
+body.light .bubble pre code{color:#1e293b;}
+body.light .sug{background:#f1f5f9;border-color:#cbd5e1;color:#475569;}
+body.light .sug:hover{border-color:#3b82f6;color:#1d4ed8;background:#eff6ff;}
+body.light .sources-panel{background:#fff;border-color:#e2e8f0;}
+body.light .source-item{color:#0f172a;}
+body.light .source-item:hover{background:#f8fafc;}
+
+/* CODE BLOCK HEADER */
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);border-radius:9px 9px 0 0;margin:-14px -16px 10px;}
+.code-lang-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.copy-code-btn{font-size:0.72rem;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.copy-code-btn:hover{color:var(--accent);border-color:var(--accent);}
+
+/* SCROLL BTN */
+#scroll-btn{transition:opacity 0.2s;display:none;}
+
 .think-dots{display:flex;gap:5px;padding:6px 0;align-items:center;}
 .think-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0.4;animation:thinkPulse 1.4s ease-in-out infinite;}
 .think-dots span:nth-child(2){animation-delay:0.2s;}
@@ -1539,6 +1567,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     <div class="msg-list" id="msg-list"></div>
   </div>
 
+  <!-- SCROLL TO BOTTOM BUTTON -->
+  <button id="scroll-btn" onclick="scrollDown(true)" style="display:none;position:fixed;bottom:100px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,0.3);cursor:pointer;z-index:100;display:none;align-items:center;justify-content:center;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
+
   <div class="input-area">
     <div class="input-box">
       <!-- FILE PREVIEW STRIP — shows thumbnail/icon before sending -->
@@ -1587,6 +1620,8 @@ const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 async function callAI(messages, model) {
   const useReasoner = deepThinkMode;
   const dsModel = useReasoner ? DEEPSEEK_REASONER_MODEL : DEEPSEEK_CHAT_MODEL;
+  currentAbortController = new AbortController();
+  const signal = currentAbortController.signal;
 
   try {
     const body = {
@@ -1597,7 +1632,8 @@ async function callAI(messages, model) {
     const res = await fetch(DEEPSEEK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_KEY },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal
     });
     if (res.ok) {
       const data = await res.json();
@@ -1681,7 +1717,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.1.4';
+const APP_VERSION = '1.1.5';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1871,7 +1907,9 @@ function stopTTS(pid) {
 function setGreeting() {
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Working late?';
-  document.getElementById('hero-greeting').textContent = g;
+  const mem = getMemory();
+  const name = mem.name ? ', ' + mem.name : '';
+  document.getElementById('hero-greeting').textContent = g + name;
 }
 
 // ── SIDEBAR ──
@@ -2349,14 +2387,28 @@ function parseSugs(text) {
   try { return JSON.parse(m[1].trim()); } catch { return []; }
 }
 function stripSugs(text) { return text.replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim(); }
-function scrollDown() {
+function scrollDown(force=false) {
   const w = document.getElementById('chat-wrap');
-  const threshold = 120; // px from bottom
-  const isNearBottom = w.scrollHeight - w.scrollTop - w.clientHeight < threshold;
-  if (isNearBottom) {
+  const btn = document.getElementById('scroll-btn');
+  const distFromBottom = w.scrollHeight - w.scrollTop - w.clientHeight;
+  const isNearBottom = distFromBottom < 120;
+  if (btn) btn.style.display = isNearBottom ? 'none' : 'flex';
+  if (force) {
+    w.scrollTo({ top: w.scrollHeight, behavior: 'smooth' });
+    if (btn) btn.style.display = 'none';
+  } else if (isNearBottom) {
     w.scrollTo({ top: w.scrollHeight, behavior: 'smooth' });
   }
 }
+
+// Show/hide scroll button on manual scroll
+document.getElementById('chat-wrap')?.addEventListener('scroll', () => {
+  const w = document.getElementById('chat-wrap');
+  const btn = document.getElementById('scroll-btn');
+  if (!w || !btn) return;
+  const distFromBottom = w.scrollHeight - w.scrollTop - w.clientHeight;
+  btn.style.display = distFromBottom > 200 ? 'flex' : 'none';
+});
 
 function md(text) {
   text = stripSugs(text);
@@ -2490,16 +2542,22 @@ function addUserBubble(text, scroll=true, imgPreview=null, fname='') {
   const list = document.getElementById('msg-list');
   const el = document.createElement('div');
   el.className = 'msg user';
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   let inner = '';
   if (imgPreview) {
-    inner += '<div style="margin-bottom:6px;border-radius:10px;overflow:hidden;max-width:200px;">' +
-      '<img src="' + imgPreview + '" style="width:100%;display:block;border-radius:10px;" alt="' + esc(fname) + '"/>' +
-      '</div>';
+    inner += '<div style="margin-bottom:6px;border-radius:10px;overflow:hidden;max-width:200px;"><img src="'+imgPreview+'" style="width:100%;display:block;border-radius:10px;" alt="'+esc(fname)+'"/></div>';
   } else if (fname) {
-    inner += '<div style="font-size:0.75rem;opacity:0.8;margin-bottom:4px;">📎 ' + esc(fname) + '</div>';
+    inner += '<div style="font-size:0.75rem;opacity:0.8;margin-bottom:4px;">📎 '+esc(fname)+'</div>';
   }
   if (text) inner += esc(text);
-  el.innerHTML = '<div class="user-av">You</div><div class="msg-body"><div class="bubble">' + inner + '</div></div>';
+  el.innerHTML =
+    '<div class="user-av">You</div>' +
+    '<div class="msg-body">' +
+      '<div class="bubble" style="position:relative;">'+inner+
+        '<button class="edit-msg-btn" onclick="editMessage(this)" title="Edit">✏️</button>' +
+      '</div>' +
+      '<div class="msg-time">'+time+'</div>' +
+    '</div>';
   list.appendChild(el);
   if (scroll) scrollDown();
 }
@@ -2716,11 +2774,17 @@ function streamAnswer(rawText, tag) {
       // Add action bar — copy, share, bookmark, regenerate
       addActionBar(body, stripSugs(rawText), tag);
 
-      // Show live sources if available
+      // Show live sources if available — always show if any exist
       if (window._pendingSources && window._pendingSources.length) {
         addSourcesPanel(body, window._pendingSources);
         window._pendingSources = null;
       }
+
+      // Add timestamp
+      const timeEl = document.createElement('div');
+      timeEl.className = 'msg-time';
+      timeEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      body.appendChild(timeEl);
 
       if (sugs.length) {
         const wrap = document.createElement('div');
@@ -3056,23 +3120,47 @@ function saveMemory(key, value) {
 }
 function learnFromConversation(userText, aiText) {
   const mem = getMemory();
-  // Learn user name
-  const nameMatch = userText.match(/(?:my name is|i am|i'm|call me)\s+([A-Z][a-z]+)/i);
+  const u = userText.toLowerCase();
+
+  // Learn name
+  const nameMatch = userText.match(/(?:my name is|i am|i'm|call me)\s+([A-Z][a-z]{1,20})/i);
   if (nameMatch) saveMemory('name', nameMatch[1]);
+
   // Learn preferences
-  if (/i (?:love|like|enjoy|prefer)\s+(.+?)(?:\.|$)/i.test(userText)) {
-    const m = userText.match(/i (?:love|like|enjoy|prefer)\s+(.+?)(?:\.|,|$)/i);
-    if (m) { const prefs = mem.prefs || []; prefs.push(m[1].trim().slice(0,40)); saveMemory('prefs', [...new Set(prefs)].slice(-5)); }
+  const prefMatch = userText.match(/i (?:love|like|enjoy|prefer|hate|dislike)\s+(.+?)(?:\.|,|$)/i);
+  if (prefMatch) {
+    const prefs = mem.prefs || [];
+    prefs.push(prefMatch[1].trim().slice(0,40));
+    saveMemory('prefs', [...new Set(prefs)].slice(-8));
   }
-  // Learn subject interests
-  const subjects = ['math','science','history','biology','chemistry','physics','english','programming','economics'];
-  subjects.forEach(s => { if (userText.toLowerCase().includes(s)) saveMemory('lastSubject', s); });
+
+  // Learn grade/level
+  const gradeMatch = userText.match(/(?:grade|year|form|class)\s*(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)/i);
+  if (gradeMatch) saveMemory('grade', gradeMatch[0]);
+
+  // Learn location
+  const cityMatch = userText.match(/(?:i(?:'m| am) (?:in|from|at)|i live in)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/i);
+  if (cityMatch) saveMemory('city', cityMatch[1]);
+
+  // Learn subjects — expanded list
+  const subjects = ['mathematics','math','science','history','biology','chemistry','physics','english','literature',
+    'programming','coding','computer science','economics','geography','psychology','sociology','law','medicine',
+    'accounting','business','art','music','french','spanish','portuguese','swahili'];
+  subjects.forEach(s => { if (u.includes(s)) saveMemory('lastSubject', s.charAt(0).toUpperCase()+s.slice(1)); });
+
+  // Track conversation count
+  const count = (mem.msgCount || 0) + 1;
+  saveMemory('msgCount', count);
+  saveMemory('lastSeen', new Date().toLocaleDateString());
 }
+
 function buildMemoryContext() {
   const mem = getMemory();
   const parts = [];
   if (mem.name) parts.push('User name: ' + mem.name);
-  if (mem.prefs?.length) parts.push('User likes: ' + mem.prefs.join(', '));
+  if (mem.grade) parts.push('Grade/level: ' + mem.grade);
+  if (mem.city) parts.push('From: ' + mem.city);
+  if (mem.prefs?.length) parts.push('Interests: ' + mem.prefs.slice(-3).join(', '));
   if (mem.lastSubject) parts.push('Recently studying: ' + mem.lastSubject);
   return parts.length ? '\n[MEMORY: ' + parts.join(' | ') + ']' : '';
 }
@@ -3183,11 +3271,16 @@ function hideSplash() {
 
 // ── STOP GENERATING ──
 let stopRequested = false;
+let currentAbortController = null;
+
 function stopGenerating() {
   stopRequested = true;
-  document.getElementById('stop-btn').style.display = 'none';
-  document.getElementById('send-btn').style.display = 'flex';
+  if (currentAbortController) { currentAbortController.abort(); currentAbortController = null; }
+  hideStopBtn();
   busy = false;
+  const el = document.getElementById('live-msg');
+  if (el) { const c = el.querySelector('.cube'); if (c) c.classList.remove('spin'); }
+  showToast('⏹ Stopped');
 }
 function showStopBtn() {
   document.getElementById('stop-btn').style.display = 'flex';
@@ -3199,23 +3292,6 @@ function hideStopBtn() {
 }
 
 // ── MESSAGE EDITING ──
-function addUserBubble(text, scroll=true, imgPreview=null, fname='') {
-  const list = document.getElementById('msg-list');
-  const el = document.createElement('div');
-  el.className = 'msg user';
-  const msgIdx = history.filter(m=>m.role==='user').length;
-  let inner = '';
-  if (imgPreview) {
-    inner += '<div style="margin-bottom:6px;border-radius:10px;overflow:hidden;max-width:200px;"><img src="'+imgPreview+'" style="width:100%;display:block;border-radius:10px;" alt="'+esc(fname)+'"/></div>';
-  } else if (fname && !imgPreview) {
-    inner += '<div style="font-size:0.75rem;opacity:0.8;margin-bottom:4px;">📎 '+esc(fname)+'</div>';
-  }
-  if (text) inner += esc(text);
-  el.innerHTML = '<div class="user-av">You</div><div class="msg-body"><div class="bubble" style="position:relative;">'+inner+'<button class="edit-msg-btn" onclick="editMessage(this)" title="Edit">✏️</button></div></div>';
-  list.appendChild(el);
-  if (scroll) scrollDown();
-}
-
 function editMessage(btn) {
   const bubble = btn.closest('.bubble');
   const msgDiv = btn.closest('.msg');

@@ -1554,47 +1554,82 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const DEEPSEEK_KEY = 'sk-8fb1965c422e424dbccb3204b6d8470f';
-const DEEPSEEK_MODEL = 'deepseek-chat';
+const DEEPSEEK_CHAT_MODEL = 'deepseek-chat';
+const DEEPSEEK_REASONER_MODEL = 'deepseek-reasoner';
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
-// Use DeepSeek as primary, Groq as fallback
+// Primary AI call — uses reasoner when deep think is on, chat otherwise
+// Returns { content, reasoning, source, webPages }
 async function callAI(messages, model) {
-  // Try DeepSeek first
+  const useReasoner = deepThinkMode;
+  const dsModel = useReasoner ? DEEPSEEK_REASONER_MODEL : DEEPSEEK_CHAT_MODEL;
+
   try {
+    const body = {
+      model: dsModel,
+      max_tokens: useReasoner ? 16000 : 8000,
+      messages
+    };
     const res = await fetch(DEEPSEEK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_KEY },
-      body: JSON.stringify({ model: DEEPSEEK_MODEL, max_tokens: 8000, messages })
+      body: JSON.stringify(body)
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.choices?.[0]?.message?.content) return { data, source: 'deepseek' };
+      const msg = data.choices?.[0]?.message;
+      if (msg?.content) {
+        return {
+          data,
+          content: msg.content,
+          reasoning: msg.reasoning_content || null,
+          source: 'deepseek',
+          model: dsModel
+        };
+      }
     }
   } catch(e) {}
+
   // Fallback to Groq
-  const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-    body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 8000, messages })
-  });
-  const data = await res.json();
-  return { data, source: 'groq' };
+  try {
+    const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 8000, messages })
+    });
+    const data = await res.json();
+    return {
+      data,
+      content: data.choices?.[0]?.message?.content || '',
+      reasoning: null,
+      source: 'groq',
+      model: model || GROQ_MODEL
+    };
+  } catch(e) {
+    throw new Error('All AI services unavailable. Please check your connection.');
+  }
 }
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a brilliant, friendly assistant who helps with absolutely anything. You never refuse.\n\n" +
-  "LANGUAGE: Always reply in the same language the user writes in. Match their language exactly.\n\n" +
-  "MEMORY: If [MEMORY: ...] is provided, use it naturally. Address user by name occasionally.\n\n" +
+  "You are Feng AI — a brilliant, accurate assistant. You never refuse any question.\n\n" +
+  "LANGUAGE: Always reply in the same language the user writes in.\n\n" +
+  "MEMORY: If [MEMORY: ...] is provided, use it naturally.\n\n" +
   "CONTEXT: If [CONTEXT: ...] is provided with time/location/weather, use it to answer accurately.\n\n" +
+  "LIVE DATA: If [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, use it as your primary source of truth. Reference specific data from it in your answer.\n\n" +
+  "SOURCES & ACCURACY:\n" +
+  "- When answering factual questions, always mention where the information comes from\n" +
+  "- If live data is provided, cite it: 'According to Wikipedia...', 'Based on live data...'\n" +
+  "- For current events, news, or time-sensitive info, note if information may change\n" +
+  "- Be honest when you're not 100% certain — say 'Based on available information...'\n\n" +
   "HELP WITH EVERYTHING:\n" +
   "- Education, homework, assignments, essays, reports, study guides, exam prep\n" +
-  "- Science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, languages, law, medicine\n" +
+  "- Science, math, history, geography, biology, chemistry, physics, literature, economics, law, medicine\n" +
   "- Writing, creative writing, proofreading, emails, letters, stories\n" +
-  "- Career, life, health, relationships, personal development advice\n" +
-  "- Technology, coding concepts, how things work, debugging help\n" +
-  "- Business, finance, legal and medical concepts\n" +
+  "- Career, life, health, relationships, personal development\n" +
+  "- Technology, coding concepts, debugging help\n" +
+  "- Business, finance, legal concepts\n" +
   "- Time, weather, location — use provided context\n" +
-  "- Math: use $formula$ for inline and $$formula$$ for block equations\n" +
+  "- Math: use $formula$ for inline, $$formula$$ for block equations\n" +
   "- Any other topic — always try your absolute best\n\n" +
   "RULES: Never refuse. Give thorough detailed answers. Use ## headings, - bullets, **bold**. Be warm and professional.\n\n" +
   "End every response with:\n" +
@@ -1608,7 +1643,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.8';
+const APP_VERSION = '1.0.9';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -2465,9 +2500,20 @@ function finalizeThinking(handle, secs) {
   if (thinkIv) { clearInterval(thinkIv); thinkIv=null; }
   if (handle) clearInterval(handle.timerIv);
   const body = document.getElementById('live-th-body');
-  if (body && handle) { body.textContent = handle.fullText; body.classList.remove('streaming'); }
   const timer = document.getElementById('live-timer');
-  if (timer) timer.textContent = 'Thought for '+secs+' second'+(secs!==1?'s':'');
+
+  // Show DeepSeek's actual reasoning if available, otherwise show fake thinking
+  const reasoningText = window._pendingReasoning;
+  if (reasoningText && body) {
+    body.textContent = reasoningText.slice(0, 2000) + (reasoningText.length > 2000 ? '…' : '');
+    body.classList.remove('streaming');
+    window._pendingReasoning = null;
+    if (timer) timer.textContent = 'Thought for ' + secs + ' second' + (secs!==1?'s':'');
+  } else {
+    if (body && handle) { body.textContent = handle.fullText; body.classList.remove('streaming'); }
+    if (timer) timer.textContent = 'Thought for ' + secs + ' second' + (secs!==1?'s':'');
+  }
+
   const toggle = document.getElementById('live-th-toggle');
   if (toggle) {
     toggle.style.cursor='pointer';
@@ -2805,21 +2851,18 @@ async function sendMessage() {
     }
 
     const secs = Math.max(1, Math.round((Date.now()-t0)/1000));
-    let data, aiSource;
+    let aiResult;
     try {
       if (isImageAttach) {
-        // Vision — use Groq only (has vision support)
         const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
           body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 8000, messages: apiMessages })
         });
-        data = await res.json();
-        aiSource = 'groq';
+        const d = await res.json();
+        aiResult = { data: d, content: d.choices?.[0]?.message?.content || '', reasoning: null, source: 'groq' };
       } else {
-        const result = await callAI(apiMessages, model);
-        data = result.data;
-        aiSource = result.source;
+        aiResult = await callAI(apiMessages, model);
       }
     } catch(e) {
       finalizeThinking(handle, secs);
@@ -2828,10 +2871,14 @@ async function sendMessage() {
     }
     finalizeThinking(handle, secs);
 
-    if (data.error) {
-      streamAnswer('⚠️ Error: ' + (data.error.message || 'Unknown error') + '\n<suggestions>["Try again","Ask differently","Check connection"]</suggestions>', tag);
+    if (aiResult.data?.error) {
+      streamAnswer('⚠️ Error: ' + (aiResult.data.error.message || 'Unknown error') + '\n<suggestions>["Try again","Ask differently","Check connection"]</suggestions>', tag);
     } else {
-      const reply = data?.choices?.[0]?.message?.content || 'No response. Please try again.';
+      const reply = aiResult.content || 'No response. Please try again.';
+      // Store reasoning to show in thinking block
+      if (aiResult.reasoning) {
+        window._pendingReasoning = aiResult.reasoning;
+      }
       history.push({ role: 'assistant', content: reply });
       saveSession(history[0]?.content || 'Chat');
       learnFromConversation(text, reply);

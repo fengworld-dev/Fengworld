@@ -290,7 +290,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 /* SIDEBAR */
 #sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s;backdrop-filter:blur(2px);}
 #sb-overlay.open{opacity:1;pointer-events:all;}
-#sidebar{position:fixed;top:0;left:0;bottom:0;width:290px;background:var(--surface);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;}
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:320px;background:var(--surface);border-right:1px solid var(--border);z-index:201;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);display:flex;flex-direction:column;}
 #sidebar.open{transform:translateX(0);}
 .sb-head{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px;border-bottom:1px solid var(--border);}
 .sb-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
@@ -431,6 +431,48 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .help-detail{font-size:0.78rem;color:var(--muted);}
 .help-arr{color:var(--muted2);}
 
+/* ── SOURCES PANEL ── */
+.sources-panel{margin-top:12px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);}
+.sources-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;font-size:0.78rem;font-weight:600;color:var(--muted);transition:background 0.15s;user-select:none;}
+.sources-header:hover{background:var(--surface2);}
+.sources-chevron{font-size:0.6rem;transition:transform 0.25s;}
+.sources-panel.open .sources-chevron{transform:rotate(180deg);}
+.sources-list{display:none;border-top:1px solid var(--border);}
+.sources-panel.open .sources-list{display:block;}
+.source-item{display:flex;align-items:center;gap:10px;padding:10px 14px;text-decoration:none;color:var(--text);border-bottom:1px solid var(--border);transition:background 0.12s;}
+.source-item:last-child{border-bottom:none;}
+.source-item:hover{background:var(--surface2);}
+.source-icon{font-size:1.1rem;flex-shrink:0;width:28px;text-align:center;}
+.source-info{flex:1;min-width:0;}
+.source-name{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--accent);margin-bottom:1px;}
+.source-title{font-size:0.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.source-desc{font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.source-arrow{font-size:0.85rem;color:var(--muted);flex-shrink:0;}
+.source-item:hover .source-arrow{color:var(--accent);}
+
+/* ── TUTOR MODE ── */
+.tutor-lesson{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;font-size:0.87rem;line-height:1.7;}
+
+/* ── EXAM SIM ── */
+.sim-q-btn.active{border-color:var(--accent)!important;background:rgba(79,142,247,0.1)!important;color:var(--accent)!important;}
+
+/* ── TEMPLATES ── */
+.template-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;}
+.template-card:hover{border-color:var(--accent);background:var(--surface2);}
+.template-cat{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:4px;}
+.template-title{font-weight:700;font-size:0.88rem;margin-bottom:4px;}
+.template-preview{font-size:0.75rem;color:var(--muted);line-height:1.5;}
+
+/* ── ANALYTICS ── */
+.topic-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.topic-bar-fill{height:8px;border-radius:4px;transition:width 0.8s ease;}
+.topic-bar-label{font-size:0.78rem;color:var(--text);min-width:80px;}
+.topic-bar-pct{font-size:0.72rem;color:var(--muted);margin-left:auto;}
+
+/* ── QUOTE CARD ── */
+.quote-theme-btn{padding:8px;border-radius:8px;border:2px solid var(--border);cursor:pointer;font-size:0.75rem;text-align:center;transition:all 0.15s;}
+.quote-theme-btn.active{border-color:var(--accent);}
+
 /* ── MIND MAP ── */
 .mindmap{padding:10px 0;}
 .mm-center{display:inline-block;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;padding:10px 20px;border-radius:50px;margin-bottom:16px;box-shadow:0 0 20px rgba(79,142,247,0.4);}
@@ -458,7 +500,57 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .pomo-tab.active{background:var(--accent);color:#fff;}
 #pomo-circle{position:relative;display:flex;align-items:center;justify-content:center;}
 
-/* ── SIDEBAR TOOL BUTTONS ── */
+/* ── SIDEBAR TOOLS ── */
+.sb-tools-wrap{
+  overflow-y:auto;
+  padding:10px 14px 6px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+  max-height:55vh;
+}
+.sb-section-label{
+  font-size:0.62rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--muted);padding:10px 2px 7px;
+}
+.sb-tools-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin-bottom:4px;
+}
+.sb-tile{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;padding:10px 4px;
+  border-radius:12px;border:1px solid var(--border);
+  background:var(--surface2);cursor:pointer;
+  transition:all 0.18s;
+}
+.sb-tile:hover{
+  border-color:var(--accent);
+  background:rgba(79,142,247,0.08);
+  transform:translateY(-1px);
+}
+.sb-tile:active{transform:scale(0.96);}
+.sb-tile-icon{font-size:1.25rem;line-height:1;}
+.sb-tile-name{
+  font-size:0.62rem;color:var(--muted);
+  text-align:center;line-height:1.2;
+  font-family:'DM Sans',sans-serif;
+  font-weight:500;
+}
+.sb-tile:hover .sb-tile-name{color:var(--accent);}
+.sb-tile-accent{
+  border-color:rgba(79,142,247,0.3);
+  background:rgba(79,142,247,0.06);
+}
+.sb-tile-accent .sb-tile-name{color:var(--accent);}
+.sb-tile-accent:hover{
+  background:rgba(79,142,247,0.14);
+  border-color:var(--accent);
+}
+
+/* ── SIDEBAR TOOL BUTTONS (legacy) ── */
 .sb-tool-btn{
   padding:8px 6px;border-radius:9px;border:1px solid var(--border);
   background:var(--surface2);color:var(--muted);font-size:0.75rem;
@@ -752,25 +844,110 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     </div>
   </div>
   <div class="sb-scroll" id="sb-scroll"></div>
-  <div style="padding:10px 14px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-    <button onclick="openSubpage('page-bookmarks');closeSB();" class="sb-tool-btn">🔖 Saved</button>
-    <button onclick="openSubpage('page-notebook');closeSB();renderNotes();" class="sb-tool-btn">📓 Notebook</button>
-    <button onclick="openSubpage('page-pomodoro');closeSB();" class="sb-tool-btn">⏱️ Timer</button>
-    <button onclick="openSubpage('page-dashboard');closeSB();renderDashboard();" class="sb-tool-btn">📊 Progress</button>
-    <button onclick="openSubpage('page-exams');closeSB();renderExams();" class="sb-tool-btn">📅 Exams</button>
-    <button onclick="openSubpage('page-vocab');closeSB();loadVocabWord();" class="sb-tool-btn">📖 Vocab</button>
-    <button onclick="openSubpage('page-bibliography');closeSB();renderBibliography();" class="sb-tool-btn">📚 Citations</button>
-    <button onclick="summarizeChat();closeSB();" class="sb-tool-btn">✨ Summarize</button>
+
+  <!-- SIDEBAR TOOLS SECTION -->
+  <div class="sb-tools-wrap">
+
+    <!-- AI TOOLS -->
+    <div class="sb-section-label">AI Tools</div>
+    <div class="sb-tools-grid">
+      <button class="sb-tile" onclick="quickTool('translate');closeSB();">
+        <span class="sb-tile-icon">🌍</span><span class="sb-tile-name">Translate</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('summarize');closeSB();">
+        <span class="sb-tile-icon">📋</span><span class="sb-tile-name">Summarize</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('writing');closeSB();">
+        <span class="sb-tile-icon">✍️</span><span class="sb-tile-name">Writing Coach</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('compare');closeSB();">
+        <span class="sb-tile-icon">⚖️</span><span class="sb-tile-name">Compare</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('language');closeSB();">
+        <span class="sb-tile-icon">🗣️</span><span class="sb-tile-name">Language</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('batch');closeSB();">
+        <span class="sb-tile-icon">⚡</span><span class="sb-tile-name">Batch Q&A</span>
+      </button>
+    </div>
+
+    <!-- STUDENT TOOLS -->
+    <div class="sb-section-label">Student Tools</div>
+    <div class="sb-tools-grid">
+      <button class="sb-tile sb-tile-accent" onclick="openSubpage('page-tutor');closeSB();">
+        <span class="sb-tile-icon">🎓</span><span class="sb-tile-name">Tutor Mode</span>
+      </button>
+      <button class="sb-tile sb-tile-accent" onclick="openSubpage('page-exam-sim');closeSB();">
+        <span class="sb-tile-icon">🏆</span><span class="sb-tile-name">Exam Sim</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('flashcards');closeSB();">
+        <span class="sb-tile-icon">🃏</span><span class="sb-tile-name">Flashcards</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('quiz');closeSB();">
+        <span class="sb-tile-icon">📝</span><span class="sb-tile-name">Quiz Me</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('grade');closeSB();">
+        <span class="sb-tile-icon">✏️</span><span class="sb-tile-name">Grade Essay</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('studyplan');closeSB();">
+        <span class="sb-tile-icon">📅</span><span class="sb-tile-name">Study Plan</span>
+      </button>
+      <button class="sb-tile" onclick="quickTool('citation');closeSB();">
+        <span class="sb-tile-icon">📚</span><span class="sb-tile-name">Citation</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-templates');closeSB();">
+        <span class="sb-tile-icon">📋</span><span class="sb-tile-name">Templates</span>
+      </button>
+    </div>
+
+    <!-- MY STUFF -->
+    <div class="sb-section-label">My Stuff</div>
+    <div class="sb-tools-grid">
+      <button class="sb-tile" onclick="openSubpage('page-bookmarks');closeSB();">
+        <span class="sb-tile-icon">🔖</span><span class="sb-tile-name">Saved</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-notebook');closeSB();renderNotes();">
+        <span class="sb-tile-icon">📓</span><span class="sb-tile-name">Notebook</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-vocab');closeSB();loadVocabWord();">
+        <span class="sb-tile-icon">📖</span><span class="sb-tile-name">Vocab</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-bibliography');closeSB();renderBibliography();">
+        <span class="sb-tile-icon">🗂️</span><span class="sb-tile-name">Citations</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-exams');closeSB();renderExams();">
+        <span class="sb-tile-icon">⏰</span><span class="sb-tile-name">Exams</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-pomodoro');closeSB();">
+        <span class="sb-tile-icon">⏱️</span><span class="sb-tile-name">Timer</span>
+      </button>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="sb-section-label">Insights</div>
+    <div class="sb-tools-grid">
+      <button class="sb-tile" onclick="openSubpage('page-dashboard');closeSB();renderDashboard();">
+        <span class="sb-tile-icon">📊</span><span class="sb-tile-name">Progress</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-analytics');closeSB();renderAnalytics();">
+        <span class="sb-tile-icon">📈</span><span class="sb-tile-name">Analytics</span>
+      </button>
+      <button class="sb-tile" onclick="summarizeChat();closeSB();">
+        <span class="sb-tile-icon">✨</span><span class="sb-tile-name">Summarize</span>
+      </button>
+      <button class="sb-tile" onclick="exportChatPDF();closeSB();">
+        <span class="sb-tile-icon">📕</span><span class="sb-tile-name">Export PDF</span>
+      </button>
+      <button class="sb-tile" onclick="exportChat();closeSB();">
+        <span class="sb-tile-icon">💾</span><span class="sb-tile-name">Export TXT</span>
+      </button>
+      <button class="sb-tile" onclick="openSubpage('page-stats');closeSB();renderStats();">
+        <span class="sb-tile-icon">🏅</span><span class="sb-tile-name">Stats</span>
+      </button>
+    </div>
+
   </div>
-  <div style="padding:0 14px 10px;display:flex;gap:6px;">
-    <button onclick="exportChat();closeSB();" style="flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export TXT
-    </button>
-    <button onclick="exportChatPDF();closeSB();" style="flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;">
-      📕 Export PDF
-    </button>
-  </div>
+
   <div class="sb-foot" onclick="openSettings()">
     <div class="sb-av">F</div>
     <div class="sb-name">My Account</div>
@@ -1038,6 +1215,102 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <div class="sub-body" id="stats-body"></div>
 </div>
 
+<!-- TUTOR MODE PAGE -->
+<div class="subpage" id="page-tutor">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-tutor')">←</button>
+    <div class="sub-title">🎓 Tutor Mode</div>
+  </div>
+  <div class="sub-body">
+    <p style="font-size:0.83rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">Choose a subject and Feng AI will teach you step by step like a real tutor — with lessons, examples, and progress checks.</p>
+    <div id="tutor-setup" >
+      <input id="tutor-subject" class="login-input" placeholder="Subject (e.g. Algebra, Biology, History…)" style="margin-bottom:10px;"/>
+      <input id="tutor-level" class="login-input" placeholder="Your level (e.g. Beginner, Grade 10, University)" style="margin-bottom:10px;"/>
+      <input id="tutor-goal" class="login-input" placeholder="Your goal (e.g. Pass exam, Understand basics)" style="margin-bottom:16px;"/>
+      <button onclick="startTutorSession()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;">🎓 Start Lesson</button>
+    </div>
+    <div id="tutor-progress" style="display:none;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:0.8rem;color:var(--muted);">Lesson Progress</span>
+        <span id="tutor-step-label" style="font-size:0.8rem;color:var(--accent);">Step 1 of 5</span>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:16px;">
+        <div id="tutor-bar" style="height:100%;background:var(--accent);border-radius:2px;transition:width 0.5s;width:20%;"></div>
+      </div>
+      <button onclick="nextTutorStep()" style="width:100%;padding:11px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;margin-bottom:8px;">Next Step →</button>
+      <button onclick="resetTutor()" style="width:100%;padding:9px;border-radius:var(--r);border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.83rem;cursor:pointer;">Start New Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXAM SIMULATOR PAGE -->
+<div class="subpage" id="page-exam-sim">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-exam-sim')">←</button>
+    <div class="sub-title">🏆 Exam Simulator</div>
+  </div>
+  <div class="sub-body">
+    <div id="exam-sim-setup">
+      <p style="font-size:0.83rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">Feng AI creates a timed mock exam, marks your answers and gives you a score with feedback.</p>
+      <input id="sim-subject" class="login-input" placeholder="Subject (e.g. Mathematics, Biology)" style="margin-bottom:10px;"/>
+      <input id="sim-level" class="login-input" placeholder="Level (e.g. Grade 12, University Year 1)" style="margin-bottom:10px;"/>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button onclick="setSimQ(5)" id="simq5" class="sim-q-btn active" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--accent);background:rgba(79,142,247,0.1);color:var(--accent);font-size:0.8rem;cursor:pointer;">5 Qs</button>
+        <button onclick="setSimQ(10)" id="simq10" class="sim-q-btn" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:0.8rem;cursor:pointer;">10 Qs</button>
+        <button onclick="setSimQ(15)" id="simq15" class="sim-q-btn" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:0.8rem;cursor:pointer;">15 Qs</button>
+      </div>
+      <button onclick="startExamSim()" style="width:100%;padding:13px;border-radius:var(--r);border:none;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;">🏆 Start Exam</button>
+    </div>
+    <div id="exam-sim-running" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span id="sim-q-counter" style="font-size:0.8rem;color:var(--muted);">Question 1/5</span>
+        <span id="sim-timer-display" style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);">00:00</span>
+      </div>
+      <div id="sim-question" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;font-size:0.88rem;line-height:1.7;min-height:80px;"></div>
+      <textarea id="sim-answer" placeholder="Type your answer here…" style="width:100%;height:100px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;resize:none;outline:none;margin-bottom:10px;"></textarea>
+      <button onclick="submitSimAnswer()" style="width:100%;padding:11px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;cursor:pointer;">Submit Answer →</button>
+    </div>
+    <div id="exam-sim-results" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- TEMPLATES LIBRARY PAGE -->
+<div class="subpage" id="page-templates">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-templates')">←</button>
+    <div class="sub-title">📋 Templates</div>
+  </div>
+  <div class="sub-body" style="padding-top:12px;">
+    <input class="lang-search" type="text" placeholder="Search templates…" oninput="filterTemplates(this.value)" style="margin-bottom:14px;"/>
+    <div id="templates-list"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS PAGE -->
+<div class="subpage" id="page-analytics">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-analytics')">←</button>
+    <div class="sub-title">📈 Analytics</div>
+  </div>
+  <div class="sub-body" id="analytics-body"></div>
+</div>
+
+<!-- QUOTE CARD PAGE -->
+<div class="subpage" id="page-quote">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-quote')">←</button>
+    <div class="sub-title">🖼️ Quote Card</div>
+  </div>
+  <div class="sub-body" style="display:flex;flex-direction:column;gap:14px;">
+    <div id="quote-preview" style="background:linear-gradient(135deg,#4f8ef7,#2563eb);border-radius:16px;padding:28px;position:relative;min-height:160px;">
+      <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Feng AI</div>
+      <div id="quote-text" style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#fff;line-height:1.6;">Select an AI answer and tap "Create Quote Card"</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="quote-themes-row"></div>
+    <button onclick="shareQuoteCard()" style="width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;">📤 Share Card</button>
+  </div>
+</div>
+
 <!-- VOICE SETTINGS PAGE -->
 <div class="subpage" id="page-voice">
   <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-voice')">←</button><div class="sub-title">Voice & Audio</div></div>
@@ -1112,18 +1385,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       </div>
       <div class="hero-greeting" id="hero-greeting">Good afternoon</div>
       <div class="hero-sub" id="hero-sub">Ask me anything — I'm here to help</div>
-      <div class="quick-tools">
-        <button class="quick-tool-btn" onclick="quickTool('translate')">🌍 Translate</button>
-        <button class="quick-tool-btn" onclick="quickTool('summarize')">📋 Summarize</button>
-        <button class="quick-tool-btn" onclick="quickTool('flashcards')">🃏 Flashcards</button>
-        <button class="quick-tool-btn" onclick="quickTool('quiz')">📝 Quiz me</button>
-        <button class="quick-tool-btn" onclick="quickTool('grade')">✏️ Grade essay</button>
-        <button class="quick-tool-btn" onclick="quickTool('citation')">📚 Citation</button>
-        <button class="quick-tool-btn" onclick="quickTool('studyplan')">📅 Study Planner</button>
-        <button class="quick-tool-btn" onclick="quickTool('chart')">📊 Chart</button>
-        <button class="quick-tool-btn" onclick="quickTool('mermaid')">🔀 Diagram</button>
-        <button class="quick-tool-btn" onclick="quickTool('compare')">⚖️ Compare</button>
-      </div>
     </div>
     <div class="msg-list" id="msg-list"></div>
   </div>
@@ -1197,7 +1458,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.6';
+const APP_VERSION = '1.0.8';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1468,6 +1729,9 @@ function openSubpage(id) {
   if (id === 'page-vocab') { setTimeout(()=>{ loadVocabWord(); renderVocabHistory(); }, 100); }
   if (id === 'page-stats') renderStats();
   if (id === 'page-pomodoro') updatePomoUI();
+  if (id === 'page-templates') { setTimeout(renderTemplates, 100); }
+  if (id === 'page-analytics') renderAnalytics();
+  if (id === 'page-quote') renderQuoteThemes();
 }
 function closeSubpage(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -2111,6 +2375,12 @@ function streamAnswer(rawText, tag) {
       // Add action bar — copy, share, bookmark, regenerate, reactions
       addActionBar(body, stripSugs(rawText), tag);
 
+      // Show live sources if available
+      if (window._pendingSources && window._pendingSources.length) {
+        addSourcesPanel(body, window._pendingSources);
+        window._pendingSources = null;
+      }
+
       // Add confidence indicator
       addConfidenceBar(body, stripSugs(rawText));
 
@@ -2343,10 +2613,15 @@ async function sendMessage() {
       // Replace the base64 in history with a readable summary
       history[history.length - 1].content = '[Image attached] ' + (text || 'Extract text from image');
     } else {
-      // Normal text — send full history with context + memory injected
+      // Normal text — fetch from multiple sources simultaneously
       const detectedLang = detectUserLanguage(text);
       const langNote = detectedLang ? '\n[LANGUAGE: User is writing in ' + detectedLang + ' — please respond in ' + detectedLang + ']' : '';
-      const ctx = buildContextString() + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote() + getDeepThinkNote();
+
+      // Run multi-source research in parallel
+      const liveData = await fetchLiveData(text);
+
+      const ctx = buildContextString() + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote() + getDeepThinkNote() + liveData.context;
+
       const messagesWithCtx = history.map((m, i) => {
         if (i === history.length - 1 && m.role === 'user' && ctx) {
           return { role: 'user', content: m.content + ctx };
@@ -2357,6 +2632,11 @@ async function sendMessage() {
         { role: 'system', content: SYSTEM_PROMPT },
         ...messagesWithCtx
       ];
+
+      // Store sources to show after response
+      if (liveData.sources.length) {
+        window._pendingSources = liveData.sources;
+      }
     }
 
     const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
@@ -3574,11 +3854,602 @@ function quickTool(type) {
     studyplan: 'Create a detailed study plan. My subjects are: [list subjects]. My exam date is: [date]. Available hours per day: [hours]. Create a day-by-day schedule.',
     chart: 'Create a bar chart comparing: [describe your data]. For example: "sales figures for Jan, Feb, Mar as 1200, 1800, 1500"',
     mermaid: 'Create a flowchart/diagram showing the steps of: ',
-    compare: 'Create a detailed side-by-side comparison table between: '
+    writing: 'Here is my text. Please rewrite it professionally, then show a before/after comparison with improvements explained:\n\n',
+    language: 'I want to practice conversational ',
+    batch: 'Please answer all of these questions thoroughly:\n\n1. \n2. \n3. \n4. \n5. '
   };
   inp.value = prompts[type] || '';
   inp.focus();
   inp.setSelectionRange(inp.value.length, inp.value.length);
+}
+
+// ── TUTOR MODE ──
+let tutorSession = { subject:'', level:'', step:0, totalSteps:5 };
+const TUTOR_STEPS = [
+  'Introduction & overview of the topic',
+  'Core concepts and fundamentals',
+  'Detailed explanation with examples',
+  'Practice problems and exercises',
+  'Summary, review and quiz'
+];
+
+function startTutorSession() {
+  const subject = document.getElementById('tutor-subject')?.value.trim();
+  const level = document.getElementById('tutor-level')?.value.trim();
+  const goal = document.getElementById('tutor-goal')?.value.trim();
+  if (!subject) { showToast('Please enter a subject!'); return; }
+  tutorSession = { subject, level: level||'General', goal: goal||'Learn the basics', step: 0, totalSteps: 5 };
+  document.getElementById('tutor-setup').style.display = 'none';
+  document.getElementById('tutor-progress').style.display = 'block';
+  updateTutorProgress();
+  closeSubpage('page-tutor');
+  sendTutorStep();
+}
+
+function sendTutorStep() {
+  const s = tutorSession;
+  const stepName = TUTOR_STEPS[s.step];
+  const prompt = `You are tutoring a ${s.level} student on "${s.subject}". Their goal: ${s.goal}.
+This is LESSON STEP ${s.step+1} of 5: "${stepName}".
+Deliver this step clearly and engagingly. Use examples, analogies, and simple language.
+At the end, ask ONE check question to confirm understanding before we move on.`;
+  document.getElementById('user-input').value = prompt;
+  sendMessage();
+}
+
+function nextTutorStep() {
+  tutorSession.step++;
+  if (tutorSession.step >= tutorSession.totalSteps) {
+    showToast('🎓 Lesson complete! Great work!');
+    confetti();
+    resetTutor();
+    return;
+  }
+  updateTutorProgress();
+  closeSubpage('page-tutor');
+  sendTutorStep();
+}
+
+function updateTutorProgress() {
+  const pct = ((tutorSession.step+1)/tutorSession.totalSteps)*100;
+  const bar = document.getElementById('tutor-bar');
+  const lbl = document.getElementById('tutor-step-label');
+  if (bar) bar.style.width = pct+'%';
+  if (lbl) lbl.textContent = 'Step '+(tutorSession.step+1)+' of '+tutorSession.totalSteps+': '+TUTOR_STEPS[tutorSession.step];
+}
+
+function resetTutor() {
+  tutorSession = { subject:'', level:'', step:0, totalSteps:5 };
+  const setup = document.getElementById('tutor-setup');
+  const progress = document.getElementById('tutor-progress');
+  if (setup) setup.style.display='block';
+  if (progress) progress.style.display='none';
+  ['tutor-subject','tutor-level','tutor-goal'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+// ── EXAM SIMULATOR ──
+let simState = { questions:[], answers:[], current:0, numQ:5, subject:'', level:'', timerIv:null, elapsed:0 };
+
+function setSimQ(n) {
+  simState.numQ = n;
+  document.querySelectorAll('.sim-q-btn').forEach(b => {
+    b.style.borderColor='var(--border)'; b.style.background='transparent'; b.style.color='var(--muted)';
+  });
+  const btn = document.getElementById('simq'+n);
+  if (btn) { btn.style.borderColor='var(--accent)'; btn.style.background='rgba(79,142,247,0.1)'; btn.style.color='var(--accent)'; }
+}
+
+async function startExamSim() {
+  const subject = document.getElementById('sim-subject')?.value.trim();
+  const level = document.getElementById('sim-level')?.value.trim();
+  if (!subject) { showToast('Please enter a subject!'); return; }
+  simState.subject=subject; simState.level=level||'General'; simState.current=0; simState.answers=[];
+  document.getElementById('exam-sim-setup').style.display='none';
+  document.getElementById('exam-sim-running').style.display='block';
+  showToast('Generating exam… please wait ⏳');
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:GROQ_MODEL,max_tokens:1500,
+        messages:[{role:'user',content:`Create a ${simState.numQ}-question exam for ${level} level ${subject}. Return ONLY a JSON array like: [{"q":"Question text","type":"short"},{"q":"...","type":"essay"}]. Mix short answer and essay questions. No other text.`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.choices[0].message.content;
+    simState.questions = JSON.parse(raw.match(/\[[\s\S]*\]/)[0]);
+    simState.elapsed = 0;
+    simState.timerIv = setInterval(()=>{ simState.elapsed++; updateSimTimer(); }, 1000);
+    showSimQuestion();
+  } catch(e) {
+    showToast('Could not generate exam. Try again.');
+    document.getElementById('exam-sim-setup').style.display='block';
+    document.getElementById('exam-sim-running').style.display='none';
+  }
+}
+
+function updateSimTimer() {
+  const m = String(Math.floor(simState.elapsed/60)).padStart(2,'0');
+  const s = String(simState.elapsed%60).padStart(2,'0');
+  const el = document.getElementById('sim-timer-display');
+  if (el) el.textContent = m+':'+s;
+}
+
+function showSimQuestion() {
+  const q = simState.questions[simState.current];
+  if (!q) return;
+  const counter = document.getElementById('sim-q-counter');
+  const qEl = document.getElementById('sim-question');
+  const ans = document.getElementById('sim-answer');
+  if (counter) counter.textContent = 'Question '+(simState.current+1)+'/'+simState.questions.length;
+  if (qEl) qEl.textContent = q.q;
+  if (ans) ans.value='';
+}
+
+async function submitSimAnswer() {
+  const ans = document.getElementById('sim-answer')?.value.trim();
+  if (!ans) { showToast('Please write an answer first!'); return; }
+  simState.answers.push({ q:simState.questions[simState.current].q, a:ans });
+  simState.current++;
+  if (simState.current >= simState.questions.length) {
+    clearInterval(simState.timerIv);
+    await gradeExamSim();
+  } else {
+    showSimQuestion();
+  }
+}
+
+async function gradeExamSim() {
+  document.getElementById('exam-sim-running').style.display='none';
+  document.getElementById('exam-sim-results').style.display='block';
+  document.getElementById('exam-sim-results').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Marking your exam… ⏳</div>';
+  const qa = simState.answers.map((a,i)=>`Q${i+1}: ${a.q}\nAnswer: ${a.a}`).join('\n\n');
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:GROQ_MODEL,max_tokens:1200,
+        messages:[{role:'user',content:`Mark this ${simState.subject} exam. Give a score out of 100, grade (A/B/C/D/F), and brief feedback per question. Be encouraging but honest.\n\n${qa}\n\nFormat: Start with "SCORE: X/100 | GRADE: X" then feedback per question.`}]
+      })
+    });
+    const data = await res.json();
+    const result = data.choices[0].message.content;
+    const scoreMatch = result.match(/SCORE:\s*(\d+)/i);
+    const gradeMatch = result.match(/GRADE:\s*([A-F][+-]?)/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+    const grade = gradeMatch ? gradeMatch[1] : '?';
+    const color = score>=80?'#22c55e':score>=60?'#f59e0b':'#ef4444';
+    const timeTaken = Math.floor(simState.elapsed/60)+'m '+( simState.elapsed%60)+'s';
+    document.getElementById('exam-sim-results').innerHTML =
+      '<div style="text-align:center;padding:24px;background:var(--surface);border-radius:16px;margin-bottom:14px;">' +
+        '<div style="font-size:3rem;font-weight:800;font-family:\'Syne\',sans-serif;color:'+color+';">'+score+'<span style="font-size:1.2rem;">/100</span></div>' +
+        '<div style="font-size:1.5rem;font-weight:700;color:'+color+';">Grade: '+grade+'</div>' +
+        '<div style="font-size:0.8rem;color:var(--muted);margin-top:6px;">Time: '+timeTaken+' · '+simState.questions.length+' questions</div>' +
+      '</div>' +
+      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;font-size:0.83rem;line-height:1.7;">'+result.replace(/\n/g,'<br>')+'</div>' +
+      '<button onclick="resetExamSim()" style="width:100%;padding:11px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:\'DM Sans\',sans-serif;cursor:pointer;">Try Again</button>';
+    if (score >= 80) confetti();
+  } catch { document.getElementById('exam-sim-results').innerHTML = '<div style="color:var(--muted);">Could not grade exam.</div>'; }
+}
+
+function resetExamSim() {
+  simState = { questions:[], answers:[], current:0, numQ:5, subject:'', level:'', timerIv:null, elapsed:0 };
+  document.getElementById('exam-sim-setup').style.display='block';
+  document.getElementById('exam-sim-running').style.display='none';
+  document.getElementById('exam-sim-results').style.display='none';
+  if (document.getElementById('sim-subject')) document.getElementById('sim-subject').value='';
+  if (document.getElementById('sim-answer')) document.getElementById('sim-answer').value='';
+  if (document.getElementById('sim-timer-display')) document.getElementById('sim-timer-display').textContent='00:00';
+}
+
+// ── TEMPLATES LIBRARY ──
+const TEMPLATES = [
+  { cat:'📝 Essay', title:'5-Paragraph Essay', preview:'Write a complete 5-paragraph essay about…', prompt:'Write a complete, well-structured 5-paragraph essay about: ' },
+  { cat:'📝 Essay', title:'Argumentative Essay', preview:'Write a persuasive argumentative essay…', prompt:'Write a persuasive argumentative essay arguing that: ' },
+  { cat:'📊 Report', title:'Research Report', preview:'Write a full research report on…', prompt:'Write a comprehensive research report on the topic: ' },
+  { cat:'📊 Report', title:'Science Lab Report', preview:'Write a lab report for the experiment…', prompt:'Write a complete science lab report for this experiment: ' },
+  { cat:'📧 Letter', title:'Formal Letter', preview:'Write a professional formal letter to…', prompt:'Write a professional formal letter to [recipient] regarding: ' },
+  { cat:'📧 Letter', title:'Cover Letter', preview:'Write a job application cover letter for…', prompt:'Write a compelling job application cover letter for the position of: ' },
+  { cat:'📧 Letter', title:'Complaint Letter', preview:'Write a formal complaint letter about…', prompt:'Write a formal complaint letter regarding: ' },
+  { cat:'🎓 Academic', title:'Literature Review', preview:'Write a literature review on…', prompt:'Write an academic literature review on the topic: ' },
+  { cat:'🎓 Academic', title:'Abstract', preview:'Write an abstract for my paper about…', prompt:'Write a concise academic abstract for a paper about: ' },
+  { cat:'🎓 Academic', title:'Bibliography/References', preview:'Generate references for my paper on…', prompt:'Generate a complete bibliography with APA, MLA and Harvard citations for a paper about: ' },
+  { cat:'💼 Business', title:'Business Plan', preview:'Write a business plan for…', prompt:'Write a detailed business plan for: ' },
+  { cat:'💼 Business', title:'SWOT Analysis', preview:'Create a SWOT analysis for…', prompt:'Create a detailed SWOT analysis for: ' },
+  { cat:'📅 Planning', title:'Study Schedule', preview:'Create a study schedule for…', prompt:'Create a detailed day-by-day study schedule for: ' },
+  { cat:'📅 Planning', title:'Project Plan', preview:'Create a project plan for…', prompt:'Create a comprehensive project plan for: ' },
+  { cat:'🧠 Learning', title:'Concept Explanation', preview:'Explain the concept of… in simple terms', prompt:'Explain the concept of [topic] in simple terms with examples: ' },
+  { cat:'🧠 Learning', title:'Mind Map', preview:'Create a mind map for…', prompt:'Create a detailed mind map for the topic: ' },
+  { cat:'✍️ Creative', title:'Short Story', preview:'Write a short story about…', prompt:'Write a creative short story about: ' },
+  { cat:'✍️ Creative', title:'Poem', preview:'Write a poem about…', prompt:'Write a creative poem about: ' }
+];
+
+let filteredTemplates = TEMPLATES;
+function renderTemplates() {
+  const el = document.getElementById('templates-list');
+  if (!el) return;
+  const cats = [...new Set(filteredTemplates.map(t=>t.cat))];
+  el.innerHTML = cats.map(cat =>
+    '<div style="margin-bottom:16px;">' +
+      '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">'+cat+'</div>' +
+      filteredTemplates.filter(t=>t.cat===cat).map(t =>
+        '<div class="template-card" onclick="useTemplate('+JSON.stringify(t.prompt)+')">' +
+          '<div class="template-title">'+t.title+'</div>' +
+          '<div class="template-preview">'+t.preview+'</div>' +
+        '</div>'
+      ).join('') +
+    '</div>'
+  ).join('');
+}
+function filterTemplates(q) {
+  filteredTemplates = q ? TEMPLATES.filter(t=>t.title.toLowerCase().includes(q.toLowerCase())||t.cat.toLowerCase().includes(q.toLowerCase())) : TEMPLATES;
+  renderTemplates();
+}
+function useTemplate(prompt) {
+  document.getElementById('user-input').value = prompt;
+  closeSubpage('page-templates');
+  document.getElementById('user-input').focus();
+  document.getElementById('user-input').setSelectionRange(prompt.length, prompt.length);
+}
+
+// ── TOPIC ANALYTICS ──
+function renderAnalytics() {
+  const el = document.getElementById('analytics-body');
+  if (!el) return;
+  const topics = { '🔬 Science':0,'📐 Math':0,'📚 Literature':0,'🌍 History':0,'💻 Technology':0,'🏥 Health':0,'💼 Business':0,'🌱 Other':0 };
+  const keywords = { '🔬 Science':['biology','chemistry','physics','science','experiment','cell','atom'],'📐 Math':['math','algebra','calculus','equation','geometry','statistics','number'],'📚 Literature':['essay','poem','story','book','literature','writing','grammar'],'🌍 History':['history','war','century','civilization','ancient','revolution','empire'],'💻 Technology':['code','programming','computer','app','website','software','algorithm','tech'],'🏥 Health':['health','medical','body','disease','nutrition','exercise','mental'],'💼 Business':['business','finance','money','investment','economics','market','trade'] };
+  sessions.forEach(s => {
+    const title = s.title.toLowerCase();
+    let matched = false;
+    for (const [topic, kws] of Object.entries(keywords)) {
+      if (kws.some(kw=>title.includes(kw))) { topics[topic]++; matched=true; break; }
+    }
+    if (!matched) topics['🌱 Other']++;
+  });
+  const total = Object.values(topics).reduce((a,b)=>a+b,0)||1;
+  const colors = ['#4f8ef7','#34d399','#f59e0b','#ec4899','#a855f7','#ef4444','#14b8a6','#8b949e'];
+  const sorted = Object.entries(topics).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>0);
+  el.innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">' +
+      '<div style="font-weight:700;font-size:0.85rem;margin-bottom:14px;">📊 Topics You Study Most</div>' +
+      sorted.map(([topic,count],i) =>
+        '<div class="topic-bar">' +
+          '<span class="topic-bar-label">'+topic+'</span>' +
+          '<div style="flex:1;height:8px;background:var(--border2);border-radius:4px;overflow:hidden;">' +
+            '<div class="topic-bar-fill" style="width:'+Math.round(count/total*100)+'%;background:'+colors[i%colors.length]+';"></div>' +
+          '</div>' +
+          '<span class="topic-bar-pct">'+count+'</span>' +
+        '</div>'
+      ).join('') +
+      (!sorted.length?'<div style="color:var(--muted);font-size:0.82rem;">Start chatting to see your topic breakdown!</div>':'') +
+    '</div>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">' +
+      '<div style="font-weight:700;font-size:0.85rem;margin-bottom:10px;">📅 Weekly Activity</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">' +
+        ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((day,i) => {
+          const count = sessions.filter(s=>new Date(s.ts).getDay()===i).length;
+          const h = Math.min(count*8+4,40);
+          return '<div style="text-align:center;"><div style="height:'+h+'px;background:var(--accent);border-radius:3px;opacity:'+(count?1:0.2)+';margin-bottom:4px;"></div><div style="font-size:0.6rem;color:var(--muted);">'+day+'</div></div>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+}
+
+// ── QUOTE CARD ──
+let quoteTheme = 0;
+const QUOTE_THEMES = [
+  {name:'Ocean',bg:'linear-gradient(135deg,#4f8ef7,#2563eb)'},
+  {name:'Forest',bg:'linear-gradient(135deg,#22c55e,#15803d)'},
+  {name:'Sunset',bg:'linear-gradient(135deg,#f97316,#dc2626)'},
+  {name:'Purple',bg:'linear-gradient(135deg,#a855f7,#7c3aed)'},
+  {name:'Gold',bg:'linear-gradient(135deg,#eab308,#d97706)'},
+  {name:'Dark',bg:'linear-gradient(135deg,#1e293b,#0f172a)'}
+];
+
+function openQuoteCard(text) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').trim().slice(0,200);
+  document.getElementById('quote-text').textContent = clean;
+  renderQuoteThemes();
+  openSubpage('page-quote');
+}
+function renderQuoteThemes() {
+  const el = document.getElementById('quote-themes-row');
+  if (!el) return;
+  el.innerHTML = QUOTE_THEMES.map((t,i) =>
+    '<div class="quote-theme-btn'+(i===quoteTheme?' active':'')+'" onclick="setQuoteTheme('+i+')" style="background:'+t.bg+';color:#fff;font-size:0.7rem;padding:10px 6px;border-radius:8px;border:2px solid '+(i===quoteTheme?'#fff':'transparent')+';cursor:pointer;text-align:center;">'+t.name+'</div>'
+  ).join('');
+}
+function setQuoteTheme(i) {
+  quoteTheme = i;
+  document.getElementById('quote-preview').style.background = QUOTE_THEMES[i].bg;
+  renderQuoteThemes();
+}
+function shareQuoteCard() {
+  const text = document.getElementById('quote-text')?.textContent || '';
+  if (navigator.share) {
+    navigator.share({ title:'Feng AI', text: text + '\n\n— Feng AI' });
+  } else {
+    navigator.clipboard.writeText(text + '\n\n— Feng AI');
+    showToast('Quote copied to clipboard! 📋');
+  }
+}
+
+// ── WRITING COACH ──
+function isWritingCoachRequest(text) {
+  return /\b(rewrite|improve|fix|polish|make.*better|writing coach|professional.*version)\b/i.test(text) && text.length > 50;
+}
+
+// ── BATCH QUESTIONS ──
+function isBatchRequest(text) {
+  const questions = text.match(/\?/g);
+  return questions && questions.length >= 3;
+}
+
+// ── SMART HOME SUGGESTIONS ──
+function getSmartSuggestions() {
+  const mem = getMemory();
+  const recentTopics = sessions.slice(-5).map(s=>s.title).join(' ').toLowerCase();
+  const suggestions = [];
+  if (mem.lastSubject) suggestions.push('Continue learning ' + mem.lastSubject);
+  if (/math|algebra|calculus/.test(recentTopics)) suggestions.push('Practice more math problems');
+  if (/essay|writing/.test(recentTopics)) suggestions.push('Get your latest essay graded');
+  if (sessions.length >= 3) suggestions.push('View your topic analytics');
+  if (exams && exams.length) suggestions.push('Check your exam countdown');
+  // Always add some defaults
+  const defaults = ['Try the Exam Simulator','Generate flashcards on a topic','Ask me anything!','Start a Tutor Mode session'];
+  while (suggestions.length < 4) suggestions.push(defaults[suggestions.length]);
+  return suggestions.slice(0,4);
+}
+
+function renderSmartSuggestions() {
+  const hero = document.getElementById('hero');
+  let sugEl = document.getElementById('smart-sugs');
+  if (!sugEl) {
+    sugEl = document.createElement('div');
+    sugEl.id = 'smart-sugs';
+    sugEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;max-width:380px;';
+    hero.appendChild(sugEl);
+  }
+  const sugs = getSmartSuggestions();
+  sugEl.innerHTML = sugs.map(s =>
+    '<button onclick="document.getElementById(\'user-input\').value='+JSON.stringify(s)+';document.getElementById(\'user-input\').focus();" style="padding:7px 14px;border-radius:50px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:0.76rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;transition:all 0.15s;" onmouseover="this.style.borderColor=\'var(--accent)\';this.style.color=\'var(--text)\';" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--muted)\';">'+esc(s)+'</button>'
+  ).join('');
+}
+
+// ── ADD QUOTE CARD TO ACTION BAR ──
+const _origAddActionBar = addActionBar;
+addActionBar = function(body, text, tag) {
+  _origAddActionBar(body, text, tag);
+  const bar = body.querySelector('.action-bar');
+  if (bar && text.length > 30) {
+    const qBtn = document.createElement('button');
+    qBtn.className = 'action-btn';
+    qBtn.innerHTML = '🖼️ Quote';
+    qBtn.onclick = () => openQuoteCard(text);
+    bar.appendChild(qBtn);
+  }
+};
+
+// ══════════════════════════════════════════
+// ── MULTI-SOURCE LIVE RESEARCH ENGINE ──
+// ══════════════════════════════════════════
+
+async function fetchLiveData(query) {
+  const t = query.toLowerCase();
+  const sources = [];
+  const contextParts = [];
+
+  // Detect what kind of query this is
+  const isWiki = /\b(what is|who is|who was|tell me about|explain|history of|definition|meaning of|facts about)\b/i.test(t);
+  const isNews = /\b(news|latest|today|current|happening|headline|update|recent)\b/i.test(t);
+  const isCountry = /\b(country|capital|population|flag|currency|continent|where is|located)\b/i.test(t) && t.length < 80;
+  const isDict = /\b(define|definition|meaning|synonym|antonym|word|vocabulary)\b/i.test(t);
+  const isBook = /\b(book|novel|author|written by|isbn|literature|read|reading)\b/i.test(t);
+  const isNASA = /\b(space|nasa|planet|star|galaxy|universe|asteroid|cosmos|astronomy|moon|mars|earth from space)\b/i.test(t);
+  const isQuote = /\b(quote|quotes|said|inspiration|motivat)\b/i.test(t);
+  const isNumber = /\b(fact about|interesting fact|number|date|born on|happened on)\b.*\d+/i.test(t) || /^\d+$/.test(t.trim());
+
+  // Run all relevant fetches in parallel
+  const fetches = [];
+
+  if (isWiki || isWiki || query.length > 20) {
+    fetches.push(fetchWikipedia(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  }
+  if (isNews) {
+    fetches.push(fetchGNews(query).then(r => { if(r) { contextParts.push(r.context); sources.push(...r.sources); } }));
+  }
+  if (isCountry) {
+    fetches.push(fetchCountry(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  }
+  if (isDict) {
+    fetches.push(fetchDictionary(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  }
+  if (isBook) {
+    fetches.push(fetchOpenLibrary(query).then(r => { if(r) { contextParts.push(r.context); sources.push(...r.sources); } }));
+  }
+  if (isNASA) {
+    fetches.push(fetchNASA().then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  }
+  if (isQuote) {
+    fetches.push(fetchQuote().then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  }
+  if (isNumber) {
+    const numMatch = query.match(/\d+/);
+    if (numMatch) fetches.push(fetchNumberFact(numMatch[0]).then(r => { if(r) contextParts.push(r); }));
+  }
+
+  // Always fetch Wikipedia for any substantial query
+  if (!isWiki && query.split(' ').length >= 3) {
+    fetches.push(fetchWikipedia(query).then(r => { if(r && !contextParts.includes(r.context)) { contextParts.push(r.context); if(!sources.find(s=>s.url===r.source.url)) sources.push(r.source); } }));
+  }
+
+  await Promise.allSettled(fetches);
+
+  const context = contextParts.length
+    ? '\n\n[LIVE DATA FROM MULTIPLE SOURCES:\n' + contextParts.join('\n') + '\nUse this data to give accurate, up-to-date answers. Include relevant links when available.]'
+    : '';
+
+  return { context, sources };
+}
+
+// ── WIKIPEDIA ──
+async function fetchWikipedia(query) {
+  try {
+    const clean = query.replace(/[?!.,]/g,'').trim().slice(0,100);
+    const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(clean);
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (d.type === 'disambiguation' || !d.extract) return null;
+    return {
+      context: '📖 Wikipedia: '+d.title+' — '+d.extract.slice(0,600),
+      source: { name:'Wikipedia', title: d.title, url: d.content_urls?.desktop?.page || 'https://wikipedia.org', icon:'📖', desc: d.extract.slice(0,100)+'…' }
+    };
+  } catch { return null; }
+}
+
+// ── GNEWS (real headlines) ──
+async function fetchGNews(query) {
+  try {
+    const clean = encodeURIComponent(query.replace(/\b(news|latest|today|current)\b/gi,'').trim().slice(0,60));
+    // Use RSS-based proxy — no key needed
+    const url = 'https://gnews.io/api/v4/search?q='+clean+'&lang=en&max=4&apikey=0e4c9d37d4bfedb9c47c8acf0b6b74c4';
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (!d.articles?.length) return null;
+    const articles = d.articles.slice(0,4);
+    const context = '📰 Live News:\n' + articles.map(a => '• '+a.title+' ('+a.source.name+') — '+a.description?.slice(0,120)).join('\n');
+    const sources = articles.map(a => ({ name: a.source.name, title: a.title, url: a.url, icon:'📰', desc: a.description?.slice(0,80)+'…', publishedAt: a.publishedAt }));
+    return { context, sources };
+  } catch { return null; }
+}
+
+// ── REST COUNTRIES ──
+async function fetchCountry(query) {
+  try {
+    const name = query.replace(/\b(country|capital|population|flag|currency|tell me about|what is|where is|facts about)\b/gi,'').trim();
+    if (!name || name.length < 3) return null;
+    const res = await fetch('https://restcountries.com/v3.1/name/'+encodeURIComponent(name)+'?fullText=false');
+    if (!res.ok) return null;
+    const [c] = await res.json();
+    if (!c) return null;
+    const capital = c.capital?.[0] || 'N/A';
+    const pop = c.population?.toLocaleString() || 'N/A';
+    const currency = Object.values(c.currencies||{})[0];
+    const curStr = currency ? currency.name+' ('+currency.symbol+')' : 'N/A';
+    const langs = Object.values(c.languages||{}).join(', ') || 'N/A';
+    const region = c.region+' / '+c.subregion;
+    const context = '🌍 Country Data: '+c.name.common+'\n• Capital: '+capital+'\n• Population: '+pop+'\n• Currency: '+curStr+'\n• Languages: '+langs+'\n• Region: '+region+'\n• Flag: '+c.flag;
+    return {
+      context,
+      source: { name:'REST Countries', title: c.name.common, url:'https://restcountries.com', icon:'🌍', desc: capital+' · Pop: '+pop }
+    };
+  } catch { return null; }
+}
+
+// ── FREE DICTIONARY API ──
+async function fetchDictionary(query) {
+  try {
+    const word = query.replace(/\b(define|definition|meaning of|what does|mean|synonym|word)\b/gi,'').trim().split(' ')[0];
+    if (!word || word.length < 2) return null;
+    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word));
+    if (!res.ok) return null;
+    const [entry] = await res.json();
+    if (!entry) return null;
+    const meanings = entry.meanings?.slice(0,2).map(m => {
+      const def = m.definitions?.[0];
+      return m.partOfSpeech+': '+def?.definition+(def?.example?' — "'+def.example+'"':'');
+    }).join('\n');
+    const phonetic = entry.phonetic || '';
+    const context = '📝 Dictionary: '+entry.word+' '+phonetic+'\n'+meanings;
+    return {
+      context,
+      source: { name:'Free Dictionary', title: entry.word, url:'https://dictionaryapi.dev', icon:'📝', desc: meanings?.split('\n')[0]?.slice(0,80) }
+    };
+  } catch { return null; }
+}
+
+// ── OPEN LIBRARY ──
+async function fetchOpenLibrary(query) {
+  try {
+    const clean = query.replace(/\b(book|novel|find|search|about|read|author)\b/gi,'').trim().slice(0,60);
+    const res = await fetch('https://openlibrary.org/search.json?q='+encodeURIComponent(clean)+'&limit=4&fields=title,author_name,first_publish_year,isbn,subject,key');
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (!d.docs?.length) return null;
+    const books = d.docs.slice(0,4);
+    const context = '📚 Open Library Results:\n' + books.map(b => '• "'+b.title+'" by '+(b.author_name?.[0]||'Unknown')+' ('+( b.first_publish_year||'?')+')').join('\n');
+    const sources = books.map(b => ({
+      name: 'Open Library', title: '"'+b.title+'"',
+      url: 'https://openlibrary.org'+b.key,
+      icon:'📚', desc: 'by '+(b.author_name?.[0]||'Unknown')+' · '+(b.first_publish_year||'')
+    }));
+    return { context, sources };
+  } catch { return null; }
+}
+
+// ── NASA APOD ──
+async function fetchNASA() {
+  try {
+    const res = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
+    if (!res.ok) return null;
+    const d = await res.json();
+    const context = '🚀 NASA Today: "'+d.title+'" — '+d.explanation?.slice(0,300);
+    return {
+      context,
+      source: { name:'NASA APOD', title: d.title, url: d.hdurl||d.url, icon:'🚀', desc: d.date+' · '+d.explanation?.slice(0,80)+'…' }
+    };
+  } catch { return null; }
+}
+
+// ── QUOTES API ──
+async function fetchQuote() {
+  try {
+    const res = await fetch('https://api.quotable.io/random?maxLength=200');
+    if (!res.ok) return null;
+    const d = await res.json();
+    const context = '💬 Relevant Quote: "'+d.content+'" — '+d.author;
+    return {
+      context,
+      source: { name:'Quotable', title: '"'+d.content.slice(0,60)+'…"', url:'https://quotable.io', icon:'💬', desc: '— '+d.author }
+    };
+  } catch { return null; }
+}
+
+// ── NUMBERS API ──
+async function fetchNumberFact(num) {
+  try {
+    const res = await fetch('http://numbersapi.com/'+num+'/trivia?json');
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.found ? '🔢 Number fact: '+d.text : null;
+  } catch { return null; }
+}
+
+// ── SOURCES PANEL ──
+function addSourcesPanel(body, sources) {
+  if (!sources?.length) return;
+  const panel = document.createElement('div');
+  panel.className = 'sources-panel';
+  panel.innerHTML =
+    '<div class="sources-header" onclick="this.parentElement.classList.toggle(\'open\')">' +
+      '<span>🔗 Sources & References ('+sources.length+')</span>' +
+      '<span class="sources-chevron">▼</span>' +
+    '</div>' +
+    '<div class="sources-list">' +
+      sources.map(s =>
+        '<a href="'+esc(s.url)+'" target="_blank" rel="noopener" class="source-item">' +
+          '<div class="source-icon">'+s.icon+'</div>' +
+          '<div class="source-info">' +
+            '<div class="source-name">'+esc(s.name)+'</div>' +
+            '<div class="source-title">'+esc(s.title)+'</div>' +
+            (s.desc?'<div class="source-desc">'+esc(s.desc)+'</div>':'') +
+          '</div>' +
+          '<div class="source-arrow">↗</div>' +
+        '</a>'
+      ).join('') +
+    '</div>';
+  body.appendChild(panel);
 }
 
 // ── INPUT RESIZE ──
@@ -3603,6 +4474,7 @@ const initS = RESPONSE_STYLES.find(x=>x.id===currentResponseStyle); if(initS) do
 const initT = THEMES.find(x=>x.id===currentThemeId); if(initT) document.getElementById('cur-theme').textContent = initT.name;
 if (webSearchEnabled) { const wb=document.getElementById('web-search-btn'); if(wb){wb.style.color='var(--accent)';wb.style.borderColor='var(--accent)';} }
 if (currentUser) { const sb = document.querySelector('.sb-name'); if (sb) sb.textContent = currentUser.name; }
+renderSmartSuggestions();
 </script>
 </body>
 </html>

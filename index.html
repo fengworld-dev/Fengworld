@@ -168,27 +168,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* MARKDOWN — proper paragraph spacing like Gemini */
-.bubble p{margin:0 0 12px;line-height:1.82;}
+.bubble p{margin:0 0 12px;line-height:1.82;color:var(--text);}
 .bubble p:last-child{margin-bottom:0;}
 .bubble h1,.bubble h2,.bubble h3{
   font-family:'Syne',sans-serif;font-weight:700;
-  margin:18px 0 8px;line-height:1.3;color:var(--text);
+  margin:18px 0 6px;line-height:1.3;
 }
-.bubble h1{font-size:1.1rem;}
-.bubble h2{font-size:1rem;}
-.bubble h3{font-size:0.95rem;color:var(--accent);}
-.bubble ul,.bubble ol{padding-left:20px;margin:6px 0 10px;}
-.bubble strong{font-weight:700;color:var(--accent);}
+.bubble h1{font-size:1.1rem;color:var(--text);}
+.bubble h2{font-size:1rem;color:var(--accent);}
+.bubble h3{font-size:0.92rem;color:var(--accent);}
+.bubble ul,.bubble ol{padding-left:20px;margin:4px 0 12px;}
+.bubble strong{font-weight:700;color:var(--text);}
 .bubble em{font-style:italic;opacity:0.85;}
-.bubble p{color:var(--text);}
-.bubble li{margin:3px 0;line-height:1.7;color:var(--text);}
-.bubble li+li{margin-top:8px;}
+.bubble li{margin:4px 0;line-height:1.72;color:var(--text);}
+.bubble li+li{margin-top:6px;}
+.bubble li strong{color:var(--accent);}
 .bubble pre{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;overflow-x:auto;position:relative;}
 .bubble pre code{font-family:'Fira Code','Courier New',monospace;font-size:0.8rem;line-height:1.65;color:#c9d1d9;background:none;padding:0;}
-.bubble code{font-family:'Fira Code',monospace;font-size:0.82em;background:rgba(255,255,255,0.07);border:1px solid var(--border);padding:1px 5px;border-radius:4px;}
+.bubble code{font-family:'Fira Code',monospace;font-size:0.82em;background:rgba(255,255,255,0.07);border:1px solid var(--border);padding:1px 5px;border-radius:4px;color:var(--text);}
 .bubble table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85rem;}
-.bubble th{background:var(--surface2);padding:9px 12px;text-align:left;font-weight:600;border:1px solid var(--border);}
-.bubble td{padding:8px 12px;border:1px solid var(--border);line-height:1.5;}
+.bubble th{background:var(--surface2);padding:9px 12px;text-align:left;font-weight:600;border:1px solid var(--border);color:var(--text);}
+.bubble td{padding:8px 12px;border:1px solid var(--border);line-height:1.5;color:var(--text);}
 .bubble tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
 
 /* USER AVATAR */
@@ -219,8 +219,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .msg.ai .msg-time{text-align:left;}
 
 /* LIGHT MODE FIXES */
-body.light .bubble strong{color:#1d4ed8;}
+body.light .bubble strong{font-weight:700;color:#0f172a;}
+body.light .bubble li strong{color:#1d4ed8;}
 body.light .bubble h2,body.light .bubble h3{color:#1d4ed8;}
+body.light .bubble p,body.light .bubble li,body.light .bubble td{color:#0f172a;}
 body.light .tbl-wrap th{background:#f1f5f9;color:#0f172a;}
 body.light .tbl-wrap td{color:#0f172a;}
 body.light .bubble code{background:rgba(0,0,0,0.06);border-color:#e2e8f0;color:#1e293b;}
@@ -869,7 +871,8 @@ body.light .source-item:hover{background:#f8fafc;}
 .tag-code{background:rgba(52,211,153,0.1);color:var(--accent2);border:1px solid rgba(52,211,153,0.2);}
 .tag-design{background:rgba(192,132,252,0.1);color:var(--accent3);border:1px solid rgba(192,132,252,0.2);}
 .bubble h2,.bubble h3{color:var(--accent);}
-.bubble strong{color:var(--accent);font-weight:700;}
+.bubble strong{font-weight:700;color:var(--text);}
+.bubble li strong{color:var(--accent);}
 .bubble p,.bubble li,.bubble td,.bubble blockquote{color:var(--text);}
 .bubble pre{border-left:3px solid var(--accent);}
 
@@ -2449,10 +2452,24 @@ function md(text) {
       return codeBlocks[idx];
     }
 
-    // Heading
-    if (/^### (.+)/.test(block)) return '<h3>'+block.replace(/^### /,'')+'</h3>';
-    if (/^## (.+)/.test(block)) return '<h2>'+block.replace(/^## /,'')+'</h2>';
-    if (/^# (.+)/.test(block)) return '<h1>'+block.replace(/^# /,'')+'</h1>';
+    // Heading — split heading text from any inline paragraph that follows
+    if (/^### (.+)/.test(block)) {
+      const rest = block.replace(/^### /,'');
+      const dot = rest.indexOf('. ');
+      if (dot > 0 && dot < 80) return '<h3>'+rest.slice(0,dot+1)+'</h3><p>'+rest.slice(dot+2)+'</p>';
+      return '<h3>'+rest+'</h3>';
+    }
+    if (/^## (.+)/.test(block)) {
+      const rest = block.replace(/^## /,'');
+      // If there's inline text after the heading (no linebreak), split at first sentence
+      const dot = rest.indexOf('. ');
+      if (dot > 0 && dot < 80) return '<h2>'+rest.slice(0,dot+1)+'</h2><p>'+rest.slice(dot+2)+'</p>';
+      return '<h2>'+rest+'</h2>';
+    }
+    if (/^# (.+)/.test(block)) {
+      const rest = block.replace(/^# /,'');
+      return '<h1>'+rest+'</h1>';
+    }
 
     // Blockquote
     if (/^> /.test(block)) return '<blockquote>'+block.replace(/^> /,'')+'</blockquote>';

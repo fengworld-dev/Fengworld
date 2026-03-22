@@ -330,6 +330,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 /* SUB-PAGES (login, language, appearance, data, help) */
 .subpage{position:fixed;inset:0;background:var(--bg);z-index:400;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);overflow-y:auto;display:flex;flex-direction:column;}
 
+.tbl-wrap{overflow-x:auto;margin:10px 0;}
+.bubble table{border-collapse:collapse;width:100%;font-size:0.83rem;}
+.bubble th{background:var(--surface2);color:var(--text);padding:8px 12px;text-align:left;border:1px solid var(--border2);font-weight:600;}
+.bubble td{padding:7px 12px;border:1px solid var(--border);color:var(--text);}
+.bubble tr:nth-child(even) td{background:var(--surface);}
+
 /* ── TABLE OF CONTENTS ── */
 .toc-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:0.82rem;}
 .toc-title{font-weight:700;font-size:0.78rem;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;}
@@ -424,6 +430,92 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .help-name{font-weight:600;font-size:0.9rem;margin-bottom:2px;}
 .help-detail{font-size:0.78rem;color:var(--muted);}
 .help-arr{color:var(--muted2);}
+
+/* ── TOAST ── */
+.feng-toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--border2);color:var(--text);
+  padding:10px 20px;border-radius:50px;font-size:0.82rem;z-index:9999;
+  opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+.feng-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── CONFETTI ── */
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes popIn{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* ── POMODORO ── */
+.pomo-tab{padding:7px 14px;border-radius:50px;border:none;background:transparent;color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.pomo-tab.active{background:var(--accent);color:#fff;}
+#pomo-circle{position:relative;display:flex;align-items:center;justify-content:center;}
+
+/* ── SIDEBAR TOOL BUTTONS ── */
+.sb-tool-btn{
+  padding:8px 6px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);font-size:0.75rem;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.sb-tool-btn:hover{border-color:var(--accent);color:var(--text);}
+
+/* ── REACTIONS ── */
+.reaction-row{display:flex;gap:4px;margin-left:auto;}
+.react-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.react-btn:hover{transform:scale(1.2);border-color:var(--border2);}
+
+/* ── STOP BUTTON ── */
+.stop-btn{
+  width:34px;height:34px;border-radius:9px;border:1px solid rgba(239,68,68,0.4);
+  background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+}
+.stop-btn:hover{background:rgba(239,68,68,0.18);}
+.stop-btn svg{width:13px;height:13px;}
+
+/* ── USER MSG EDIT ── */
+.msg.user .bubble{position:relative;}
+.edit-msg-btn{
+  position:absolute;top:6px;right:6px;
+  width:22px;height:22px;border-radius:6px;
+  border:none;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);
+  cursor:pointer;display:none;align-items:center;justify-content:center;
+  font-size:0.65rem;transition:all 0.15s;
+}
+.msg.user:hover .edit-msg-btn{display:flex;}
+.edit-msg-btn:hover{background:rgba(255,255,255,0.25);}
+
+/* ── PIN BADGE ── */
+.pin-badge{color:var(--accent);font-size:0.7rem;margin-right:4px;}
+
+/* ── SB ITEM ACTIONS ── */
+.sb-item{display:flex;align-items:center;gap:8px;padding:9px 18px;cursor:pointer;font-size:0.83rem;color:var(--muted);transition:background 0.12s;position:relative;}
+.sb-item-actions{display:none;gap:4px;margin-left:auto;flex-shrink:0;}
+.sb-item:hover .sb-item-actions{display:flex;}
+.sb-act-btn{width:22px;height:22px;border-radius:5px;border:none;background:var(--surface2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.65rem;}
+.sb-act-btn:hover{background:var(--border2);color:var(--text);}
+
+/* ── PERSONA OPTIONS ── */
+.persona-option{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);cursor:pointer;margin-bottom:10px;transition:all 0.15s;}
+.persona-option.selected{border-color:var(--accent);background:rgba(79,142,247,0.05);}
+.persona-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.persona-info{flex:1;}
+.persona-name{font-weight:600;font-size:0.9rem;margin-bottom:2px;}
+.persona-desc{font-size:0.75rem;color:var(--muted);}
+.persona-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.persona-option.selected .persona-radio{border-color:var(--accent);background:var(--accent);}
+.persona-option.selected .persona-radio::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff;}
+
+/* ── CODE HIGHLIGHTING ── */
+.bubble pre{background:#0d1117;border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden;position:relative;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#161b22;border-bottom:1px solid var(--border);}
+.code-lang-label{font-size:0.68rem;color:#7d8590;text-transform:uppercase;letter-spacing:1px;font-family:'DM Sans',sans-serif;}
+.copy-code-btn{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;border:1px solid #30363d;background:transparent;color:#7d8590;font-size:0.7rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.copy-code-btn:hover{background:#21262d;color:#c9d1d9;}
+.bubble pre code{display:block;padding:14px;font-family:'Fira Code','Courier New',monospace;font-size:0.82rem;line-height:1.65;color:#c9d1d9;overflow-x:auto;}
+/* Syntax colors */
+.tok-keyword{color:#ff7b72;}.tok-string{color:#a5d6ff;}.tok-comment{color:#8b949e;font-style:italic;}
+.tok-number{color:#79c0ff;}.tok-function{color:#d2a8ff;}.tok-operator{color:#ff7b72;}
 
 /* ── ACTION BAR ── */
 .action-bar{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
@@ -650,12 +742,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <span class="logo-text">Feng <span class="logo-ai">AI</span></span>
       </div>
     </div>
-    <button class="sb-new" onclick="newChat();closeSB();" title="New chat">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
+    <div style="display:flex;gap:6px;">
+      <button class="sb-new" onclick="openSubpage('page-search')" title="Search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="sb-new" onclick="newChat();closeSB();" title="New chat">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
   </div>
   <div class="sb-scroll" id="sb-scroll"></div>
-  <div style="padding:10px 14px;border-top:1px solid var(--border);">
+  <div style="padding:10px 14px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+    <button onclick="openSubpage('page-bookmarks');closeSB();" class="sb-tool-btn">🔖 Saved</button>
+    <button onclick="openSubpage('page-notebook');closeSB();renderNotes();" class="sb-tool-btn">📓 Notebook</button>
+    <button onclick="openSubpage('page-pomodoro');closeSB();" class="sb-tool-btn">⏱️ Timer</button>
+    <button onclick="openSubpage('page-dashboard');closeSB();renderDashboard();" class="sb-tool-btn">📊 Progress</button>
+  </div>
+  <div style="padding:0 14px 10px;">
     <button onclick="exportChat();closeSB();" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.15s;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Export Chat
@@ -686,6 +789,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     <div class="set-group">
       <div class="set-row" onclick="openSubpage('page-lang')"><div class="s-icon">🌐</div><div class="s-label">Language</div><div class="s-val" id="cur-lang">English</div><div class="s-arr">›</div></div>
       <div class="set-row" onclick="openSubpage('page-appear')"><div class="s-icon">🌙</div><div class="s-label">Appearance</div><div class="s-val" id="cur-appear">Dark</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-themes')"><div class="s-icon">🎨</div><div class="s-label">Chat Theme</div><div class="s-val" id="cur-theme">Default</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-persona')"><div class="s-icon">🎭</div><div class="s-label">AI Persona</div><div class="s-val" id="cur-persona">Default</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-response')"><div class="s-icon">⚙️</div><div class="s-label">Response Style</div><div class="s-val" id="cur-response">Balanced</div><div class="s-arr">›</div></div>
     </div>
     <span class="set-label">About</span>
     <div class="set-group">
@@ -803,6 +909,97 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   </div>
 </div>
 
+<!-- THEMES PAGE -->
+<div class="subpage" id="page-themes">
+  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-themes')">←</button><div class="sub-title">Chat Theme</div></div>
+  <div class="sub-body"><div id="theme-list"></div></div>
+</div>
+
+<!-- BOOKMARKS PAGE -->
+<div class="subpage" id="page-bookmarks">
+  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-bookmarks')">←</button><div class="sub-title">Saved Answers</div></div>
+  <div class="sub-body" id="bookmarks-body" style="padding-top:12px;"></div>
+</div>
+
+<!-- NOTEBOOK PAGE -->
+<div class="subpage" id="page-notebook">
+  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-notebook')">←</button><div class="sub-title">My Notebook</div>
+    <button onclick="saveNote()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
+  </div>
+  <div class="sub-body" style="padding:12px 20px;display:flex;flex-direction:column;gap:10px;height:100%;">
+    <input id="note-title" class="login-input" placeholder="Note title…" style="font-size:0.9rem;"/>
+    <textarea id="note-body" placeholder="Write your notes here…" style="flex:1;resize:none;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;line-height:1.7;outline:none;"></textarea>
+    <div id="notes-list" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- POMODORO PAGE -->
+<div class="subpage" id="page-pomodoro">
+  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-pomodoro')">←</button><div class="sub-title">Study Timer</div></div>
+  <div class="sub-body" style="display:flex;flex-direction:column;align-items:center;padding-top:40px;gap:24px;">
+    <div id="pomo-mode-tabs" style="display:flex;gap:8px;background:var(--surface2);border-radius:50px;padding:4px;">
+      <button class="pomo-tab active" onclick="setPomoMode('focus')">Focus</button>
+      <button class="pomo-tab" onclick="setPomoMode('short')">Short Break</button>
+      <button class="pomo-tab" onclick="setPomoMode('long')">Long Break</button>
+    </div>
+    <div id="pomo-circle">
+      <svg viewBox="0 0 200 200" width="200" height="200">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="8"/>
+        <circle id="pomo-arc" cx="100" cy="100" r="88" fill="none" stroke="var(--accent)" stroke-width="8" stroke-dasharray="553" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 1s linear;"/>
+      </svg>
+      <div id="pomo-time" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;">25:00</div>
+    </div>
+    <div style="font-size:0.85rem;color:var(--muted);" id="pomo-label">Ready to focus?</div>
+    <div style="display:flex;gap:12px;">
+      <button onclick="togglePomo()" id="pomo-btn" style="padding:12px 32px;border-radius:50px;border:none;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;">Start</button>
+      <button onclick="resetPomo()" style="padding:12px 24px;border-radius:50px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">Reset</button>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);">Sessions today: <strong id="pomo-count" style="color:var(--accent);">0</strong></div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="subpage" id="page-dashboard">
+  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-dashboard')">←</button><div class="sub-title">My Progress</div></div>
+  <div class="sub-body" id="dashboard-body"></div>
+</div>
+
+<!-- PERSONAS PAGE -->
+<div class="subpage" id="page-persona">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-persona')">←</button>
+    <div class="sub-title">AI Persona</div>
+  </div>
+  <div class="sub-body">
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">Choose how Feng AI communicates with you.</p>
+    <div id="persona-list"></div>
+  </div>
+</div>
+
+<!-- RESPONSE STYLE PAGE -->
+<div class="subpage" id="page-response">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-response')">←</button>
+    <div class="sub-title">Response Style</div>
+  </div>
+  <div class="sub-body">
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:18px;line-height:1.6;">Control how detailed and formal Feng AI's responses are.</p>
+    <div id="response-style-list"></div>
+  </div>
+</div>
+
+<!-- SEARCH PAGE -->
+<div class="subpage" id="page-search">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-search')">←</button>
+    <div class="sub-title">Search Conversations</div>
+  </div>
+  <div class="sub-body" style="padding-top:12px;">
+    <input id="search-input" class="lang-search" type="text" placeholder="Search your chats…" oninput="searchConversations(this.value)" autofocus/>
+    <div id="search-results"></div>
+  </div>
+</div>
+
 <!-- MAIN -->
 <div id="app" style="flex:1;display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;z-index:1;">
   <div class="nav">
@@ -873,8 +1070,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
         <textarea id="user-input" placeholder="Type a message…" rows="1"></textarea>
+        <button class="mic-btn" id="web-search-btn" onclick="toggleWebSearch()" title="Web search OFF" style="font-size:0.8rem;">🌐</button>
         <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Speak">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="stop-btn" id="stop-btn" onclick="stopGenerating()" title="Stop" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
         </button>
         <button class="send-btn" id="send-btn" onclick="sendMessage()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -915,7 +1116,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.0.4';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1117,8 +1318,11 @@ function renderSB() {
   const el = document.getElementById('sb-scroll');
   if (!sessions.length) { el.innerHTML = '<div style="padding:16px;font-size:0.8rem;color:var(--muted);text-align:center;">No conversations yet</div>'; return; }
   const now = Date.now(), day = 86400000;
-  const grps = {'Today':[],'Last 7 Days':[],'Older':[]};
-  sessions.slice().reverse().forEach(s => {
+  // Pinned first, then by date
+  const pinned = sessions.filter(s=>s.pinned).reverse();
+  const unpinned = sessions.filter(s=>!s.pinned).reverse();
+  const grps = {'📌 Pinned':pinned,'Today':[],'Last 7 Days':[],'Older':[]};
+  unpinned.forEach(s => {
     const d = now - s.ts;
     if (d < day) grps['Today'].push(s);
     else if (d < 7*day) grps['Last 7 Days'].push(s);
@@ -1132,7 +1336,13 @@ function renderSB() {
     items.forEach(s => {
       const item = document.createElement('div');
       item.className = 'sb-item' + (s.id === curSession ? ' active' : '');
-      item.textContent = s.title;
+      item.innerHTML =
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(s.pinned?'📌 ':'')+esc(s.title)+'</span>' +
+        '<div class="sb-item-actions">' +
+          '<button class="sb-act-btn" title="Pin" onclick="pinSession(\''+s.id+'\',event)">📌</button>' +
+          '<button class="sb-act-btn" title="Rename" onclick="renameSession(\''+s.id+'\',event)">✏️</button>' +
+          '<button class="sb-act-btn" title="Delete" onclick="deleteSession(\''+s.id+'\',event)" style="color:#ef4444;">🗑️</button>' +
+        '</div>';
       item.onclick = () => { loadSession(s.id); closeSB(); };
       sec.appendChild(item);
     });
@@ -1164,6 +1374,14 @@ function openSubpage(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'page-login') renderLoginPage();
   if (id === 'page-lang') renderLangList('');
+  if (id === 'page-persona') renderPersonaList();
+  if (id === 'page-response') renderResponseStyleList();
+  if (id === 'page-search') { setTimeout(()=>{ const si=document.getElementById('search-input'); if(si)si.focus(); },300); searchConversations(''); }
+  if (id === 'page-themes') renderThemeList();
+  if (id === 'page-bookmarks') renderBookmarks();
+  if (id === 'page-notebook') renderNotes();
+  if (id === 'page-dashboard') renderDashboard();
+  if (id === 'page-pomodoro') updatePomoUI();
 }
 function closeSubpage(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -1564,7 +1782,18 @@ function scrollDown() {
 
 function md(text) {
   text = stripSugs(text);
-  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_,lang,code) => '<pre>' + (lang?'<span class="code-lang">'+lang+'</span>':'') + '<code>' + esc(code.trim()) + '</code></pre>');
+  // Code blocks with syntax highlighting + copy button
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    const trimmed = code.trim();
+    const highlighted = highlightCode(trimmed, lang||'general');
+    const escaped = trimmed.replace(/'/g,"\\'").replace(/\n/g,'\\n');
+    return '<pre>' +
+      '<div class="code-header">' +
+        '<span class="code-lang-label">'+(lang||'code')+'</span>' +
+        '<button class="copy-code-btn" onclick="copyCode(this,\''+escaped+'\')">Copy</button>' +
+      '</div>' +
+      '<code>'+highlighted+'</code></pre>';
+  });
   text = text.replace(/`([^`\n]+)`/g,'<code>$1</code>');
   text = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
   text = text.replace(/\*(.*?)\*/g,'<em>$1</em>');
@@ -1572,6 +1801,12 @@ function md(text) {
   text = text.replace(/^## (.+)$/gm,'<h2>$1</h2>');
   text = text.replace(/^# (.+)$/gm,'<h1>$1</h1>');
   text = text.replace(/^> (.+)$/gm,'<blockquote style="border-left:3px solid var(--border2);padding-left:10px;color:var(--muted);font-style:italic;margin:6px 0;">$1</blockquote>');
+  // Tables
+  text = text.replace(/^\|(.+)\|\s*\n\|[-\s|:]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, (_, header, rows) => {
+    const ths = header.split('|').map(c=>'<th>'+c.trim()+'</th>').join('');
+    const trs = rows.trim().split('\n').map(r=>'<tr>'+r.split('|').filter((_,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('');
+    return '<div class="tbl-wrap"><table><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
+  });
   text = text.replace(/^[\-\*] (.+)$/gm,'<li>$1</li>');
   text = text.replace(/(<li>.*?<\/li>\n?)+/gs, m=>'<ul>'+m+'</ul>');
   text = text.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
@@ -1787,8 +2022,11 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // Add action bar — copy, share, regenerate
+      // Add action bar — copy, share, bookmark, regenerate, reactions
       addActionBar(body, stripSugs(rawText), tag);
+
+      // Add confidence indicator
+      addConfidenceBar(body, stripSugs(rawText));
 
       if (sugs.length) {
         const wrap = document.createElement('div');
@@ -1812,10 +2050,18 @@ function streamAnswer(rawText, tag) {
 function addActionBar(body, text, tag) {
   const bar = document.createElement('div');
   bar.className = 'action-bar';
+  const bid = 'ab'+Date.now();
   bar.innerHTML =
     '<button class="action-btn" onclick="copyAnswer(this,'+JSON.stringify(text)+')" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>' +
     '<button class="action-btn" onclick="shareAnswer('+JSON.stringify(text)+')" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>' +
-    '<button class="action-btn" onclick="regenerateAnswer(\''+tag+'\')" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Regenerate</button>';
+    '<button class="action-btn" id="bk-'+bid+'" onclick="bookmarkAnswer(\''+bid+'\','+JSON.stringify(text)+')" title="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Save</button>' +
+    '<button class="action-btn" onclick="regenerateAnswer(\''+tag+'\')" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Retry</button>' +
+    '<div class="reaction-row" id="rx-'+bid+'">' +
+      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'👍\')">👍</button>' +
+      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'👎\')">👎</button>' +
+      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'❤️\')">❤️</button>' +
+      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'🤯\')">🤯</button>' +
+    '</div>';
   body.appendChild(bar);
 }
 
@@ -1989,7 +2235,9 @@ async function sendMessage() {
   }
 
   busy = true;
+  stopRequested = false;
   document.getElementById('send-btn').disabled = true;
+  showStopBtn();
   const t0 = Date.now();
   const handle = startThinking(text, tag);
 
@@ -2016,7 +2264,7 @@ async function sendMessage() {
       // Normal text — send full history with context + memory injected
       const detectedLang = detectUserLanguage(text);
       const langNote = detectedLang ? '\n[LANGUAGE: User is writing in ' + detectedLang + ' — please respond in ' + detectedLang + ']' : '';
-      const ctx = buildContextString() + buildMemoryContext() + langNote;
+      const ctx = buildContextString() + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote();
       const messagesWithCtx = history.map((m, i) => {
         if (i === history.length - 1 && m.role === 'user' && ctx) {
           return { role: 'user', content: m.content + ctx };
@@ -2070,6 +2318,7 @@ async function sendMessage() {
   }
 
   busy = false;
+  hideStopBtn();
   document.getElementById('send-btn').disabled = false;
   inp.focus();
 }
@@ -2238,6 +2487,491 @@ function hideSplash() {
   }
 }
 
+// ── STOP GENERATING ──
+let stopRequested = false;
+function stopGenerating() {
+  stopRequested = true;
+  document.getElementById('stop-btn').style.display = 'none';
+  document.getElementById('send-btn').style.display = 'flex';
+  busy = false;
+}
+function showStopBtn() {
+  document.getElementById('stop-btn').style.display = 'flex';
+  document.getElementById('send-btn').style.display = 'none';
+}
+function hideStopBtn() {
+  document.getElementById('stop-btn').style.display = 'none';
+  document.getElementById('send-btn').style.display = 'flex';
+}
+
+// ── MESSAGE EDITING ──
+function addUserBubble(text, scroll=true, imgPreview=null, fname='') {
+  const list = document.getElementById('msg-list');
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  const msgIdx = history.filter(m=>m.role==='user').length;
+  let inner = '';
+  if (imgPreview) {
+    inner += '<div style="margin-bottom:6px;border-radius:10px;overflow:hidden;max-width:200px;"><img src="'+imgPreview+'" style="width:100%;display:block;border-radius:10px;" alt="'+esc(fname)+'"/></div>';
+  } else if (fname && !imgPreview) {
+    inner += '<div style="font-size:0.75rem;opacity:0.8;margin-bottom:4px;">📎 '+esc(fname)+'</div>';
+  }
+  if (text) inner += esc(text);
+  el.innerHTML = '<div class="user-av">You</div><div class="msg-body"><div class="bubble" style="position:relative;">'+inner+'<button class="edit-msg-btn" onclick="editMessage(this)" title="Edit">✏️</button></div></div>';
+  list.appendChild(el);
+  if (scroll) scrollDown();
+}
+
+function editMessage(btn) {
+  const bubble = btn.closest('.bubble');
+  const msgDiv = btn.closest('.msg');
+  const allMsgs = Array.from(document.getElementById('msg-list').children);
+  const idx = allMsgs.indexOf(msgDiv);
+  // Get text content only
+  const text = bubble.textContent.replace('✏️','').trim();
+  // Remove this message and everything after from DOM
+  for (let i = allMsgs.length - 1; i >= idx; i--) {
+    allMsgs[i].remove();
+  }
+  // Remove from history back to this point
+  const userMsgsBefore = allMsgs.slice(0, idx).filter(el => el.classList.contains('msg') && el.classList.contains('user')).length;
+  // Trim history to before this message
+  let userCount = 0;
+  let trimIdx = 0;
+  for (let i = 0; i < history.length; i++) {
+    if (history[i].role === 'user') {
+      if (userCount === userMsgsBefore) { trimIdx = i; break; }
+      userCount++;
+    }
+  }
+  history = history.slice(0, trimIdx);
+  // Put text back in input
+  document.getElementById('user-input').value = text;
+  document.getElementById('user-input').focus();
+  if (heroOn && allMsgs.slice(0, idx).filter(el=>el.classList.contains('msg')).length === 0) showHero();
+}
+
+// ── PERSONAS ──
+const PERSONAS = [
+  { id:'default', icon:'🤖', name:'Default', desc:'Balanced, helpful and professional', prompt:'' },
+  { id:'teacher', icon:'👩‍🏫', name:'Teacher', desc:'Patient, clear explanations with examples', prompt:'You are a patient, encouraging teacher. Always explain with simple examples, analogies and step-by-step breakdowns. Check for understanding.' },
+  { id:'coach', icon:'💪', name:'Life Coach', desc:'Motivating, positive and action-oriented', prompt:'You are an energetic life coach. Be motivating, positive and always give practical actionable steps. Celebrate progress.' },
+  { id:'friend', icon:'😊', name:'Friendly', desc:'Casual, warm and conversational', prompt:'You are a knowledgeable friend. Be casual, warm, use contractions and everyday language. Be relatable and fun.' },
+  { id:'expert', icon:'🎓', name:'Expert', desc:'Deep, technical and highly detailed', prompt:'You are a world-class expert. Give extremely detailed, technically precise answers. Include nuance, edge cases and advanced insights.' },
+  { id:'tutor', icon:'📚', name:'Study Tutor', desc:'Focused on learning and academic success', prompt:'You are a dedicated academic tutor. Focus on helping the student truly understand concepts, not just memorize. Use the Socratic method when helpful.' }
+];
+let currentPersona = localStorage.getItem('feng_persona') || 'default';
+
+function renderPersonaList() {
+  const el = document.getElementById('persona-list');
+  if (!el) return;
+  el.innerHTML = PERSONAS.map(p =>
+    '<div class="persona-option'+(p.id===currentPersona?' selected':'')+'" onclick="selectPersona(\''+p.id+'\')">' +
+      '<div class="persona-icon" style="background:var(--surface2);">'+p.icon+'</div>' +
+      '<div class="persona-info"><div class="persona-name">'+p.name+'</div><div class="persona-desc">'+p.desc+'</div></div>' +
+      '<div class="persona-radio"></div>' +
+    '</div>'
+  ).join('');
+}
+function selectPersona(id) {
+  currentPersona = id;
+  localStorage.setItem('feng_persona', id);
+  const p = PERSONAS.find(x=>x.id===id);
+  document.getElementById('cur-persona').textContent = p.name;
+  renderPersonaList();
+}
+function getPersonaPrompt() {
+  const p = PERSONAS.find(x=>x.id===currentPersona);
+  return p?.prompt ? '\n\nPERSONA: ' + p.prompt : '';
+}
+
+// ── RESPONSE STYLES ──
+const RESPONSE_STYLES = [
+  { id:'concise', icon:'⚡', name:'Concise', desc:'Short, to the point answers' },
+  { id:'balanced', icon:'⚖️', name:'Balanced', desc:'Normal length, well structured' },
+  { id:'detailed', icon:'📖', name:'Detailed', desc:'Long, thorough, comprehensive' },
+  { id:'formal', icon:'👔', name:'Formal', desc:'Professional and academic tone' },
+  { id:'simple', icon:'🌱', name:'Simple', desc:'Easy language for all ages' }
+];
+let currentResponseStyle = localStorage.getItem('feng_style') || 'balanced';
+
+function renderResponseStyleList() {
+  const el = document.getElementById('response-style-list');
+  if (!el) return;
+  el.innerHTML = RESPONSE_STYLES.map(s =>
+    '<div class="persona-option'+(s.id===currentResponseStyle?' selected':'')+'" onclick="selectResponseStyle(\''+s.id+'\')">' +
+      '<div class="persona-icon" style="background:var(--surface2);">'+s.icon+'</div>' +
+      '<div class="persona-info"><div class="persona-name">'+s.name+'</div><div class="persona-desc">'+s.desc+'</div></div>' +
+      '<div class="persona-radio"></div>' +
+    '</div>'
+  ).join('');
+}
+function selectResponseStyle(id) {
+  currentResponseStyle = id;
+  localStorage.setItem('feng_style', id);
+  const s = RESPONSE_STYLES.find(x=>x.id===id);
+  document.getElementById('cur-response').textContent = s.name;
+  renderResponseStyleList();
+}
+function getStyleNote() {
+  const notes = { concise:'\nBe concise — short focused answers.', balanced:'', detailed:'\nBe very detailed and comprehensive.', formal:'\nUse formal academic language.', simple:'\nUse very simple easy-to-understand language.' };
+  return notes[currentResponseStyle] || '';
+}
+
+// ── SEARCH CONVERSATIONS ──
+function searchConversations(query) {
+  const el = document.getElementById('search-results');
+  if (!el) return;
+  if (!query.trim()) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">Type to search your conversations</div>'; return; }
+  const results = sessions.filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+  if (!results.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.82rem;padding:20px;">No conversations found</div>'; return; }
+  el.innerHTML = results.map(s =>
+    '<div onclick="loadSession(\''+s.id+'\');closeSubpage(\'page-search\');closeSB();" style="padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer;font-size:0.85rem;">' +
+      '<div style="color:var(--text);margin-bottom:2px;">'+esc(s.title)+'</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);">'+new Date(s.ts).toLocaleDateString()+'</div>' +
+    '</div>'
+  ).join('');
+}
+
+// ── RENAME / DELETE / PIN CONVERSATIONS ──
+function renameSession(id, e) {
+  e.stopPropagation();
+  const s = sessions.find(x=>x.id===id); if(!s) return;
+  const newName = prompt('Rename conversation:', s.title);
+  if (newName && newName.trim()) {
+    s.title = newName.trim();
+    localStorage.setItem('feng_s', JSON.stringify(sessions));
+    renderSB();
+  }
+}
+function deleteSession(id, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this conversation?')) return;
+  sessions = sessions.filter(x=>x.id!==id);
+  localStorage.setItem('feng_s', JSON.stringify(sessions));
+  if (curSession === id) newChat();
+  else renderSB();
+}
+function pinSession(id, e) {
+  e.stopPropagation();
+  const s = sessions.find(x=>x.id===id); if(!s) return;
+  s.pinned = !s.pinned;
+  localStorage.setItem('feng_s', JSON.stringify(sessions));
+  renderSB();
+}
+
+// ── SYNTAX HIGHLIGHTING ──
+function highlightCode(code, lang) {
+  let h = esc(code);
+  const keywords = { js:['const','let','var','function','return','if','else','for','while','class','import','export','from','async','await','new','this','true','false','null','undefined','typeof','try','catch','throw'], py:['def','return','if','elif','else','for','while','class','import','from','as','True','False','None','and','or','not','in','is','try','except','raise','with','lambda'], general:['function','return','if','else','for','while','class','import','true','false','null'] };
+  const kws = keywords[lang] || keywords.general;
+  kws.forEach(kw => { h = h.replace(new RegExp('\\b('+kw+')\\b','g'), '<span class="tok-keyword">$1</span>'); });
+  h = h.replace(/(["'`])(.*?)\1/g, '<span class="tok-string">$1$2$1</span>');
+  h = h.replace(/\/\/[^\n]*/g, '<span class="tok-comment">$&</span>');
+  h = h.replace(/#[^\n]*/g, '<span class="tok-comment">$&</span>');
+  h = h.replace(/\b(\d+\.?\d*)\b/g, '<span class="tok-number">$1</span>');
+  return h;
+}
+
+function copyCode(btn, code) {
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+// ── CHAT THEMES ──
+const THEMES = [
+  { id:'default', name:'Default', accent:'#4f8ef7', bg:'#0f0f11', surface:'#18181b' },
+  { id:'purple', name:'Purple', accent:'#a855f7', bg:'#0d0a14', surface:'#1a1525' },
+  { id:'green', name:'Forest', accent:'#22c55e', bg:'#0a110d', surface:'#111a13' },
+  { id:'orange', name:'Sunset', accent:'#f97316', bg:'#110d09', surface:'#1a1410' },
+  { id:'pink', name:'Rose', accent:'#ec4899', bg:'#110a0e', surface:'#1a1118' },
+  { id:'teal', name:'Ocean', accent:'#14b8a6', bg:'#090f10', surface:'#0f1a1b' },
+  { id:'red', name:'Ruby', accent:'#ef4444', bg:'#110909', surface:'#1a1010' },
+  { id:'gold', name:'Gold', accent:'#eab308', bg:'#0f0e08', surface:'#1a1900' }
+];
+let currentThemeId = localStorage.getItem('feng_theme') || 'default';
+
+function renderThemeList() {
+  const el = document.getElementById('theme-list');
+  if (!el) return;
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+    THEMES.map(t =>
+      '<div onclick="selectTheme(\''+t.id+'\')" style="padding:16px;border-radius:12px;border:2px solid '+(t.id===currentThemeId?t.accent:'var(--border)')+';cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;">' +
+        '<div style="width:28px;height:28px;border-radius:50%;background:'+t.accent+';flex-shrink:0;box-shadow:0 0 12px '+t.accent+'66;"></div>' +
+        '<span style="font-size:0.85rem;font-weight:600;'+(t.id===currentThemeId?'color:'+t.accent:'color:var(--text)')+'">'+t.name+'</span>' +
+      '</div>'
+    ).join('') + '</div>';
+}
+function selectTheme(id) {
+  currentThemeId = id;
+  localStorage.setItem('feng_theme', id);
+  applyTheme(id);
+  const t = THEMES.find(x=>x.id===id);
+  if (t) document.getElementById('cur-theme').textContent = t.name;
+  renderThemeList();
+}
+function applyTheme(id) {
+  const t = THEMES.find(x=>x.id===id) || THEMES[0];
+  const root = document.documentElement;
+  root.style.setProperty('--accent', t.accent);
+  // Also tint bg/surface slightly if not default
+  if (id !== 'default' && id !== 'light') {
+    root.style.setProperty('--bg', t.bg);
+    root.style.setProperty('--surface', t.surface);
+  }
+}
+
+// ── BOOKMARKS ──
+let bookmarks = JSON.parse(localStorage.getItem('feng_bookmarks') || '[]');
+function bookmarkAnswer(bid, text) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').trim().slice(0,300);
+  const bk = { id: bid, text: clean, ts: Date.now(), preview: clean.slice(0,80)+'…' };
+  bookmarks.unshift(bk);
+  if (bookmarks.length > 50) bookmarks = bookmarks.slice(0,50);
+  localStorage.setItem('feng_bookmarks', JSON.stringify(bookmarks));
+  const btn = document.getElementById('bk-'+bid);
+  if (btn) { btn.style.color='var(--accent)'; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Saved!'; }
+  showToast('Answer saved to bookmarks 🔖');
+}
+function renderBookmarks() {
+  const el = document.getElementById('bookmarks-body');
+  if (!el) return;
+  if (!bookmarks.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;">No saved answers yet.<br>Tap Save on any AI response.</div>'; return; }
+  el.innerHTML = bookmarks.map((b,i) =>
+    '<div style="padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">' +
+      '<div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;">'+new Date(b.ts).toLocaleString()+'</div>' +
+      '<div style="font-size:0.85rem;line-height:1.6;color:var(--text);">'+esc(b.preview)+'</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;">' +
+        '<button onclick="copyAnswer(this,'+JSON.stringify(b.text)+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:0.75rem;cursor:pointer;">Copy</button>' +
+        '<button onclick="deleteBookmark('+i+')" style="padding:5px 12px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:0.75rem;cursor:pointer;">Delete</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+function deleteBookmark(i) {
+  bookmarks.splice(i,1);
+  localStorage.setItem('feng_bookmarks', JSON.stringify(bookmarks));
+  renderBookmarks();
+}
+
+// ── NOTEBOOK ──
+let notes = JSON.parse(localStorage.getItem('feng_notes') || '[]');
+function saveNote() {
+  const title = document.getElementById('note-title')?.value.trim();
+  const body = document.getElementById('note-body')?.value.trim();
+  if (!title && !body) return;
+  notes.unshift({ id: Date.now(), title: title||'Untitled', body, ts: Date.now() });
+  localStorage.setItem('feng_notes', JSON.stringify(notes));
+  if (document.getElementById('note-title')) document.getElementById('note-title').value = '';
+  if (document.getElementById('note-body')) document.getElementById('note-body').value = '';
+  renderNotes();
+  showToast('Note saved! 📓');
+}
+function renderNotes() {
+  const el = document.getElementById('notes-list');
+  if (!el) return;
+  if (!notes.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Saved Notes</div>' +
+    notes.map((n,i) =>
+      '<div style="padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--surface);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+          '<strong style="font-size:0.85rem;">'+esc(n.title)+'</strong>' +
+          '<button onclick="deleteNote('+i+')" style="border:none;background:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">✕</button>' +
+        '</div>' +
+        '<div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">'+esc(n.body.slice(0,120))+(n.body.length>120?'…':'')+'</div>' +
+      '</div>'
+    ).join('');
+}
+function deleteNote(i) {
+  notes.splice(i,1);
+  localStorage.setItem('feng_notes', JSON.stringify(notes));
+  renderNotes();
+}
+
+// ── POMODORO TIMER ──
+let pomoMode = 'focus', pomoRunning = false, pomoIv = null;
+let pomoSecs = 25*60, pomoTotal = 25*60;
+let pomoSessionCount = parseInt(localStorage.getItem('feng_pomo_count')||'0');
+const POMO_TIMES = { focus:25*60, short:5*60, long:15*60 };
+const POMO_LABELS = { focus:'Stay focused! 🎯', short:'Take a break ☕', long:'Long break — stretch! 🧘' };
+
+function setPomoMode(mode) {
+  pomoMode = mode; pomoRunning = false;
+  clearInterval(pomoIv);
+  pomoSecs = POMO_TIMES[mode]; pomoTotal = pomoSecs;
+  document.querySelectorAll('.pomo-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.pomo-tab[onclick="setPomoMode(\''+mode+'\')"]').classList.add('active');
+  document.getElementById('pomo-btn').textContent = 'Start';
+  updatePomoUI();
+}
+function togglePomo() {
+  if (pomoRunning) {
+    clearInterval(pomoIv); pomoRunning=false;
+    document.getElementById('pomo-btn').textContent = 'Resume';
+  } else {
+    pomoRunning=true;
+    document.getElementById('pomo-btn').textContent = 'Pause';
+    pomoIv = setInterval(() => {
+      if (pomoSecs <= 0) {
+        clearInterval(pomoIv); pomoRunning=false;
+        document.getElementById('pomo-btn').textContent = 'Start';
+        if (pomoMode==='focus') {
+          pomoSessionCount++;
+          localStorage.setItem('feng_pomo_count', pomoSessionCount);
+          document.getElementById('pomo-count').textContent = pomoSessionCount;
+          showToast('Focus session complete! 🎉');
+          confetti();
+        } else { showToast('Break over! Ready to focus? ⚡'); }
+        return;
+      }
+      pomoSecs--;
+      updatePomoUI();
+    }, 1000);
+  }
+}
+function resetPomo() {
+  clearInterval(pomoIv); pomoRunning=false;
+  pomoSecs=POMO_TIMES[pomoMode]; pomoTotal=pomoSecs;
+  document.getElementById('pomo-btn').textContent='Start';
+  updatePomoUI();
+}
+function updatePomoUI() {
+  const mins = String(Math.floor(pomoSecs/60)).padStart(2,'0');
+  const secs = String(pomoSecs%60).padStart(2,'0');
+  const timeEl = document.getElementById('pomo-time');
+  const arcEl = document.getElementById('pomo-arc');
+  const labelEl = document.getElementById('pomo-label');
+  const countEl = document.getElementById('pomo-count');
+  if (timeEl) timeEl.textContent = mins+':'+secs;
+  if (arcEl) { const pct = pomoSecs/pomoTotal; arcEl.style.strokeDashoffset = 553*(1-pct); }
+  if (labelEl) labelEl.textContent = pomoRunning ? POMO_LABELS[pomoMode] : (pomoSecs===pomoTotal?'Ready?':'Paused');
+  if (countEl) countEl.textContent = pomoSessionCount;
+}
+
+// ── STUDENT DASHBOARD ──
+function renderDashboard() {
+  const el = document.getElementById('dashboard-body');
+  if (!el) return;
+  const totalChats = sessions.length;
+  const totalMsgs = history.length;
+  const mem = getMemory();
+  const streak = getStreak();
+  const pomoCount = parseInt(localStorage.getItem('feng_pomo_count')||'0');
+  const bkCount = bookmarks.length;
+  const noteCount = notes.length;
+
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">' +
+      statCard('💬','Conversations', totalChats) +
+      statCard('🔥','Day Streak', streak) +
+      statCard('⏱️','Focus Sessions', pomoCount) +
+      statCard('🔖','Saved Answers', bkCount) +
+      statCard('📓','Notes', noteCount) +
+      statCard('🧠','Topics Studied', mem.lastSubject||'—') +
+    '</div>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">' +
+      '<div style="font-weight:700;font-size:0.85rem;margin-bottom:10px;">📈 Activity</div>' +
+      '<div style="font-size:0.8rem;color:var(--muted);line-height:2;">' +
+        '• Total questions asked: <strong style="color:var(--text);">'+Math.floor(totalMsgs/2)+'</strong><br>' +
+        '• Bookmarked answers: <strong style="color:var(--text);">'+bkCount+'</strong><br>' +
+        '• Notes written: <strong style="color:var(--text);">'+noteCount+'</strong><br>' +
+        (mem.name?'• Logged in as: <strong style="color:var(--accent);">'+esc(mem.name)+'</strong><br>':'') +
+      '</div>' +
+    '</div>';
+}
+function statCard(icon, label, val) {
+  return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">' +
+    '<div style="font-size:1.5rem;margin-bottom:4px;">'+icon+'</div>' +
+    '<div style="font-size:1.2rem;font-weight:800;font-family:\'Syne\',sans-serif;color:var(--accent);">'+val+'</div>' +
+    '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">'+label+'</div>' +
+  '</div>';
+}
+function getStreak() {
+  const key = 'feng_streak';
+  try {
+    const d = JSON.parse(localStorage.getItem(key)||'{}');
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    if (d.last===today) return d.count||1;
+    if (d.last===yesterday) { const n={last:today,count:(d.count||1)+1}; localStorage.setItem(key,JSON.stringify(n)); return n.count; }
+    localStorage.setItem(key,JSON.stringify({last:today,count:1}));
+    return 1;
+  } catch { return 1; }
+}
+
+// ── REACTIONS ──
+function reactTo(bid, emoji) {
+  const row = document.getElementById('rx-'+bid);
+  if (!row) return;
+  row.innerHTML = '<span style="font-size:1.1rem;animation:popIn 0.3s ease;">'+emoji+'</span>';
+  if (emoji==='👍') { updateDashboardStat(); showToast('Glad that helped! 😊'); }
+  else if (emoji==='👎') { showToast('Thanks for the feedback. Try regenerating! 🔄'); }
+  else if (emoji==='❤️') { showToast('Thank you! ❤️'); }
+  else if (emoji==='🤯') { showToast('Mind blown! 🤯'); confetti(); }
+}
+
+// ── TOAST NOTIFICATIONS ──
+function showToast(msg) {
+  let t = document.getElementById('feng-toast');
+  if (!t) { t=document.createElement('div'); t.id='feng-toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.className = 'feng-toast show';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── CONFETTI ──
+function confetti() {
+  const colors = ['#4f8ef7','#34d399','#f59e0b','#ec4899','#a855f7','#ef4444'];
+  for (let i=0; i<60; i++) {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:9999;' +
+      'background:'+colors[Math.floor(Math.random()*colors.length)]+';' +
+      'left:'+Math.random()*100+'vw;top:-10px;' +
+      'animation:confettiFall '+(1.5+Math.random()*2)+'s ease forwards;' +
+      'transform:rotate('+Math.random()*360+'deg);';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+// ── CONFIDENCE INDICATOR ──
+function addConfidenceBar(body, text) {
+  const wordCount = text.split(' ').length;
+  const hasHedge = /\b(might|may|could|possibly|perhaps|unclear|uncertain|approximately|around|about)\b/i.test(text);
+  const confidence = hasHedge ? Math.floor(60+Math.random()*20) : Math.floor(80+Math.random()*18);
+  const color = confidence>=85?'#22c55e':confidence>=70?'#f59e0b':'#ef4444';
+  const label = confidence>=85?'High confidence':confidence>=70?'Moderate confidence':'Lower confidence';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;';
+  bar.innerHTML =
+    '<div style="flex:1;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;">' +
+      '<div style="height:100%;width:'+confidence+'%;background:'+color+';border-radius:2px;transition:width 0.8s ease;"></div>' +
+    '</div>' +
+    '<span style="font-size:0.68rem;color:'+color+';white-space:nowrap;">'+confidence+'% · '+label+'</span>';
+  body.appendChild(bar);
+}
+
+// ── WEB SEARCH MODE ──
+let webSearchEnabled = localStorage.getItem('feng_websearch') === 'true';
+function toggleWebSearch() {
+  webSearchEnabled = !webSearchEnabled;
+  localStorage.setItem('feng_websearch', webSearchEnabled);
+  const btn = document.getElementById('web-search-btn');
+  if (btn) {
+    btn.style.color = webSearchEnabled ? 'var(--accent)' : 'var(--muted)';
+    btn.style.borderColor = webSearchEnabled ? 'var(--accent)' : 'var(--border)';
+    btn.title = webSearchEnabled ? 'Web search ON' : 'Web search OFF';
+  }
+  showToast(webSearchEnabled ? '🌐 Web search enabled' : '🌐 Web search disabled');
+}
+function getWebSearchNote() {
+  if (!webSearchEnabled) return '';
+  return '\n\nWEB SEARCH MODE: The user has enabled web search. For current events, recent news, prices, scores, or time-sensitive questions, clearly note when your knowledge may be outdated and suggest the user verify online. For stable facts, answer normally.';
+}
+
 // ── INPUT RESIZE ──
 const ta = document.getElementById('user-input');
 ta.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,180)+'px'; });
@@ -2251,9 +2985,15 @@ updateOnlineStatus();
 updateRateBar();
 hideSplash();
 applyAppearance(currentAppear);
+applyTheme(currentThemeId);
+getStreak(); // track daily streak
 document.getElementById('ap-'+currentAppear).classList.add('selected');
 document.getElementById('cur-appear').textContent = currentAppear.charAt(0).toUpperCase()+currentAppear.slice(1);
 document.getElementById('cur-lang').textContent = selectedLang;
+const initP = PERSONAS.find(x=>x.id===currentPersona); if(initP) document.getElementById('cur-persona').textContent = initP.name;
+const initS = RESPONSE_STYLES.find(x=>x.id===currentResponseStyle); if(initS) document.getElementById('cur-response').textContent = initS.name;
+const initT = THEMES.find(x=>x.id===currentThemeId); if(initT) document.getElementById('cur-theme').textContent = initT.name;
+if (webSearchEnabled) { const wb=document.getElementById('web-search-btn'); if(wb){wb.style.color='var(--accent)';wb.style.borderColor='var(--accent)';} }
 if (currentUser) { const sb = document.querySelector('.sb-name'); if (sb) sb.textContent = currentUser.name; }
 </script>
 </body>

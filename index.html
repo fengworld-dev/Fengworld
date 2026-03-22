@@ -431,6 +431,60 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .help-detail{font-size:0.78rem;color:var(--muted);}
 .help-arr{color:var(--muted2);}
 
+/* ── NAV MODE BUTTON ── */
+.nav-mode-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 14px;border-radius:50px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text);font-size:0.82rem;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all 0.15s;
+}
+.nav-mode-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-mode-btn svg{transition:transform 0.2s;}
+.nav-mode-btn.open svg{transform:rotate(180deg);}
+
+/* ── MODE PANEL (Claude-style bottom sheet) ── */
+.mode-panel{
+  position:fixed;bottom:-100%;left:0;right:0;
+  z-index:501;
+  background:var(--surface);
+  border-top-left-radius:20px;border-top-right-radius:20px;
+  border-top:1px solid var(--border);
+  padding:10px 20px 40px;
+  transition:bottom 0.35s cubic-bezier(0.16,1,0.3,1);
+  max-height:85vh;overflow-y:auto;
+}
+.mode-panel.open{bottom:0;}
+.mode-panel-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 16px;
+}
+.mode-panel-title{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:1rem;margin-bottom:16px;
+}
+.mode-option{
+  display:flex;align-items:center;gap:14px;
+  padding:14px;border-radius:14px;
+  cursor:pointer;margin-bottom:8px;
+  border:1.5px solid var(--border);
+  background:var(--surface2);
+  transition:all 0.15s;
+}
+.mode-option:hover{border-color:var(--accent);}
+.mode-option.selected{border-color:var(--accent);background:rgba(79,142,247,0.06);}
+.mode-icon{
+  width:42px;height:42px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+.mode-info{flex:1;}
+.mode-name{font-weight:700;font-size:0.9rem;margin-bottom:2px;}
+.mode-desc{font-size:0.75rem;color:var(--muted);line-height:1.4;}
+.mode-check{color:var(--accent);font-weight:700;font-size:1rem;flex-shrink:0;}
+.mode-divider{height:1px;background:var(--border);margin:16px 0 14px;}
+
 /* ── SOURCES PANEL ── */
 .sources-panel{margin-top:12px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);}
 .sources-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;font-size:0.78rem;font-weight:600;color:var(--muted);transition:background 0.15s;user-select:none;}
@@ -618,10 +672,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .tok-number{color:#79c0ff;}.tok-function{color:#d2a8ff;}.tok-operator{color:#ff7b72;}
 
 /* ── ACTION BAR ── */
-.action-bar{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-.action-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:50px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
-.action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,0.08);}
-.action-btn svg{width:12px;height:12px;flex-shrink:0;}
+.action-bar{
+  display:flex;align-items:center;gap:2px;
+  margin-top:12px;padding:2px 0;
+}
+.act-icon-btn{
+  width:34px;height:34px;border-radius:8px;
+  border:none;background:transparent;
+  color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;flex-shrink:0;
+}
+.act-icon-btn:hover{
+  background:var(--surface2);
+  color:var(--text);
+}
+.act-icon-btn svg{width:17px;height:17px;}
 
 /* ── QUICK TOOLS ── */
 .quick-tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:28px;max-width:400px;}
@@ -1369,9 +1435,69 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <span class="logo-text">Feng <span class="logo-ai">AI</span></span>
       </div>
     </div>
+
+    <!-- CENTER: Mode toggle like Claude -->
+    <button class="nav-mode-btn" id="nav-mode-btn" onclick="toggleModePanel()">
+      <span id="nav-mode-label">Standard</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+
     <button class="nav-btn" onclick="newChat()" title="New chat">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     </button>
+  </div>
+
+  <!-- MODE PANEL (slides up like Claude) -->
+  <div id="mode-overlay" onclick="closeModePanel()" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>
+  <div id="mode-panel" class="mode-panel">
+    <div class="mode-panel-handle"></div>
+    <div class="mode-panel-title">Select Mode</div>
+
+    <div class="mode-option selected" id="mode-standard" onclick="selectMode('standard')">
+      <div class="mode-icon" style="background:rgba(79,142,247,0.15);">⚡</div>
+      <div class="mode-info">
+        <div class="mode-name">Standard</div>
+        <div class="mode-desc">Fast, balanced responses for everyday questions</div>
+      </div>
+      <div class="mode-check" id="check-standard">✓</div>
+    </div>
+
+    <div class="mode-option" id="mode-deep" onclick="selectMode('deep')">
+      <div class="mode-icon" style="background:rgba(168,85,247,0.15);">🧠</div>
+      <div class="mode-info">
+        <div class="mode-name">Deep Think</div>
+        <div class="mode-desc">Slower but smarter — reasons step by step for complex problems</div>
+      </div>
+      <div class="mode-check" id="check-deep" style="opacity:0">✓</div>
+    </div>
+
+    <div class="mode-option" id="mode-research" onclick="selectMode('research')">
+      <div class="mode-icon" style="background:rgba(34,197,94,0.15);">🌐</div>
+      <div class="mode-info">
+        <div class="mode-name">Research</div>
+        <div class="mode-desc">Fetches live data from Wikipedia, news, books and more</div>
+      </div>
+      <div class="mode-check" id="check-research" style="opacity:0">✓</div>
+    </div>
+
+    <div class="mode-option" id="mode-reading" onclick="selectMode('reading')">
+      <div class="mode-icon" style="background:rgba(245,158,11,0.15);">📖</div>
+      <div class="mode-info">
+        <div class="mode-name">Reading</div>
+        <div class="mode-desc">Larger text and comfortable spacing for long answers</div>
+      </div>
+      <div class="mode-check" id="check-reading" style="opacity:0">✓</div>
+    </div>
+
+    <div class="mode-divider"></div>
+    <div class="mode-panel-title" style="margin-top:0;">Extended Thinking</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;">
+      <div>
+        <div style="font-size:0.88rem;font-weight:600;">Think longer for complex tasks</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Feng AI reasons deeply before answering</div>
+      </div>
+      <button class="toggle" id="deep-think-toggle" onclick="toggleDeepThinkFromPanel()"></button>
+    </div>
   </div>
 
   <div id="chat-wrap">
@@ -1410,9 +1536,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
         <textarea id="user-input" placeholder="Type a message…" rows="1"></textarea>
-        <button class="mic-btn" id="deep-think-btn" onclick="toggleDeepThink()" title="Deep Think OFF" style="font-size:0.8rem;">🧠</button>
-        <button class="mic-btn" id="reading-mode-btn" onclick="toggleReadingMode()" title="Reading Mode" style="font-size:0.8rem;">📖</button>
-        <button class="mic-btn" id="web-search-btn" onclick="toggleWebSearch()" title="Web search OFF" style="font-size:0.8rem;">🌐</button>
         <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Speak">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
@@ -2372,7 +2495,7 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // Add action bar — copy, share, bookmark, regenerate, reactions
+      // Add action bar — copy, share, bookmark, regenerate
       addActionBar(body, stripSugs(rawText), tag);
 
       // Show live sources if available
@@ -2380,9 +2503,6 @@ function streamAnswer(rawText, tag) {
         addSourcesPanel(body, window._pendingSources);
         window._pendingSources = null;
       }
-
-      // Add confidence indicator
-      addConfidenceBar(body, stripSugs(rawText));
 
       if (sugs.length) {
         const wrap = document.createElement('div');
@@ -2411,16 +2531,34 @@ function addActionBar(body, text, tag) {
   bar.className = 'action-bar';
   const bid = 'ab'+Date.now();
   bar.innerHTML =
-    '<button class="action-btn" onclick="copyAnswer(this,'+JSON.stringify(text)+')" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>' +
-    '<button class="action-btn" onclick="shareAnswer('+JSON.stringify(text)+')" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>' +
-    '<button class="action-btn" id="bk-'+bid+'" onclick="bookmarkAnswer(\''+bid+'\','+JSON.stringify(text)+')" title="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Save</button>' +
-    '<button class="action-btn" onclick="regenerateAnswer(\''+tag+'\')" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Retry</button>' +
-    '<div class="reaction-row" id="rx-'+bid+'">' +
-      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'👍\')">👍</button>' +
-      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'👎\')">👎</button>' +
-      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'❤️\')">❤️</button>' +
-      '<button class="react-btn" onclick="reactTo(\''+bid+'\',\'🤯\')">🤯</button>' +
-    '</div>';
+    // Copy
+    '<button class="act-icon-btn" onclick="copyAnswer(this,'+JSON.stringify(text)+')" title="Copy">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+    '</button>' +
+    // Share
+    '<button class="act-icon-btn" onclick="shareAnswer('+JSON.stringify(text)+')" title="Share">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>' +
+    '</button>' +
+    // Read aloud
+    '<button class="act-icon-btn" onclick="speakText('+JSON.stringify(text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').trim().slice(0,2000))+')" title="Read aloud">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+    '</button>' +
+    // Save / Bookmark
+    '<button class="act-icon-btn" id="bk-'+bid+'" onclick="bookmarkAnswer(\''+bid+'\','+JSON.stringify(text)+')" title="Save">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>' +
+    '</button>' +
+    // Thumbs up
+    '<button class="act-icon-btn" onclick="this.style.color=\'var(--accent2)\';this.style.background=\'rgba(52,211,153,0.12)\'" title="Good response">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
+    '</button>' +
+    // Thumbs down
+    '<button class="act-icon-btn" onclick="this.style.color=\'#ef4444\';this.style.background=\'rgba(239,68,68,0.1)\'" title="Bad response">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>' +
+    '</button>' +
+    // Retry
+    '<button class="act-icon-btn" onclick="regenerateAnswer(\''+tag+'\')" title="Retry">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.87"/></svg>' +
+    '</button>';
   body.appendChild(bar);
 }
 
@@ -3390,17 +3528,94 @@ function toggleAutoRead() {
   renderVoicePage();
 }
 
-// ── DEEP THINKING MODE ──
+// ── MODE PANEL (Claude-style) ──
 let deepThinkMode = false;
-function toggleDeepThink() {
-  deepThinkMode = !deepThinkMode;
-  const btn = document.getElementById('deep-think-btn');
-  if (btn) {
-    btn.style.color = deepThinkMode ? 'var(--accent)' : 'var(--muted)';
-    btn.style.borderColor = deepThinkMode ? 'var(--accent)' : 'var(--border)';
-    btn.title = deepThinkMode ? 'Deep Think ON' : 'Deep Think OFF';
+let currentMode = localStorage.getItem('feng_mode') || 'standard';
+
+function toggleModePanel() {
+  const panel = document.getElementById('mode-panel');
+  const overlay = document.getElementById('mode-overlay');
+  const btn = document.getElementById('nav-mode-btn');
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    closeModePanel();
+  } else {
+    overlay.style.display = 'block';
+    panel.classList.add('open');
+    btn.classList.add('open');
+    // Sync toggle state
+    const dt = document.getElementById('deep-think-toggle');
+    if (dt) dt.classList.toggle('on', deepThinkMode);
   }
-  showToast(deepThinkMode ? '🧠 Deep thinking mode ON — slower but smarter' : '🧠 Deep thinking mode OFF');
+}
+
+function closeModePanel() {
+  document.getElementById('mode-panel').classList.remove('open');
+  document.getElementById('mode-overlay').style.display = 'none';
+  document.getElementById('nav-mode-btn').classList.remove('open');
+}
+
+function selectMode(mode) {
+  const modes = ['standard','deep','research','reading'];
+  modes.forEach(m => {
+    const opt = document.getElementById('mode-'+m);
+    const chk = document.getElementById('check-'+m);
+    if (opt) opt.classList.toggle('selected', m===mode);
+    if (chk) chk.style.opacity = m===mode ? '1' : '0';
+  });
+  currentMode = mode;
+  localStorage.setItem('feng_mode', mode);
+
+  // Apply mode effects
+  deepThinkMode = mode === 'deep';
+  webSearchEnabled = mode === 'research';
+  localStorage.setItem('feng_websearch', webSearchEnabled);
+
+  if (mode === 'reading') {
+    if (!readingMode) toggleReadingMode();
+  } else {
+    if (readingMode) toggleReadingMode();
+  }
+
+  // Update label
+  const labels = { standard:'Standard ⚡', deep:'Deep Think 🧠', research:'Research 🌐', reading:'Reading 📖' };
+  const lbl = document.getElementById('nav-mode-label');
+  if (lbl) lbl.textContent = labels[mode] || 'Standard';
+
+  // Update deep think toggle in panel
+  const dt = document.getElementById('deep-think-toggle');
+  if (dt) dt.classList.toggle('on', deepThinkMode);
+
+  showToast(mode==='standard'?'⚡ Standard mode':mode==='deep'?'🧠 Deep Think ON':mode==='research'?'🌐 Research mode ON':'📖 Reading mode ON');
+  setTimeout(closeModePanel, 400);
+}
+
+function toggleDeepThinkFromPanel() {
+  deepThinkMode = !deepThinkMode;
+  const dt = document.getElementById('deep-think-toggle');
+  if (dt) dt.classList.toggle('on', deepThinkMode);
+  showToast(deepThinkMode ? '🧠 Extended thinking ON' : '🧠 Extended thinking OFF');
+}
+
+// Keep old functions for compatibility
+function toggleDeepThink() { toggleDeepThinkFromPanel(); }
+function toggleWebSearch() {
+  webSearchEnabled = !webSearchEnabled;
+  localStorage.setItem('feng_websearch', webSearchEnabled);
+  showToast(webSearchEnabled ? '🌐 Research mode ON' : '🌐 Research mode OFF');
+}
+function toggleReadingMode() {
+  readingMode = !readingMode;
+  const app = document.getElementById('app');
+  if (readingMode) {
+    app.style.maxWidth='680px'; app.style.margin='0 auto';
+    document.getElementById('chat-wrap').style.fontSize='1.05rem';
+    document.getElementById('chat-wrap').style.lineHeight='1.9';
+  } else {
+    app.style.maxWidth=''; app.style.margin='';
+    document.getElementById('chat-wrap').style.fontSize='';
+    document.getElementById('chat-wrap').style.lineHeight='';
+  }
 }
 
 function getDeepThinkNote() {
@@ -4222,8 +4437,9 @@ addActionBar = function(body, text, tag) {
   const bar = body.querySelector('.action-bar');
   if (bar && text.length > 30) {
     const qBtn = document.createElement('button');
-    qBtn.className = 'action-btn';
-    qBtn.innerHTML = '🖼️ Quote';
+    qBtn.className = 'act-icon-btn';
+    qBtn.title = 'Quote Card';
+    qBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>';
     qBtn.onclick = () => openQuoteCard(text);
     bar.appendChild(qBtn);
   }
@@ -4473,6 +4689,12 @@ const initP = PERSONAS.find(x=>x.id===currentPersona); if(initP) document.getEle
 const initS = RESPONSE_STYLES.find(x=>x.id===currentResponseStyle); if(initS) document.getElementById('cur-response').textContent = initS.name;
 const initT = THEMES.find(x=>x.id===currentThemeId); if(initT) document.getElementById('cur-theme').textContent = initT.name;
 if (webSearchEnabled) { const wb=document.getElementById('web-search-btn'); if(wb){wb.style.color='var(--accent)';wb.style.borderColor='var(--accent)';} }
+// Init mode label
+const initModeLabels = { standard:'Standard ⚡', deep:'Deep Think 🧠', research:'Research 🌐', reading:'Reading 📖' };
+const modeLbl = document.getElementById('nav-mode-label');
+if (modeLbl) modeLbl.textContent = initModeLabels[currentMode] || 'Standard ⚡';
+// Apply saved mode
+if (currentMode !== 'standard') selectMode(currentMode);
 if (currentUser) { const sb = document.querySelector('.sb-name'); if (sb) sb.textContent = currentUser.name; }
 renderSmartSuggestions();
 </script>

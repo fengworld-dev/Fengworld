@@ -138,10 +138,56 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .hero-sub{font-size:0.88rem;color:var(--muted);letter-spacing:0;text-align:left;margin-bottom:16px;}
 
 /* MESSAGES */
-.msg-list{display:flex;flex-direction:column;padding:8px 0;}
-.msg{display:flex;gap:10px;padding:4px 20px;animation:fadeUp 0.22s ease both;}
+.msg-list{display:flex;flex-direction:column;padding:8px 0 16px;}
+.msg{display:flex;gap:0;padding:2px 20px;animation:fadeUp 0.22s ease both;}
 .msg.user{flex-direction:row-reverse;padding:6px 20px;}
-.msg.ai > div:first-child{display:none;}/* Hide cube on AI messages — full width like Gemini */
+
+/* Hide cube entirely for AI messages */
+.msg.ai .cube-wrap{display:none!important;}
+
+/* MSG BODY */
+.msg-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+.msg.user .msg-body{align-items:flex-end;max-width:82%;}
+.msg.ai .msg-body{max-width:100%;width:100%;}
+
+/* TAG — small subtle pill */
+.msg-tag{display:none;}/* Hidden — cleaner like Gemini */
+
+/* BUBBLES */
+.bubble{font-size:0.93rem;line-height:1.82;}
+.msg.user .bubble{
+  background:var(--accent);color:#fff;
+  border-radius:18px;border-bottom-right-radius:4px;
+  padding:10px 15px;display:inline-block;
+}
+.msg.ai .bubble{
+  background:transparent;border:none;
+  padding:6px 0 8px;color:var(--text);width:100%;
+}
+.bubble.streaming::after{content:'▋';animation:blink 0.7s step-end infinite;color:var(--accent);margin-left:2px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* MARKDOWN — proper paragraph spacing like Gemini */
+.bubble p{margin:0 0 12px;line-height:1.82;}
+.bubble p:last-child{margin-bottom:0;}
+.bubble h1,.bubble h2,.bubble h3{
+  font-family:'Syne',sans-serif;font-weight:700;
+  margin:18px 0 8px;line-height:1.3;color:var(--text);
+}
+.bubble h1{font-size:1.1rem;}
+.bubble h2{font-size:1rem;}
+.bubble h3{font-size:0.95rem;color:var(--accent);}
+.bubble ul,.bubble ol{padding-left:20px;margin:6px 0 12px;}
+.bubble li{margin:5px 0;line-height:1.7;}
+.bubble strong{font-weight:700;}
+.bubble em{font-style:italic;opacity:0.85;}
+.bubble pre{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;overflow-x:auto;position:relative;}
+.bubble pre code{font-family:'Fira Code','Courier New',monospace;font-size:0.8rem;line-height:1.65;color:#c9d1d9;background:none;padding:0;}
+.bubble code{font-family:'Fira Code',monospace;font-size:0.82em;background:rgba(255,255,255,0.07);border:1px solid var(--border);padding:1px 5px;border-radius:4px;}
+.bubble table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85rem;}
+.bubble th{background:var(--surface2);padding:9px 12px;text-align:left;font-weight:600;border:1px solid var(--border);}
+.bubble td{padding:8px 12px;border:1px solid var(--border);line-height:1.5;}
+.bubble tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
 
 /* USER AVATAR */
 .user-av{
@@ -151,58 +197,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   display:flex;align-items:center;justify-content:center;
 }
 
-/* CUBOID AVATAR */
-.cube-wrap{width:28px;height:28px;perspective:55px;flex-shrink:0;margin-top:4px;}
-.cube{
-  width:14px;height:14px;position:relative;
-  transform-style:preserve-3d;margin:7px auto;
-  transform:rotateX(20deg) rotateY(0deg);
-}
+/* CUBOID (kept for think block spinning) */
+.cube-wrap{width:0;height:0;overflow:hidden;}
+.cube{width:14px;height:14px;position:relative;transform-style:preserve-3d;margin:7px auto;transform:rotateX(20deg);}
 .cube.spin{animation:cubeSpin 1.1s linear infinite;}
-@keyframes cubeSpin{
-  0%{transform:rotateX(20deg) rotateY(0deg) rotateZ(0deg);}
-  100%{transform:rotateX(200deg) rotateY(360deg) rotateZ(60deg);}
-}
+@keyframes cubeSpin{0%{transform:rotateX(20deg) rotateY(0deg)}100%{transform:rotateX(200deg) rotateY(360deg) rotateZ(60deg)}}
 .cube-face{position:absolute;width:14px;height:14px;border:1.5px solid rgba(79,142,247,0.7);background:rgba(79,142,247,0.1);}
-.cube-face.front{transform:translateZ(7px);}
-.cube-face.back{transform:rotateY(180deg) translateZ(7px);}
-.cube-face.left{transform:rotateY(-90deg) translateZ(7px);}
-.cube-face.right{transform:rotateY(90deg) translateZ(7px);}
-.cube-face.top{transform:rotateX(90deg) translateZ(7px);}
-.cube-face.bottom{transform:rotateX(-90deg) translateZ(7px);}
-.cube.c-code .cube-face{border-color:rgba(52,211,153,0.7);background:rgba(52,211,153,0.08);}
-.cube.c-design .cube-face{border-color:rgba(192,132,252,0.7);background:rgba(192,132,252,0.08);}
+.cube-face.front{transform:translateZ(7px)}.cube-face.back{transform:rotateY(180deg) translateZ(7px)}.cube-face.left{transform:rotateY(-90deg) translateZ(7px)}.cube-face.right{transform:rotateY(90deg) translateZ(7px)}.cube-face.top{transform:rotateX(90deg) translateZ(7px)}.cube-face.bottom{transform:rotateX(-90deg) translateZ(7px)}
 
-/* MSG BODY */
-.msg-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
-.msg.user .msg-body{align-items:flex-end;max-width:85%;}
-.msg.ai .msg-body{max-width:100%;width:100%;}
-.msg-tag{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;padding:2px 7px;border-radius:4px;width:fit-content;}
+.code-lang{position:absolute;top:7px;right:10px;font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+
+/* TAG classes kept for think block */
 .tag-edu{background:rgba(79,142,247,0.12);color:var(--accent);}
 .tag-code{background:rgba(52,211,153,0.12);color:var(--accent2);}
 .tag-design{background:rgba(192,132,252,0.12);color:var(--accent3);}
-
-/* BUBBLES */
-.bubble{font-size:0.93rem;line-height:1.8;}
-.msg.user .bubble{background:var(--accent);color:#fff;border-radius:var(--r);border-bottom-right-radius:4px;padding:11px 15px;display:inline-block;}
-.msg.ai .bubble{background:transparent;border:none;padding:0 0 4px 0;color:var(--text);width:100%;}
-.bubble.streaming::after{content:'▋';animation:blink 0.7s step-end infinite;color:var(--accent);margin-left:2px;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-
-/* MARKDOWN */
-.bubble h1,.bubble h2,.bubble h3{font-family:'Syne',sans-serif;font-weight:700;margin:10px 0 4px;line-height:1.3;}
-.bubble h1{font-size:1.05rem;}.bubble h2{font-size:0.97rem;}.bubble h3{font-size:0.9rem;}
-.bubble p{margin:4px 0;}
-.bubble ul,.bubble ol{padding-left:18px;margin:6px 0;}
-.bubble li{margin:3px 0;line-height:1.65;}
-.bubble strong{font-weight:600;}
-.bubble em{font-style:italic;opacity:0.8;}
-.bubble pre{background:#0a0a0c;border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin:10px 0;overflow-x:auto;position:relative;}
-.code-lang{position:absolute;top:7px;right:10px;font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-.bubble pre code{font-family:'Fira Code','Courier New',monospace;font-size:0.8rem;line-height:1.6;color:#c9d1d9;background:none;padding:0;}
-.bubble code{font-family:'Fira Code',monospace;font-size:0.82em;background:rgba(255,255,255,0.07);border:1px solid var(--border);padding:1px 5px;border-radius:4px;}
-
-/* THINKING DOTS */
 .think-dots{display:flex;gap:5px;padding:6px 0;align-items:center;}
 .think-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:0.4;animation:thinkPulse 1.4s ease-in-out infinite;}
 .think-dots span:nth-child(2){animation-delay:0.2s;}
@@ -343,7 +351,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 /* SUB-PAGES (login, language, appearance, data, help) */
 .subpage{position:fixed;inset:0;background:var(--bg);z-index:400;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);overflow-y:auto;display:flex;flex-direction:column;}
 
-.tbl-wrap{overflow-x:auto;margin:10px 0;}
+.tbl-wrap{overflow-x:auto;margin:14px 0;border-radius:10px;border:1px solid var(--border);}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:0.85rem;margin:0;}
+.tbl-wrap th{background:var(--surface2);padding:10px 14px;text-align:left;font-weight:700;font-size:0.8rem;border-bottom:2px solid var(--border);color:var(--text);}
+.tbl-wrap td{padding:9px 14px;border-bottom:1px solid var(--border);line-height:1.5;vertical-align:top;}
+.tbl-wrap tr:last-child td{border-bottom:none;}
+.tbl-wrap tr:nth-child(even) td{background:rgba(255,255,255,0.025);}
+.tbl-wrap tr:hover td{background:rgba(79,142,247,0.04);}
+.bubble blockquote{border-left:3px solid var(--accent);padding:6px 12px;color:var(--muted);font-style:italic;margin:10px 0;background:rgba(79,142,247,0.04);border-radius:0 6px 6px 0;}
 .bubble table{border-collapse:collapse;width:100%;font-size:0.83rem;}
 .bubble th{background:var(--surface2);color:var(--text);padding:8px 12px;text-align:left;border:1px solid var(--border2);font-weight:600;}
 .bubble td{padding:7px 12px;border:1px solid var(--border);color:var(--text);}
@@ -1677,7 +1692,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.1.3';
+const APP_VERSION = '1.1.4';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -2356,37 +2371,100 @@ function scrollDown() {
 
 function md(text) {
   text = stripSugs(text);
-  // Code blocks with syntax highlighting + copy button
-  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+
+  // 1. Protect code blocks first — replace with placeholders
+  const codeBlocks = [];
+  text = text.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
     const trimmed = code.trim();
     const highlighted = highlightCode(trimmed, lang||'general');
     const escaped = trimmed.replace(/'/g,"\\'").replace(/\n/g,'\\n');
-    return '<pre>' +
-      '<div class="code-header">' +
-        '<span class="code-lang-label">'+(lang||'code')+'</span>' +
-        '<button class="copy-code-btn" onclick="copyCode(this,\''+escaped+'\')">Copy</button>' +
-      '</div>' +
-      '<code>'+highlighted+'</code></pre>';
+    const html = '<pre><div class="code-header"><span class="code-lang-label">'+(lang||'code')+'</span><button class="copy-code-btn" onclick="copyCode(this,\''+escaped+'\')">Copy</button></div><code>'+highlighted+'</code></pre>';
+    codeBlocks.push(html);
+    return '\x00CODE'+(codeBlocks.length-1)+'\x00';
   });
+
+  // 2. Inline code
   text = text.replace(/`([^`\n]+)`/g,'<code>$1</code>');
-  text = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-  text = text.replace(/\*(.*?)\*/g,'<em>$1</em>');
-  text = text.replace(/^### (.+)$/gm,'<h3>$1</h3>');
-  text = text.replace(/^## (.+)$/gm,'<h2>$1</h2>');
-  text = text.replace(/^# (.+)$/gm,'<h1>$1</h1>');
-  text = text.replace(/^> (.+)$/gm,'<blockquote style="border-left:3px solid var(--border2);padding-left:10px;color:var(--muted);font-style:italic;margin:6px 0;">$1</blockquote>');
-  // Tables
-  text = text.replace(/^\|(.+)\|\s*\n\|[-\s|:]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, (_, header, rows) => {
-    const ths = header.split('|').map(c=>'<th>'+c.trim()+'</th>').join('');
-    const trs = rows.trim().split('\n').map(r=>'<tr>'+r.split('|').filter((_,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('');
-    return '<div class="tbl-wrap"><table><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
-  });
-  text = text.replace(/^[\-\*] (.+)$/gm,'<li>$1</li>');
-  text = text.replace(/(<li>.*?<\/li>\n?)+/gs, m=>'<ul>'+m+'</ul>');
-  text = text.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
-  text = text.replace(/\n\n/g,'</p><p>');
-  text = text.replace(/\n/g,'<br>');
-  return renderMath('<p>'+text+'</p>');
+
+  // 3. Bold and italic
+  text = text.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  text = text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  text = text.replace(/\*(.+?)\*/g,'<em>$1</em>');
+
+  // 4. Split into blocks by double newline
+  const blocks = text.split(/\n{2,}/);
+  const html = blocks.map(block => {
+    block = block.trim();
+    if (!block) return '';
+
+    // Code placeholder
+    if (/^\x00CODE\d+\x00$/.test(block)) {
+      const idx = parseInt(block.match(/\d+/)[0]);
+      return codeBlocks[idx];
+    }
+
+    // Heading
+    if (/^### (.+)/.test(block)) return '<h3>'+block.replace(/^### /,'')+'</h3>';
+    if (/^## (.+)/.test(block)) return '<h2>'+block.replace(/^## /,'')+'</h2>';
+    if (/^# (.+)/.test(block)) return '<h1>'+block.replace(/^# /,'')+'</h1>';
+
+    // Blockquote
+    if (/^> /.test(block)) return '<blockquote>'+block.replace(/^> /,'')+'</blockquote>';
+
+    // Table
+    if (/^\|.+\|/.test(block)) {
+      const lines = block.split('\n').filter(l => l.trim());
+      if (lines.length >= 2 && /^\|[-\s|:]+\|/.test(lines[1])) {
+        const headers = lines[0].split('|').filter((_,i,a)=>i>0&&i<a.length-1).map(c=>'<th>'+c.trim()+'</th>').join('');
+        const rows = lines.slice(2).map(r=>'<tr>'+r.split('|').filter((_,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('');
+        return '<div class="tbl-wrap"><table><thead><tr>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+      }
+    }
+
+    // Ordered list
+    if (/^\d+\. /.test(block)) {
+      const items = block.split('\n').filter(l=>l.trim()).map(l=>'<li>'+l.replace(/^\d+\. /,'')+'</li>').join('');
+      return '<ol>'+items+'</ol>';
+    }
+
+    // Unordered list
+    if (/^[-*] /.test(block)) {
+      const items = block.split('\n').filter(l=>l.trim()).map(l=>'<li>'+l.replace(/^[-*] /,'')+'</li>').join('');
+      return '<ul>'+items+'</ul>';
+    }
+
+    // Mixed block with some list items inline
+    if (block.includes('\n')) {
+      const lines = block.split('\n');
+      const hasListItems = lines.some(l=>/^[-*] /.test(l.trim())||/^\d+\. /.test(l.trim()));
+      if (hasListItems) {
+        let out = '';
+        let listItems = [];
+        lines.forEach(l => {
+          l = l.trim();
+          if (/^[-*] /.test(l)) { listItems.push('<li>'+l.replace(/^[-*] /,'')+'</li>'); }
+          else if (/^\d+\. /.test(l)) { listItems.push('<li>'+l.replace(/^\d+\. /,'')+'</li>'); }
+          else {
+            if (listItems.length) { out += '<ul>'+listItems.join('')+'</ul>'; listItems = []; }
+            if (l) out += '<p>'+l+'</p>';
+          }
+        });
+        if (listItems.length) out += '<ul>'+listItems.join('')+'</ul>';
+        return out;
+      }
+      // Normal paragraph with line breaks inside
+      return '<p>'+lines.join('<br>')+'</p>';
+    }
+
+    // Default: paragraph
+    return '<p>'+block+'</p>';
+  }).join('\n');
+
+  // Restore code blocks
+  let result = html;
+  codeBlocks.forEach((cb, i) => { result = result.replace('\x00CODE'+i+'\x00', cb); });
+
+  return renderMath(result);
 }
 
 function detectTag(text) {

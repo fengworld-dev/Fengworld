@@ -130,12 +130,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .hero-greeting{
   font-family:'Syne',sans-serif;
-  font-size:clamp(1.7rem,6vw,2.5rem);
-  font-weight:800;letter-spacing:-0.8px;line-height:1.2;margin-bottom:8px;
-  background:linear-gradient(135deg,var(--text) 20%,rgba(242,241,234,0.35) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-size:2rem;
+  font-weight:800;letter-spacing:-0.5px;line-height:1.2;margin-bottom:8px;
 }
-.hero-sub{font-size:0.9rem;color:var(--muted);}
+.hero-sub{font-size:0.88rem;color:var(--muted);letter-spacing:0;}
 
 /* MESSAGES */
 .msg-list{display:flex;flex-direction:column;padding:16px 0 8px;}
@@ -1661,7 +1659,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -3661,6 +3659,7 @@ function toggleAutoRead() {
 
 // ── MODE PANEL (Claude-style) ──
 let deepThinkMode = false;
+let readingMode = false;
 let currentMode = localStorage.getItem('feng_mode') || 'standard';
 
 function toggleModePanel() {
@@ -3697,61 +3696,124 @@ function selectMode(mode) {
   currentMode = mode;
   localStorage.setItem('feng_mode', mode);
 
-  // Apply mode effects
-  deepThinkMode = mode === 'deep';
-  webSearchEnabled = mode === 'research';
-  localStorage.setItem('feng_websearch', webSearchEnabled);
-
-  if (mode === 'reading') {
-    if (!readingMode) toggleReadingMode();
-  } else {
-    if (readingMode) toggleReadingMode();
+  // ── STANDARD: fast, clean, no extras
+  if (mode === 'standard') {
+    deepThinkMode = false;
+    webSearchEnabled = false;
+    if (readingMode) applyReadingMode(false);
   }
 
-  // Update label
-  const labels = { standard:'Standard ⚡', deep:'Deep Think 🧠', research:'Research 🌐', reading:'Reading 📖' };
-  const lbl = document.getElementById('nav-mode-label');
-  if (lbl) lbl.textContent = labels[mode] || 'Standard';
+  // ── DEEP THINK: DeepSeek reasoner, step-by-step, extended thinking
+  if (mode === 'deep') {
+    deepThinkMode = true;
+    webSearchEnabled = false;
+    if (readingMode) applyReadingMode(false);
+  }
 
-  // Update deep think toggle in panel
+  // ── RESEARCH: always fetches live sources, cites everything
+  if (mode === 'research') {
+    deepThinkMode = false;
+    webSearchEnabled = true;
+    if (readingMode) applyReadingMode(false);
+  }
+
+  // ── READING: large comfortable text for long responses
+  if (mode === 'reading') {
+    deepThinkMode = false;
+    webSearchEnabled = false;
+    applyReadingMode(true);
+  }
+
+  localStorage.setItem('feng_websearch', webSearchEnabled);
+
+  // Update nav label
+  const labels = {
+    standard: 'Standard ⚡',
+    deep:     'Deep Think 🧠',
+    research: 'Research 🌐',
+    reading:  'Reading 📖'
+  };
+  const lbl = document.getElementById('nav-mode-label');
+  if (lbl) lbl.textContent = labels[mode];
+
+  // Sync extended thinking toggle
   const dt = document.getElementById('deep-think-toggle');
   if (dt) dt.classList.toggle('on', deepThinkMode);
 
-  showToast(mode==='standard'?'⚡ Standard mode':mode==='deep'?'🧠 Deep Think ON':mode==='research'?'🌐 Research mode ON':'📖 Reading mode ON');
-  setTimeout(closeModePanel, 400);
+  const toasts = {
+    standard: '⚡ Standard — fast, balanced answers',
+    deep:     '🧠 Deep Think — DeepSeek Reasoner activated',
+    research: '🌐 Research — live sources fetched every answer',
+    reading:  '📖 Reading — large comfortable text enabled'
+  };
+  showToast(toasts[mode]);
+  setTimeout(closeModePanel, 500);
+}
+
+function applyReadingMode(on) {
+  readingMode = on;
+  const app = document.getElementById('app');
+  const wrap = document.getElementById('chat-wrap');
+  if (on) {
+    if (app) { app.style.maxWidth = '720px'; app.style.margin = '0 auto'; }
+    if (wrap) { wrap.style.fontSize = '1.08rem'; wrap.style.lineHeight = '2'; }
+  } else {
+    if (app) { app.style.maxWidth = ''; app.style.margin = ''; }
+    if (wrap) { wrap.style.fontSize = ''; wrap.style.lineHeight = ''; }
+  }
 }
 
 function toggleDeepThinkFromPanel() {
   deepThinkMode = !deepThinkMode;
+  // Also update currentMode to match
+  if (deepThinkMode && currentMode !== 'deep') {
+    currentMode = 'deep';
+    localStorage.setItem('feng_mode', 'deep');
+    const lbl = document.getElementById('nav-mode-label');
+    if (lbl) lbl.textContent = 'Deep Think 🧠';
+  } else if (!deepThinkMode && currentMode === 'deep') {
+    currentMode = 'standard';
+    localStorage.setItem('feng_mode', 'standard');
+    const lbl = document.getElementById('nav-mode-label');
+    if (lbl) lbl.textContent = 'Standard ⚡';
+  }
   const dt = document.getElementById('deep-think-toggle');
   if (dt) dt.classList.toggle('on', deepThinkMode);
-  showToast(deepThinkMode ? '🧠 Extended thinking ON' : '🧠 Extended thinking OFF');
+  showToast(deepThinkMode ? '🧠 Deep Think ON — DeepSeek Reasoner' : '🧠 Deep Think OFF');
 }
 
-// Keep old functions for compatibility
 function toggleDeepThink() { toggleDeepThinkFromPanel(); }
 function toggleWebSearch() {
-  webSearchEnabled = !webSearchEnabled;
-  localStorage.setItem('feng_websearch', webSearchEnabled);
-  showToast(webSearchEnabled ? '🌐 Research mode ON' : '🌐 Research mode OFF');
+  if (currentMode !== 'research') {
+    selectMode('research');
+  } else {
+    selectMode('standard');
+  }
 }
 function toggleReadingMode() {
-  readingMode = !readingMode;
-  const app = document.getElementById('app');
-  if (readingMode) {
-    app.style.maxWidth='680px'; app.style.margin='0 auto';
-    document.getElementById('chat-wrap').style.fontSize='1.05rem';
-    document.getElementById('chat-wrap').style.lineHeight='1.9';
+  if (currentMode !== 'reading') {
+    selectMode('reading');
   } else {
-    app.style.maxWidth=''; app.style.margin='';
-    document.getElementById('chat-wrap').style.fontSize='';
-    document.getElementById('chat-wrap').style.lineHeight='';
+    selectMode('standard');
   }
 }
 
 function getDeepThinkNote() {
-  if (!deepThinkMode) return '';
-  return '\n\nDEEP THINKING MODE: Take extra time to reason through this carefully. Break down the problem step by step. Consider multiple angles, identify potential errors in your reasoning, and provide the most accurate, well-reasoned answer possible. Show your reasoning process clearly.';
+  return getModePrompt();
+}
+
+function getModePrompt() {
+  switch(currentMode) {
+    case 'deep':
+      return '\n\n[MODE: DEEP THINK — You MUST use DeepSeek extended reasoning. Break down the problem thoroughly. Think step by step through every angle. Consider edge cases, alternative views, and potential errors. Show your full reasoning chain. Give the most accurate, comprehensive answer possible. Do NOT rush.]';
+    case 'research':
+      return '\n\n[MODE: RESEARCH — Live data has been fetched from multiple sources above. You MUST cite your sources explicitly in your answer using "According to [source]..." format. Every factual claim needs a source reference. List the key sources you used at the end of your answer. Be transparent about where each piece of information comes from.]';
+    case 'reading':
+      return '\n\n[MODE: READING — Format your response for comfortable long-form reading. Use clear ## headings to break up sections. Write in full paragraphs with good flow. Avoid excessive bullet points — prefer well-written prose. Make it pleasant to read from top to bottom.]';
+    case 'standard':
+    default:
+      return '';
+  }
 }
 
 // ── LIVE CALCULATOR ──
@@ -3897,29 +3959,6 @@ async function fetchNews() {
 function isNewsRequest(text) {
   return /\b(news|headlines|today|latest|happening|current events)\b/i.test(text) &&
     /\b(what|show|tell|give|any)\b/i.test(text);
-}
-
-// ── READING MODE ──
-let readingMode = false;
-function toggleReadingMode() {
-  readingMode = !readingMode;
-  const app = document.getElementById('app');
-  const btn = document.getElementById('reading-mode-btn');
-  if (readingMode) {
-    app.style.maxWidth = '680px';
-    app.style.margin = '0 auto';
-    document.getElementById('chat-wrap').style.fontSize = '1.05rem';
-    document.getElementById('chat-wrap').style.lineHeight = '1.9';
-    if (btn) { btn.style.color='var(--accent)'; btn.style.borderColor='var(--accent)'; }
-    showToast('📖 Reading mode ON');
-  } else {
-    app.style.maxWidth = '';
-    app.style.margin = '';
-    document.getElementById('chat-wrap').style.fontSize = '';
-    document.getElementById('chat-wrap').style.lineHeight = '';
-    if (btn) { btn.style.color=''; btn.style.borderColor=''; }
-    showToast('📖 Reading mode OFF');
-  }
 }
 
 // ── MIND MAP GENERATOR ──
@@ -4561,27 +4600,30 @@ async function fetchLiveData(query) {
   const sources = [];
   const contextParts = [];
 
-  const isNews = /\b(news|latest|today|current|happening|headline|update|recent|2024|2025)\b/i.test(t);
-  const isCountry = /\b(country|capital|population|flag|currency|continent|where is|located in)\b/i.test(t) && t.length < 100;
-  const isDict = /\b(define|definition|meaning of|what does|synonym|antonym)\b/i.test(t);
-  const isBook = /\b(book|novel|author|written by|isbn|literature)\b/i.test(t);
-  const isNASA = /\b(space|nasa|planet|star|galaxy|universe|asteroid|astronomy|moon|mars)\b/i.test(t);
-  const isQuote = /\b(quote|quotes|said|inspiration|motivat)\b/i.test(t);
-  const isNumber = /\b(fact about number|interesting.*\d+|born on|happened on \d)\b/i.test(t);
+  // In Research mode — always fetch everything relevant
+  const forceAll = currentMode === 'research';
+
+  const isNews    = forceAll || /\b(news|latest|today|current|happening|headline|update|recent|2024|2025)\b/i.test(t);
+  const isCountry = forceAll || (/\b(country|capital|population|flag|currency|continent|where is|located in)\b/i.test(t) && t.length < 100);
+  const isDict    = forceAll || /\b(define|definition|meaning of|what does|synonym|antonym)\b/i.test(t);
+  const isBook    = forceAll || /\b(book|novel|author|written by|isbn|literature)\b/i.test(t);
+  const isNASA    = /\b(space|nasa|planet|star|galaxy|universe|asteroid|astronomy|moon|mars)\b/i.test(t);
+  const isQuote   = /\b(quote|quotes|said|inspiration|motivat)\b/i.test(t);
+  const isNumber  = /\b(fact about number|interesting.*\d+|born on|happened on \d)\b/i.test(t);
 
   const fetches = [];
 
-  // Always try Wikipedia for any real question
+  // Always fetch Wikipedia for any real question
   if (query.split(' ').length >= 2) {
     fetches.push(fetchWikipedia(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
   }
-  if (isNews) fetches.push(fetchGNews(query).then(r => { if(r) { contextParts.push(r.context); sources.push(...r.sources); } }));
+  if (isNews)    fetches.push(fetchGNews(query).then(r => { if(r) { contextParts.push(r.context); sources.push(...r.sources); } }));
   if (isCountry) fetches.push(fetchCountry(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
-  if (isDict) fetches.push(fetchDictionary(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
-  if (isBook) fetches.push(fetchOpenLibrary(query).then(r => { if(r) { contextParts.push(r.context); sources.push(...r.sources); } }));
-  if (isNASA) fetches.push(fetchNASA().then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
-  if (isQuote) fetches.push(fetchQuote().then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
-  if (isNumber) { const nm = query.match(/\d+/); if(nm) fetches.push(fetchNumberFact(nm[0]).then(r => { if(r) contextParts.push(r); })); }
+  if (isDict)    fetches.push(fetchDictionary(query).then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  if (isBook)    fetches.push(fetchOpenLibrary(query).then(r => { if(r) { contextParts.push(r.context); sources.push(...r.sources); } }));
+  if (isNASA)    fetches.push(fetchNASA().then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  if (isQuote)   fetches.push(fetchQuote().then(r => { if(r) { contextParts.push(r.context); sources.push(r.source); } }));
+  if (isNumber)  { const nm = query.match(/\d+/); if(nm) fetches.push(fetchNumberFact(nm[0]).then(r => { if(r) contextParts.push(r); })); }
 
   await Promise.allSettled(fetches);
 

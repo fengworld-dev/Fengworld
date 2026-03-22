@@ -412,6 +412,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .help-detail{font-size:0.78rem;color:var(--muted);}
 .help-arr{color:var(--muted2);}
 
+/* ── ACTION BAR ── */
+.action-bar{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.action-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:50px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,0.08);}
+.action-btn svg{width:12px;height:12px;flex-shrink:0;}
+
+/* ── QUICK TOOLS ── */
+.quick-tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:28px;max-width:400px;}
+.quick-tool-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:50px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap;}
+.quick-tool-btn:hover{border-color:var(--accent);color:var(--text);background:var(--surface2);}
+
 /* PREVIEW STRIP */
 #preview-strip{
   padding:10px 12px 0;
@@ -559,6 +570,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     </button>
   </div>
   <div class="sb-scroll" id="sb-scroll"></div>
+  <div style="padding:10px 14px;border-top:1px solid var(--border);">
+    <button onclick="exportChat();closeSB();" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.15s;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export Chat
+    </button>
+  </div>
   <div class="sb-foot" onclick="openSettings()">
     <div class="sb-av">F</div>
     <div class="sb-name">My Account</div>
@@ -733,6 +750,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       </div>
       <div class="hero-greeting" id="hero-greeting">Good afternoon</div>
       <div class="hero-sub" id="hero-sub">Ask me anything — I'm here to help</div>
+      <div class="quick-tools">
+        <button class="quick-tool-btn" onclick="quickTool('translate')">🌍 Translate</button>
+        <button class="quick-tool-btn" onclick="quickTool('summarize')">📋 Summarize</button>
+        <button class="quick-tool-btn" onclick="quickTool('flashcards')">🃏 Flashcards</button>
+        <button class="quick-tool-btn" onclick="quickTool('quiz')">📝 Quiz me</button>
+        <button class="quick-tool-btn" onclick="quickTool('grade')">✏️ Grade essay</button>
+        <button class="quick-tool-btn" onclick="quickTool('citation')">📚 Citation</button>
+      </div>
     </div>
     <div class="msg-list" id="msg-list"></div>
   </div>
@@ -1673,7 +1698,8 @@ function streamAnswer(rawText, tag) {
         addDocButtons(body, stripSugs(rawText), fname);
       }
 
-      // suggestions below
+      // Add action bar — copy, share, regenerate
+      addActionBar(body, stripSugs(rawText), tag);
 
       if (sugs.length) {
         const wrap = document.createElement('div');
@@ -1691,6 +1717,83 @@ function streamAnswer(rawText, tag) {
       scrollDown();
     }
   }, 20);
+}
+
+// ── ACTION BAR (copy, share, regenerate) ──
+function addActionBar(body, text, tag) {
+  const bar = document.createElement('div');
+  bar.className = 'action-bar';
+  bar.innerHTML =
+    '<button class="action-btn" onclick="copyAnswer(this,'+JSON.stringify(text)+')" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>' +
+    '<button class="action-btn" onclick="shareAnswer('+JSON.stringify(text)+')" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>' +
+    '<button class="action-btn" onclick="regenerateAnswer(\''+tag+'\')" title="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Regenerate</button>';
+  body.appendChild(bar);
+}
+
+function copyAnswer(btn, text) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').trim();
+  navigator.clipboard.writeText(clean).then(() => {
+    btn.innerHTML = '✓ Copied!';
+    btn.style.color = 'var(--accent2)';
+    setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy'; btn.style.color=''; }, 2000);
+  }).catch(() => alert('Copy not supported on this browser.'));
+}
+
+function shareAnswer(text) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').trim().slice(0, 500);
+  if (navigator.share) {
+    navigator.share({ title: 'Feng AI Answer', text: clean, url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(clean).then(() => alert('Answer copied — paste it anywhere to share!'));
+  }
+}
+
+function regenerateAnswer(tag) {
+  if (busy) return;
+  const lastUser = history.filter(m => m.role === 'user').slice(-1)[0];
+  if (!lastUser) return;
+  // Remove last assistant message from history
+  const lastAiIdx = history.map(m=>m.role).lastIndexOf('assistant');
+  if (lastAiIdx > -1) history.splice(lastAiIdx, 1);
+  // Remove last AI bubble from DOM
+  const msgs = document.getElementById('msg-list');
+  const aiMsgs = msgs.querySelectorAll('.msg.ai');
+  if (aiMsgs.length) aiMsgs[aiMsgs.length-1].remove();
+  // Re-send
+  document.getElementById('user-input').value = lastUser.content.split('\n\n[CONTEXT')[0];
+  sendMessage();
+}
+
+// ── EXPORT CHAT ──
+function exportChat() {
+  if (!history.length) { alert('No conversation to export yet.'); return; }
+  let text = 'Feng AI — Chat Export\n' + new Date().toLocaleString() + '\n\n';
+  history.forEach(m => {
+    text += (m.role === 'user' ? 'You: ' : 'Feng AI: ') + m.content.replace(/<[^>]+>/g,'').replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim() + '\n\n';
+  });
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Feng-AI-Chat-' + Date.now() + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── QUICK TOOLS (Translate, Summarize, Flashcards, Quiz, Grade Essay, Citation) ──
+function quickTool(type) {
+  const inp = document.getElementById('user-input');
+  const prompts = {
+    translate: 'Translate the following text to ',
+    summarize: 'Please summarize the following text in a clear, concise way:\n\n',
+    flashcards: 'Create 10 study flashcards (question and answer format) on the topic of: ',
+    quiz: 'Create a 10-question multiple choice quiz with answers on the topic of: ',
+    grade: 'Please grade the following essay out of 100, give detailed feedback on content, structure, grammar, and how to improve it:\n\n',
+    citation: 'Generate a proper APA, MLA and Harvard citation for: '
+  };
+  inp.value = prompts[type] || '';
+  inp.focus();
+  // Put cursor at end
+  inp.setSelectionRange(inp.value.length, inp.value.length);
 }
 
 // ── IMAGE GENERATION ──

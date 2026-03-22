@@ -208,6 +208,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 @keyframes thinkPulse{0%,80%,100%{transform:scale(0.7);opacity:0.3;}40%{transform:scale(1.1);opacity:1;}}
 .reasoning-text{font-size:0.79rem;color:var(--muted);line-height:1.75;padding:3px 0;}
 .reasoning-text+.reasoning-text{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
+.reasoning-para{font-size:0.8rem;color:var(--muted);line-height:1.75;margin-bottom:10px;}
+.reasoning-para:last-child{margin-bottom:0;}
 
 /* THINK BLOCK */
 .think-block{margin-bottom:4px;}
@@ -1623,7 +1625,7 @@ const SYSTEM_PROMPT =
   "You are Feng AI — a brilliant, accurate assistant. You never refuse any question.\n\n" +
   "LANGUAGE: Always reply in the same language the user writes in.\n\n" +
   "MEMORY: If [MEMORY: ...] is provided, use it naturally.\n\n" +
-  "CONTEXT: If [CONTEXT: ...] is provided with time/location/weather, use it to answer accurately.\n\n" +
+  "CONTEXT: ONLY mention time, location or weather in your answer if the user explicitly asked about them. Never volunteer 'on this cloudy morning in Lusaka' or similar — it feels intrusive. Only use context data when directly relevant to the question.\n\n" +
   "LIVE DATA: If [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, use it as your primary source of truth. Reference specific data from it in your answer.\n\n" +
   "SOURCES & ACCURACY:\n" +
   "- When answering factual questions, always mention where the information comes from\n" +
@@ -1652,7 +1654,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.9';
+const APP_VERSION = '1.1.0';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1702,11 +1704,16 @@ async function initContext() {
   }
 }
 
-function buildContextString() {
+function buildContextString(query) {
+  const t = (query||'').toLowerCase();
+  const asksTime     = /\b(what time|current time|what day|what date|today's date|what is today|day is it|date is it|morning|afternoon|evening|night)\b/i.test(t);
+  const asksLocation = /\b(where am i|my location|which city|which country|near me|my city|my country|where are we)\b/i.test(t);
+  const asksWeather  = /\b(weather|temperature|how hot|how cold|rain|sunny|cloudy|forecast|wind|humid|degrees)\b/i.test(t);
+
   const parts = [];
-  if (userContext.time) parts.push('Current time: ' + userContext.time);
-  if (userContext.location) parts.push('User location: ' + userContext.location);
-  if (userContext.weather) parts.push('Current weather: ' + userContext.weather);
+  if (asksTime     && userContext.time)     parts.push('Current time: ' + userContext.time);
+  if (asksLocation && userContext.location) parts.push('User location: ' + userContext.location);
+  if (asksWeather  && userContext.weather)  parts.push('Current weather: ' + userContext.weather);
   if (!parts.length) return '';
   return '\n\n[CONTEXT: ' + parts.join(' | ') + ']';
 }
@@ -2467,26 +2474,57 @@ function startThinking(userText, tag) {
       '<div class="msg-tag '+cls+'">'+lbl+(isDeep?' · 🧠 Deep Think':'')+'</div>' +
       '<div class="think-block">' +
         '<div class="think-header open" id="live-th-toggle">' +
-          '<span id="live-timer">'+(isDeep?'Deep thinking…':'Thinking…')+'</span>' +
+          '<span id="live-timer">'+(isDeep?'🧠 Deep thinking…':'Thinking…')+'</span>' +
           '<span class="think-chevron">▼</span>' +
         '</div>' +
-        '<div class="think-body open streaming" id="live-th-body">' +
-          '<div class="think-dots"><span></span><span></span><span></span></div>' +
-        '</div>' +
+        '<div class="think-body open streaming" id="live-th-body"></div>' +
       '</div>' +
     '</div>';
   list.appendChild(el);
   scrollDown();
 
+  const thinkingText = generateThinkingText(userText, tag);
+  let charIdx = 0;
   let elapsed = 0;
+  const body = document.getElementById('live-th-body');
   const timerEl = document.getElementById('live-timer');
+
   const timerIv = setInterval(() => {
     elapsed++;
     if (timerEl) timerEl.textContent = (isDeep ? '🧠 Deep thinking' : 'Thinking') + ' for ' + elapsed + 's…';
   }, 1000);
 
-  // No fake text animation — just waiting for real response
-  return { timerIv, fullText: '', elapsed: ()=>elapsed };
+  thinkIv = setInterval(() => {
+    if (charIdx < thinkingText.length) {
+      if (body) body.textContent = thinkingText.slice(0, charIdx + 1);
+      charIdx += 4;
+      if (charIdx % 120 === 0) scrollDown();
+    } else { clearInterval(thinkIv); thinkIv = null; }
+  }, 14);
+
+  return { timerIv, fullText: thinkingText, elapsed: ()=>elapsed };
+}
+
+function generateThinkingText(query, tag) {
+  const q = query.trim().slice(0, 150);
+  const lines = [
+    'The user is asking: "' + q + (query.length > 150 ? '…' : '') + '"',
+    '',
+    tag === 'code' ?
+      'This is a technical question. I need to consider the best implementation approach, potential edge cases, and how to explain it clearly.' :
+    tag === 'edu' ?
+      'This is an educational question. I should think about what the user needs to learn, what level of detail is appropriate, and how to make it easy to understand.' :
+      'Let me think through what the user really needs and the best way to answer accurately.',
+    '',
+    'Key things to consider:',
+    '• What is the core question being asked?',
+    '• What background context is relevant?',
+    '• What sources or data can I draw from?',
+    '• How should I structure this answer to be most helpful?',
+    '',
+    'Let me look at any live data available and think through the most accurate, complete response…',
+  ];
+  return lines.join('\n');
 }
 
 function finalizeThinking(handle, secs) {
@@ -2497,21 +2535,22 @@ function finalizeThinking(handle, secs) {
   const timer = document.getElementById('live-timer');
   const toggle = document.getElementById('live-th-toggle');
 
-  // Use real DeepSeek reasoning if available
   const reasoning = window._pendingReasoning;
   if (reasoning && body) {
+    // Show REAL DeepSeek reasoning — replace fake text
     window._pendingReasoning = null;
     body.classList.remove('streaming');
-    // Format reasoning nicely — split into readable paragraphs
-    const cleaned = reasoning
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-    body.innerHTML = '<div class="reasoning-text">' + esc(cleaned).replace(/\n\n/g,'</div><div class="reasoning-text">').replace(/\n/g,'<br>') + '</div>';
-    if (timer) timer.textContent = '🧠 Thought for ' + secs + ' second' + (secs!==1?'s':'') + ' · DeepSeek Reasoner';
+    const cleaned = reasoning.replace(/\n{3,}/g, '\n\n').trim();
+    // Format with paragraph breaks
+    const paras = cleaned.split('\n\n');
+    body.innerHTML = paras.map(p =>
+      '<div class="reasoning-para">' + esc(p.trim()).replace(/\n/g,'<br>') + '</div>'
+    ).join('');
+    if (timer) timer.textContent = '🧠 Thought for ' + secs + 's · DeepSeek Reasoner';
   } else {
-    if (body) {
+    if (body && handle) {
+      body.textContent = handle.fullText;
       body.classList.remove('streaming');
-      body.innerHTML = '<span style="color:var(--muted);font-size:0.78rem;">Processing complete.</span>';
     }
     if (timer) timer.textContent = 'Thought for ' + secs + ' second' + (secs!==1?'s':'');
   }
@@ -2523,15 +2562,15 @@ function finalizeThinking(handle, secs) {
       const open = b.classList.toggle('open');
       toggle.classList.toggle('open', open);
     };
-    // Auto-collapse after showing
+    // Auto collapse after 5s
     setTimeout(() => {
       const b = document.getElementById('live-th-body');
       const tog = document.getElementById('live-th-toggle');
-      if (b && b.classList.contains('open')) {
+      if (b?.classList.contains('open')) {
         b.classList.remove('open');
         if (tog) tog.classList.remove('open');
       }
-    }, 4000);
+    }, 5000);
   }
 }
 
@@ -2841,7 +2880,7 @@ async function sendMessage() {
       // Run multi-source research in parallel
       const liveData = await fetchLiveData(text);
 
-      const ctx = buildContextString() + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote() + getDeepThinkNote() + liveData.context;
+      const ctx = buildContextString(text) + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote() + getDeepThinkNote() + liveData.context;
 
       const messagesWithCtx = history.map((m, i) => {
         if (i === history.length - 1 && m.role === 'user' && ctx) {

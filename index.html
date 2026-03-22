@@ -1553,6 +1553,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 <script>
 const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const DEEPSEEK_KEY = 'sk-8fb1965c422e424dbccb3204b6d8470f';
+const DEEPSEEK_MODEL = 'deepseek-chat';
+const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
+
+// Use DeepSeek as primary, Groq as fallback
+async function callAI(messages, model) {
+  // Try DeepSeek first
+  try {
+    const res = await fetch(DEEPSEEK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_KEY },
+      body: JSON.stringify({ model: DEEPSEEK_MODEL, max_tokens: 8000, messages })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.choices?.[0]?.message?.content) return { data, source: 'deepseek' };
+    }
+  } catch(e) {}
+  // Fallback to Groq
+  const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 8000, messages })
+  });
+  const data = await res.json();
+  return { data, source: 'groq' };
+}
 
 const SYSTEM_PROMPT =
   "You are Feng AI — a brilliant, friendly assistant who helps with absolutely anything. You never refuse.\n\n" +
@@ -2777,25 +2804,27 @@ async function sendMessage() {
       }
     }
 
-    const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + GROQ_KEY,
-      },
-      body: JSON.stringify({
-        model: model,
-        max_tokens: 8000,
-        messages: apiMessages,
-      }),
-    });
-
     const secs = Math.max(1, Math.round((Date.now()-t0)/1000));
-    let data;
-    try { data = await res.json(); } catch(e) {
+    let data, aiSource;
+    try {
+      if (isImageAttach) {
+        // Vision — use Groq only (has vision support)
+        const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 8000, messages: apiMessages })
+        });
+        data = await res.json();
+        aiSource = 'groq';
+      } else {
+        const result = await callAI(apiMessages, model);
+        data = result.data;
+        aiSource = result.source;
+      }
+    } catch(e) {
       finalizeThinking(handle, secs);
-      streamAnswer('⚠️ Could not parse response (HTTP ' + res.status + '). Check your API key.\n<suggestions>["Try again","Check connection","Ask something else"]</suggestions>', tag);
-      busy = false; document.getElementById('send-btn').disabled = false; inp.focus(); return;
+      streamAnswer('⚠️ Connection error. Please check your internet and try again.\n<suggestions>["Try again","Check connection","Ask something else"]</suggestions>', tag);
+      busy = false; hideStopBtn(); document.getElementById('send-btn').disabled = false; inp.focus(); return;
     }
     finalizeThinking(handle, secs);
 
@@ -2806,7 +2835,6 @@ async function sendMessage() {
       history.push({ role: 'assistant', content: reply });
       saveSession(history[0]?.content || 'Chat');
       learnFromConversation(text, reply);
-      // Auto-save citations to bibliography
       if (/citation|APA|MLA|Harvard/i.test(text)) saveCitation(reply.replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim());
       haptic('success');
       streamAnswer(reply, tag);
@@ -3812,13 +3840,8 @@ function generateMindMap(topic) {
   list.appendChild(el); scrollDown();
 
   // Ask AI for mind map data then render
-  fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-    body: JSON.stringify({
-      model: GROQ_MODEL, max_tokens: 800,
-      messages: [{role:'user', content:'Create a mind map for "'+topic+'". Return ONLY a JSON object like: {"center":"'+topic+'","branches":[{"label":"Branch 1","children":["item1","item2","item3"]},{"label":"Branch 2","children":["item1","item2","item3"]},{"label":"Branch 3","children":["item1","item2"]},{"label":"Branch 4","children":["item1","item2","item3"]}]}. No other text.'}]
-    })
-  }).then(r=>r.json()).then(data => {
+  callAI([{role:'user', content:'Create a mind map for "'+topic+'". Return ONLY a JSON object like: {"center":"'+topic+'","branches":[{"label":"Branch 1","children":["item1","item2","item3"]},{"label":"Branch 2","children":["item1","item2","item3"]},{"label":"Branch 3","children":["item1","item2"]},{"label":"Branch 4","children":["item1","item2","item3"]}]}. No other text.'}])
+  .then(result => result.data).then(data => {
     try {
       const raw = data.choices[0].message.content;
       const json = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]);
@@ -4003,14 +4026,7 @@ async function summarizeChat() {
   showToast('Summarizing conversation…');
   const msgs = history.map(m=>(m.role==='user'?'User: ':'AI: ')+m.content.slice(0,300)).join('\n').slice(0,3000);
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-      body:JSON.stringify({model:GROQ_MODEL,max_tokens:400,
-        messages:[{role:'user',content:'Summarize this conversation in 3-5 bullet points:\n\n'+msgs}]
-      })
-    });
-    const data = await res.json();
+    const {data} = await callAI([{role:'user',content:'Summarize this conversation in 3-5 bullet points:\n\n'+msgs}]);
     const summary = data.choices?.[0]?.message?.content || 'Could not summarize.';
     hideHero();
     const list = document.getElementById('msg-list');
@@ -4164,13 +4180,7 @@ async function startExamSim() {
   showToast('Generating exam… please wait ⏳');
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-      body:JSON.stringify({model:GROQ_MODEL,max_tokens:1500,
-        messages:[{role:'user',content:`Create a ${simState.numQ}-question exam for ${level} level ${subject}. Return ONLY a JSON array like: [{"q":"Question text","type":"short"},{"q":"...","type":"essay"}]. Mix short answer and essay questions. No other text.`}]
-      })
-    });
-    const data = await res.json();
+    const {data} = await callAI([{role:'user',content:`Create a ${simState.numQ}-question exam for ${level} level ${subject}. Return ONLY a JSON array like: [{"q":"Question text","type":"short"},{"q":"...","type":"essay"}]. Mix short answer and essay questions. No other text.`}]);
     const raw = data.choices[0].message.content;
     simState.questions = JSON.parse(raw.match(/\[[\s\S]*\]/)[0]);
     simState.elapsed = 0;
@@ -4220,13 +4230,7 @@ async function gradeExamSim() {
   document.getElementById('exam-sim-results').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Marking your exam… ⏳</div>';
   const qa = simState.answers.map((a,i)=>`Q${i+1}: ${a.q}\nAnswer: ${a.a}`).join('\n\n');
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-      body:JSON.stringify({model:GROQ_MODEL,max_tokens:1200,
-        messages:[{role:'user',content:`Mark this ${simState.subject} exam. Give a score out of 100, grade (A/B/C/D/F), and brief feedback per question. Be encouraging but honest.\n\n${qa}\n\nFormat: Start with "SCORE: X/100 | GRADE: X" then feedback per question.`}]
-      })
-    });
-    const data = await res.json();
+    const {data} = await callAI([{role:'user',content:`Mark this ${simState.subject} exam. Give a score out of 100, grade (A/B/C/D/F), and brief feedback per question. Be encouraging but honest.\n\n${qa}\n\nFormat: Start with "SCORE: X/100 | GRADE: X" then feedback per question.`}]);
     const result = data.choices[0].message.content;
     const scoreMatch = result.match(/SCORE:\s*(\d+)/i);
     const gradeMatch = result.match(/GRADE:\s*([A-F][+-]?)/i);

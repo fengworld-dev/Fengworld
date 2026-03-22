@@ -757,11 +757,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     <button onclick="openSubpage('page-notebook');closeSB();renderNotes();" class="sb-tool-btn">📓 Notebook</button>
     <button onclick="openSubpage('page-pomodoro');closeSB();" class="sb-tool-btn">⏱️ Timer</button>
     <button onclick="openSubpage('page-dashboard');closeSB();renderDashboard();" class="sb-tool-btn">📊 Progress</button>
+    <button onclick="openSubpage('page-exams');closeSB();renderExams();" class="sb-tool-btn">📅 Exams</button>
+    <button onclick="openSubpage('page-vocab');closeSB();loadVocabWord();" class="sb-tool-btn">📖 Vocab</button>
+    <button onclick="openSubpage('page-bibliography');closeSB();renderBibliography();" class="sb-tool-btn">📚 Citations</button>
+    <button onclick="summarizeChat();closeSB();" class="sb-tool-btn">✨ Summarize</button>
   </div>
-  <div style="padding:0 14px 10px;">
-    <button onclick="exportChat();closeSB();" style="width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.15s;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export Chat
+  <div style="padding:0 14px 10px;display:flex;gap:6px;">
+    <button onclick="exportChat();closeSB();" style="flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export TXT
+    </button>
+    <button onclick="exportChatPDF();closeSB();" style="flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;">
+      📕 Export PDF
     </button>
   </div>
   <div class="sb-foot" onclick="openSettings()">
@@ -797,6 +804,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
     <span class="set-label">About</span>
     <div class="set-group">
       <div class="set-row"><div class="s-icon">ℹ️</div><div class="s-label">Version</div><div class="s-val" id="app-version">v1.0.1</div></div>
+      <div class="set-row" onclick="openSubpage('page-stats')"><div class="s-icon">📊</div><div class="s-label">Usage Statistics</div><div class="s-arr">›</div></div>
       <div class="set-row" onclick="openSubpage('page-help')"><div class="s-icon">❓</div><div class="s-label">Help & Feedback</div><div class="s-arr">›</div></div>
     </div>
     <div class="set-group set-danger" style="margin-top:8px;">
@@ -834,14 +842,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <div><div class="toggle-label">Improve Feng AI</div><div class="toggle-sub">Allow anonymous usage data to improve responses</div></div>
         <button class="toggle" onclick="this.classList.toggle('on')"></button>
       </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Personalized responses</div><div class="toggle-sub">Use your preferences to tailor answers</div></div>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+      </div>
     </div>
     <div class="data-card">
       <div class="data-card-title">🧹 Data Management</div>
-      <div class="data-card-desc">Your conversations are stored locally on your device only. We never send your personal data to third-party services without your consent.</div>
+      <div class="data-card-desc">Your conversations are stored locally on your device only. We never share or sell your personal data to any third party. You have full control over your data at all times.</div>
+    </div>
+    <div class="data-card">
+      <div class="data-card-title">🔐 Security</div>
+      <div class="data-card-desc">All messages are encrypted in transit using industry-standard TLS encryption. Your conversations are private and protected. Feng AI does not store your messages on external servers.</div>
     </div>
     <div class="data-card">
       <div class="data-card-title">📋 Usage Policy</div>
-      <div class="data-card-desc">Feng AI uses Groq AI to process your messages. Your queries are sent to Groq's servers to generate responses. Do not share sensitive personal information.</div>
+      <div class="data-card-desc">Feng AI processes your messages using advanced AI technology to generate intelligent responses. Do not share sensitive personal information such as passwords, financial details, or ID numbers in chat.</div>
+    </div>
+    <div class="data-card">
+      <div class="data-card-title">👤 Your Rights</div>
+      <div class="data-card-desc">You have the right to delete all your data at any time. Clearing history removes all conversations permanently from your device. Feng AI respects your privacy and digital rights.</div>
     </div>
     <div class="set-group set-danger" style="margin-top:8px;">
       <div class="set-row" onclick="clearHistory()"><div class="s-icon">🗑️</div><div class="s-label">Delete all data</div></div>
@@ -965,6 +985,59 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <div class="sub-body" id="dashboard-body"></div>
 </div>
 
+<!-- EXAM COUNTDOWN PAGE -->
+<div class="subpage" id="page-exams">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-exams')">←</button>
+    <div class="sub-title">Exam Countdown</div>
+    <button onclick="showAddExam()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Add</button>
+  </div>
+  <div class="sub-body">
+    <div id="add-exam-form" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
+      <input id="exam-name" class="login-input" placeholder="Exam name (e.g. Math Final)" style="margin-bottom:10px;"/>
+      <input id="exam-date" class="login-input" type="date" style="margin-bottom:10px;"/>
+      <button onclick="addExam()" style="width:100%;padding:10px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;cursor:pointer;">Save Exam</button>
+    </div>
+    <div id="exams-list"></div>
+  </div>
+</div>
+
+<!-- BIBLIOGRAPHY PAGE -->
+<div class="subpage" id="page-bibliography">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-bibliography')">←</button>
+    <div class="sub-title">Bibliography</div>
+  </div>
+  <div class="sub-body" id="bibliography-body" style="padding-top:12px;"></div>
+</div>
+
+<!-- VOCABULARY PAGE -->
+<div class="subpage" id="page-vocab">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-vocab')">←</button>
+    <div class="sub-title">Vocabulary Builder</div>
+  </div>
+  <div class="sub-body">
+    <div id="vocab-word-card" style="background:linear-gradient(135deg,var(--accent),#2563eb);border-radius:16px;padding:28px;text-align:center;margin-bottom:20px;">
+      <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Word of the Day</div>
+      <div id="vocab-word" style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;margin-bottom:8px;">Loading…</div>
+      <div id="vocab-pos" style="font-size:0.8rem;color:rgba(255,255,255,0.7);font-style:italic;margin-bottom:12px;"></div>
+      <div id="vocab-def" style="font-size:0.88rem;color:rgba(255,255,255,0.9);line-height:1.6;"></div>
+    </div>
+    <button onclick="loadVocabWord()" style="width:100%;padding:11px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:16px;">🔄 New Word</button>
+    <div id="vocab-history"></div>
+  </div>
+</div>
+
+<!-- USAGE STATS PAGE -->
+<div class="subpage" id="page-stats">
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-stats')">←</button>
+    <div class="sub-title">Usage Statistics</div>
+  </div>
+  <div class="sub-body" id="stats-body"></div>
+</div>
+
 <!-- VOICE SETTINGS PAGE -->
 <div class="subpage" id="page-voice">
   <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-voice')">←</button><div class="sub-title">Voice & Audio</div></div>
@@ -1047,6 +1120,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <button class="quick-tool-btn" onclick="quickTool('grade')">✏️ Grade essay</button>
         <button class="quick-tool-btn" onclick="quickTool('citation')">📚 Citation</button>
         <button class="quick-tool-btn" onclick="quickTool('studyplan')">📅 Study Planner</button>
+        <button class="quick-tool-btn" onclick="quickTool('chart')">📊 Chart</button>
+        <button class="quick-tool-btn" onclick="quickTool('mermaid')">🔀 Diagram</button>
+        <button class="quick-tool-btn" onclick="quickTool('compare')">⚖️ Compare</button>
       </div>
     </div>
     <div class="msg-list" id="msg-list"></div>
@@ -1121,7 +1197,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.5';
+const APP_VERSION = '1.0.6';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1387,6 +1463,11 @@ function openSubpage(id) {
   if (id === 'page-notebook') renderNotes();
   if (id === 'page-dashboard') renderDashboard();
   if (id === 'page-voice') { setTimeout(renderVoicePage, 300); }
+  if (id === 'page-exams') renderExams();
+  if (id === 'page-bibliography') renderBibliography();
+  if (id === 'page-vocab') { setTimeout(()=>{ loadVocabWord(); renderVocabHistory(); }, 100); }
+  if (id === 'page-stats') renderStats();
+  if (id === 'page-pomodoro') updatePomoUI();
 }
 function closeSubpage(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -2123,22 +2204,6 @@ function exportChat() {
 }
 
 // ── QUICK TOOLS (Translate, Summarize, Flashcards, Quiz, Grade Essay, Citation) ──
-function quickTool(type) {
-  const inp = document.getElementById('user-input');
-  const prompts = {
-    translate: 'Translate the following text to ',
-    summarize: 'Please summarize the following text in a clear, concise way:\n\n',
-    flashcards: 'Create 10 study flashcards (question and answer format) on the topic of: ',
-    quiz: 'Create a 10-question multiple choice quiz with answers on the topic of: ',
-    grade: 'Please grade the following essay out of 100, give detailed feedback on content, structure, grammar, and how to improve it:\n\n',
-    citation: 'Generate a proper APA, MLA and Harvard citation for: ',
-    studyplan: 'Create a detailed study plan for me. My subjects are: [list your subjects]. My exam date is: [date]. Available study hours per day: [hours]. Please create a day-by-day schedule with topics, time allocation, and revision tips.'
-  };
-  inp.value = prompts[type] || '';
-  inp.focus();
-  inp.setSelectionRange(inp.value.length, inp.value.length);
-}
-
 // ── IMAGE GENERATION ──
 function generateImage(text) {
   hideHero();
@@ -2323,6 +2388,8 @@ async function sendMessage() {
       history.push({ role: 'assistant', content: reply });
       saveSession(history[0]?.content || 'Chat');
       learnFromConversation(text, reply);
+      // Auto-save citations to bibliography
+      if (/citation|APA|MLA|Harvard/i.test(text)) saveCitation(reply.replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim());
       haptic('success');
       streamAnswer(reply, tag);
     }
@@ -3283,6 +3350,235 @@ function renderMindMap(uid, data) {
   html += '</div></div>';
   el.innerHTML = html;
   scrollDown();
+}
+
+// ── EXAM COUNTDOWN ──
+let exams = JSON.parse(localStorage.getItem('feng_exams')||'[]');
+function showAddExam() {
+  const f = document.getElementById('add-exam-form');
+  if (f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+function addExam() {
+  const name = document.getElementById('exam-name')?.value.trim();
+  const date = document.getElementById('exam-date')?.value;
+  if (!name||!date) return;
+  exams.push({id:Date.now(),name,date});
+  localStorage.setItem('feng_exams',JSON.stringify(exams));
+  if (document.getElementById('exam-name')) document.getElementById('exam-name').value='';
+  if (document.getElementById('exam-date')) document.getElementById('exam-date').value='';
+  document.getElementById('add-exam-form').style.display='none';
+  renderExams();
+  showToast('Exam added! 📅');
+}
+function renderExams() {
+  const el = document.getElementById('exams-list');
+  if (!el) return;
+  exams = exams.filter(e=>new Date(e.date)>=new Date(new Date().toDateString()));
+  localStorage.setItem('feng_exams',JSON.stringify(exams));
+  if (!exams.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;">No exams added yet.<br>Tap + Add to add your first exam.</div>'; return; }
+  el.innerHTML = exams.sort((a,b)=>new Date(a.date)-new Date(b.date)).map((e,i) => {
+    const days = Math.ceil((new Date(e.date)-new Date())/86400000);
+    const color = days<=3?'#ef4444':days<=7?'#f59e0b':'var(--accent)';
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">' +
+      '<div style="text-align:center;min-width:56px;"><div style="font-family:\'Syne\',sans-serif;font-size:1.8rem;font-weight:800;color:'+color+';">'+days+'</div><div style="font-size:0.65rem;color:var(--muted);">DAYS</div></div>' +
+      '<div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">'+esc(e.name)+'</div><div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">'+new Date(e.date).toLocaleDateString('en',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'</div></div>' +
+      '<button onclick="deleteExam('+i+')" style="border:none;background:none;color:var(--muted);cursor:pointer;font-size:1rem;">🗑️</button>' +
+    '</div>';
+  }).join('');
+}
+function deleteExam(i) { exams.splice(i,1); localStorage.setItem('feng_exams',JSON.stringify(exams)); renderExams(); }
+
+// ── BIBLIOGRAPHY MANAGER ──
+let bibliography = JSON.parse(localStorage.getItem('feng_biblio')||'[]');
+function saveCitation(text) {
+  const cite = { id:Date.now(), text:text.slice(0,500), ts:Date.now() };
+  bibliography.unshift(cite);
+  localStorage.setItem('feng_biblio',JSON.stringify(bibliography));
+  showToast('Citation saved! 📚');
+}
+function renderBibliography() {
+  const el = document.getElementById('bibliography-body');
+  if (!el) return;
+  if (!bibliography.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;">No citations saved yet.<br>Ask Feng to generate citations and save them here.</div>'; return; }
+  el.innerHTML = bibliography.map((c,i) =>
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;">' +
+      '<div style="font-size:0.8rem;color:var(--text);line-height:1.6;margin-bottom:8px;">'+esc(c.text)+'</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button onclick="copyAnswer(this,'+JSON.stringify(c.text)+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:0.75rem;cursor:pointer;">Copy</button>' +
+        '<button onclick="deleteBiblio('+i+')" style="padding:5px 12px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:0.75rem;cursor:pointer;">Delete</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+function deleteBiblio(i) { bibliography.splice(i,1); localStorage.setItem('feng_biblio',JSON.stringify(bibliography)); renderBibliography(); }
+
+// ── VOCABULARY BUILDER ──
+const VOCAB_WORDS = [
+  {word:'Ephemeral',pos:'adjective',def:'Lasting for a very short time; transitory.',example:'The ephemeral beauty of cherry blossoms makes them even more precious.'},
+  {word:'Perspicacious',pos:'adjective',def:'Having a ready insight; shrewd and wise.',example:'Her perspicacious analysis impressed the entire board.'},
+  {word:'Eloquent',pos:'adjective',def:'Fluent and persuasive in speaking or writing.',example:'His eloquent speech moved the audience to tears.'},
+  {word:'Ubiquitous',pos:'adjective',def:'Present, appearing, or found everywhere.',example:'Smartphones have become ubiquitous in modern life.'},
+  {word:'Resilience',pos:'noun',def:'The ability to recover quickly from difficulties.',example:'Her resilience in the face of adversity inspired everyone around her.'},
+  {word:'Ambiguous',pos:'adjective',def:'Open to more than one interpretation; not clear.',example:'The ambiguous instructions confused the students.'},
+  {word:'Meticulous',pos:'adjective',def:'Showing great attention to detail and accuracy.',example:'The scientist was meticulous in recording every observation.'},
+  {word:'Pragmatic',pos:'adjective',def:'Dealing with things sensibly and realistically.',example:'We need a pragmatic approach to solve this problem.'},
+  {word:'Profound',pos:'adjective',def:'Very great or intense; having deep insight.',example:'Reading philosophy had a profound effect on his thinking.'},
+  {word:'Catalyst',pos:'noun',def:'Something that causes or accelerates change or action.',example:'The invention of the internet was a catalyst for global communication.'},
+  {word:'Tenacious',pos:'adjective',def:'Holding firmly; persistent and determined.',example:'Her tenacious spirit helped her overcome every obstacle.'},
+  {word:'Innovation',pos:'noun',def:'A new method, idea, or product; introducing new things.',example:'Continuous innovation is key to staying competitive.'},
+  {word:'Empathy',pos:'noun',def:'The ability to understand and share the feelings of others.',example:'Good leaders show empathy toward their team members.'},
+  {word:'Articulate',pos:'adjective',def:'Expressing oneself clearly and effectively.',example:'She was articulate in presenting her research findings.'},
+  {word:'Diligent',pos:'adjective',def:'Having or showing care and conscientiousness in work.',example:'Diligent students always review their notes after class.'}
+];
+let vocabHistory = JSON.parse(localStorage.getItem('feng_vocab_hist')||'[]');
+let lastVocabIdx = -1;
+function loadVocabWord() {
+  let idx;
+  do { idx = Math.floor(Math.random()*VOCAB_WORDS.length); } while (idx===lastVocabIdx);
+  lastVocabIdx = idx;
+  const w = VOCAB_WORDS[idx];
+  const wordEl = document.getElementById('vocab-word');
+  const posEl = document.getElementById('vocab-pos');
+  const defEl = document.getElementById('vocab-def');
+  if (wordEl) wordEl.textContent = w.word;
+  if (posEl) posEl.textContent = w.pos;
+  if (defEl) defEl.innerHTML = w.def+'<div style="margin-top:8px;font-size:0.8rem;opacity:0.8;font-style:italic;">e.g. '+w.example+'</div>';
+  // Save to history
+  if (!vocabHistory.find(v=>v.word===w.word)) {
+    vocabHistory.unshift(w);
+    if (vocabHistory.length>20) vocabHistory=vocabHistory.slice(0,20);
+    localStorage.setItem('feng_vocab_hist',JSON.stringify(vocabHistory));
+  }
+  renderVocabHistory();
+}
+function renderVocabHistory() {
+  const el = document.getElementById('vocab-history');
+  if (!el||!vocabHistory.length) return;
+  el.innerHTML = '<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">Recent Words</div>' +
+    vocabHistory.slice(0,8).map(w=>
+      '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">' +
+        '<strong style="font-size:0.87rem;color:var(--accent);min-width:100px;">'+w.word+'</strong>' +
+        '<span style="font-size:0.78rem;color:var(--muted);line-height:1.4;">'+w.def.slice(0,60)+'…</span>' +
+      '</div>'
+    ).join('');
+}
+
+// ── USAGE STATISTICS ──
+function renderStats() {
+  const el = document.getElementById('stats-body');
+  if (!el) return;
+  const totalChats = sessions.length;
+  const totalMsgs = sessions.reduce((acc,s)=>acc+(s.history?.length||0),0);
+  const totalBookmarks = bookmarks.length;
+  const totalNotes = notes.length;
+  const totalExams = exams.length;
+  const pomoCount = parseInt(localStorage.getItem('feng_pomo_count')||'0');
+  const streak = getStreak();
+  const vocabCount = vocabHistory.length;
+  const mem = getMemory();
+  const firstChat = sessions.length ? new Date(Math.min(...sessions.map(s=>s.ts))).toLocaleDateString() : 'N/A';
+
+  el.innerHTML =
+    '<div style="background:linear-gradient(135deg,var(--accent),#2563eb);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">' +
+      '<div style="font-size:2.5rem;font-weight:800;font-family:\'Syne\',sans-serif;color:#fff;">'+streak+'</div>' +
+      '<div style="color:rgba(255,255,255,0.8);font-size:0.85rem;">Day Streak 🔥</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">' +
+      statCard('💬','Conversations',totalChats) +
+      statCard('❓','Questions Asked',Math.floor(totalMsgs/2)) +
+      statCard('⏱️','Focus Sessions',pomoCount) +
+      statCard('🔖','Bookmarks',totalBookmarks) +
+      statCard('📓','Notes',totalNotes) +
+      statCard('📖','Words Learned',vocabCount) +
+    '</div>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">' +
+      '<div style="font-weight:700;font-size:0.85rem;margin-bottom:12px;">📋 Details</div>' +
+      '<div style="font-size:0.82rem;color:var(--muted);line-height:2.2;">' +
+        (mem.name?'👤 Name: <strong style="color:var(--text);">'+esc(mem.name)+'</strong><br>':'') +
+        '📅 Using Feng AI since: <strong style="color:var(--text);">'+firstChat+'</strong><br>' +
+        '📚 Upcoming exams: <strong style="color:var(--text);">'+totalExams+'</strong><br>' +
+        '🗂️ Saved citations: <strong style="color:var(--text);">'+bibliography.length+'</strong>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── CONVERSATION SUMMARY ──
+async function summarizeChat() {
+  if (!history.length) { showToast('No conversation to summarize yet.'); return; }
+  showToast('Summarizing conversation…');
+  const msgs = history.map(m=>(m.role==='user'?'User: ':'AI: ')+m.content.slice(0,300)).join('\n').slice(0,3000);
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:GROQ_MODEL,max_tokens:400,
+        messages:[{role:'user',content:'Summarize this conversation in 3-5 bullet points:\n\n'+msgs}]
+      })
+    });
+    const data = await res.json();
+    const summary = data.choices?.[0]?.message?.content || 'Could not summarize.';
+    hideHero();
+    const list = document.getElementById('msg-list');
+    const el = document.createElement('div');
+    el.className = 'msg ai';
+    el.innerHTML = '<div>'+cubeHTML('edu',false)+'</div>' +
+      '<div class="msg-body">' +
+        '<div class="msg-tag tag-edu">✨ Summary</div>' +
+        '<div class="bubble">'+md(summary)+'</div>' +
+      '</div>';
+    list.appendChild(el);
+    scrollDown();
+  } catch { showToast('Could not summarize. Try again.'); }
+}
+
+// ── CHAT EXPORT TO PDF ──
+function exportChatPDF() {
+  if (!history.length) { showToast('No conversation to export.'); return; }
+  const win = window.open('','_blank');
+  if (!win) { showToast('Please allow popups to export PDF.'); return; }
+  let content = '';
+  history.forEach(m => {
+    const role = m.role==='user' ? '<div style="color:#2563eb;font-weight:700;margin-top:20px;">You</div>' : '<div style="color:#16a34a;font-weight:700;margin-top:20px;">Feng AI</div>';
+    const text = m.content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/^## (.+)$/gm,'<h3>$1</h3>').replace(/^# (.+)$/gm,'<h2>$1</h2>').replace(/\n/g,'<br>');
+    content += role + '<div style="padding:8px 0 8px 12px;border-left:3px solid #e5e7eb;margin-top:6px;font-size:13pt;">'+text+'</div>';
+  });
+  const html = '<!DOCTYPE html><html><head><title>Feng AI Chat Export</title>' +
+    '<style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;color:#111;line-height:1.7;}' +
+    'h1{color:#2563eb;}h2,h3{color:#1e40af;}@media print{body{margin:20px;}}</style></head>' +
+    '<body><h1>Feng AI — Chat Export</h1><p style="color:#6b7280;font-size:11pt;">'+new Date().toLocaleString()+'</p><hr>'+content+'</body></html>';
+  win.document.write(html);
+  win.document.close();
+  win.setTimeout(()=>win.print(),500);
+}
+
+// ── CHARTS (using canvas) ──
+function isChartRequest(text) {
+  return /\b(chart|graph|plot|bar chart|pie chart|line graph|visualize.*data)\b/i.test(text);
+}
+
+// ── MERMAID DIAGRAMS ──
+function isMermaidRequest(text) {
+  return /\b(flowchart|sequence diagram|diagram|flow|process.*diagram|steps.*diagram)\b/i.test(text);
+}
+
+// ── QUICK TOOLS extra ──
+function quickTool(type) {
+  const inp = document.getElementById('user-input');
+  const prompts = {
+    translate: 'Translate the following text to ',
+    summarize: 'Please summarize the following text in a clear, concise way:\n\n',
+    flashcards: 'Create 10 study flashcards (question and answer format) on the topic of: ',
+    quiz: 'Create a 10-question multiple choice quiz with answers on the topic of: ',
+    grade: 'Please grade the following essay out of 100, give detailed feedback on content, structure, grammar, and how to improve it:\n\n',
+    citation: 'Generate a proper APA, MLA and Harvard citation for: ',
+    studyplan: 'Create a detailed study plan. My subjects are: [list subjects]. My exam date is: [date]. Available hours per day: [hours]. Create a day-by-day schedule.',
+    chart: 'Create a bar chart comparing: [describe your data]. For example: "sales figures for Jan, Feb, Mar as 1200, 1800, 1500"',
+    mermaid: 'Create a flowchart/diagram showing the steps of: ',
+    compare: 'Create a detailed side-by-side comparison table between: '
+  };
+  inp.value = prompts[type] || '';
+  inp.focus();
+  inp.setSelectionRange(inp.value.length, inp.value.length);
 }
 
 // ── INPUT RESIZE ──

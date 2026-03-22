@@ -77,7 +77,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
 /* Prevent text stretching in landscape */
 @media screen and (orientation:landscape) and (max-height:500px){
-  #hero{min-height:calc(100vh - 160px);padding:20px 24px;}
+  #hero{min-height:calc(100vh - 200px);padding:0 16px 28px;}
   .hero-icon-lg{width:50px;height:50px;border-radius:14px;padding:10px 10px 8px;gap:6px;}
   .hero-icon-lg .logo-bar{height:5px;}
   .hero-icon-lg .logo-dot{width:7px;height:7px;}
@@ -122,23 +122,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
 /* HERO */
 #hero{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:calc(100vh - 220px);text-align:center;padding:40px 24px;
-  animation:fadeUp 0.5s ease both;
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+  min-height:calc(100vh - 280px);text-align:left;padding:0 20px 32px;
+  animation:fadeUp 0.4s ease both;
 }
 #hero.hidden{display:none;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hero-logo-wrap{display:none;}
 .hero-greeting{
   font-family:'Syne',sans-serif;
-  font-size:2rem;
-  font-weight:800;letter-spacing:-0.5px;line-height:1.2;margin-bottom:8px;
+  font-size:1.9rem;
+  font-weight:800;letter-spacing:-0.5px;line-height:1.2;margin-bottom:6px;
+  text-align:left;
 }
-.hero-sub{font-size:0.88rem;color:var(--muted);letter-spacing:0;}
+.hero-sub{font-size:0.88rem;color:var(--muted);letter-spacing:0;text-align:left;margin-bottom:16px;}
 
 /* MESSAGES */
-.msg-list{display:flex;flex-direction:column;padding:16px 0 8px;}
-.msg{display:flex;gap:10px;padding:8px 16px;animation:fadeUp 0.25s ease both;}
-.msg.user{flex-direction:row-reverse;}
+.msg-list{display:flex;flex-direction:column;padding:8px 0;}
+.msg{display:flex;gap:10px;padding:4px 20px;animation:fadeUp 0.22s ease both;}
+.msg.user{flex-direction:row-reverse;padding:6px 20px;}
+.msg.ai > div:first-child{display:none;}/* Hide cube on AI messages — full width like Gemini */
 
 /* USER AVATAR */
 .user-av{
@@ -171,17 +174,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .cube.c-design .cube-face{border-color:rgba(192,132,252,0.7);background:rgba(192,132,252,0.08);}
 
 /* MSG BODY */
-.msg-body{max-width:88%;display:flex;flex-direction:column;gap:5px;}
-.msg.user .msg-body{align-items:flex-end;}
+.msg-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
+.msg.user .msg-body{align-items:flex-end;max-width:85%;}
+.msg.ai .msg-body{max-width:100%;width:100%;}
 .msg-tag{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;padding:2px 7px;border-radius:4px;width:fit-content;}
 .tag-edu{background:rgba(79,142,247,0.12);color:var(--accent);}
 .tag-code{background:rgba(52,211,153,0.12);color:var(--accent2);}
 .tag-design{background:rgba(192,132,252,0.12);color:var(--accent3);}
 
 /* BUBBLES */
-.bubble{font-size:0.9rem;line-height:1.75;}
-.msg.user .bubble{background:var(--accent);color:#fff;border-radius:var(--r);border-bottom-right-radius:4px;padding:11px 15px;}
-.msg.ai .bubble{background:transparent;border:none;padding:0 0 4px 0;color:var(--text);}
+.bubble{font-size:0.93rem;line-height:1.8;}
+.msg.user .bubble{background:var(--accent);color:#fff;border-radius:var(--r);border-bottom-right-radius:4px;padding:11px 15px;display:inline-block;}
+.msg.ai .bubble{background:transparent;border:none;padding:0 0 4px 0;color:var(--text);width:100%;}
 .bubble.streaming::after{content:'▋';animation:blink 0.7s step-end infinite;color:var(--accent);margin-left:2px;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
@@ -1673,7 +1677,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.1.3';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -4580,7 +4584,7 @@ function renderSmartSuggestions() {
   if (!sugEl) {
     sugEl = document.createElement('div');
     sugEl.id = 'smart-sugs';
-    sugEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;max-width:380px;';
+    sugEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:4px;max-width:100%;';
     hero.appendChild(sugEl);
   }
   const sugs = getSmartSuggestions();

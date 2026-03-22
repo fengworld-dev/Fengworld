@@ -122,8 +122,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
 /* HERO */
 #hero{
-  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
-  min-height:calc(100vh - 280px);text-align:left;padding:0 20px 32px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  min-height:auto;text-align:center;padding:40px 20px 24px;
   animation:fadeUp 0.4s ease both;
 }
 #hero.hidden{display:none;}
@@ -133,9 +133,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   font-family:'Syne',sans-serif;
   font-size:1.9rem;
   font-weight:800;letter-spacing:-0.5px;line-height:1.2;margin-bottom:6px;
-  text-align:left;
+  text-align:center;
 }
-.hero-sub{font-size:0.88rem;color:var(--muted);letter-spacing:0;text-align:left;margin-bottom:16px;}
+.hero-sub{font-size:0.88rem;color:var(--muted);letter-spacing:0;text-align:center;margin-bottom:20px;}
 
 /* MESSAGES */
 .msg-list{display:flex;flex-direction:column;padding:8px 0 16px;}
@@ -177,8 +177,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .bubble h1{font-size:1.1rem;}
 .bubble h2{font-size:1rem;}
 .bubble h3{font-size:0.95rem;color:var(--accent);}
-.bubble ul,.bubble ol{padding-left:20px;margin:6px 0 12px;}
-.bubble li{margin:5px 0;line-height:1.7;}
+.bubble ul,.bubble ol{padding-left:20px;margin:6px 0 10px;}
+.bubble li{margin:3px 0;line-height:1.7;}
+.bubble li+li{margin-top:8px;}
 .bubble strong{font-weight:700;}
 .bubble em{font-style:italic;opacity:0.85;}
 .bubble pre{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;overflow-x:auto;position:relative;}
@@ -1530,13 +1531,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
   <div id="chat-wrap">
     <div id="hero">
-      <div class="hero-logo-wrap">
-        <div class="logo-icon hero-icon-lg">
-          <div class="logo-bar long"></div>
-          <div class="logo-bar mid"></div>
-          <div class="logo-dots"><div class="logo-dot"></div><div class="logo-dot small"></div></div>
-        </div>
-      </div>
       <div class="hero-greeting" id="hero-greeting">Good afternoon</div>
       <div class="hero-sub" id="hero-sub">Ask me anything — I'm here to help</div>
     </div>
@@ -1639,49 +1633,42 @@ async function callAI(messages, model) {
 }
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a highly intelligent assistant. Respond like a knowledgeable expert, not a template-filling machine.\n\n" +
+  "You are Feng AI — a highly intelligent assistant. Respond like a knowledgeable expert.\n\n" +
 
   "LANGUAGE: Always reply in the same language the user writes in.\n\n" +
 
   "MEMORY: If [MEMORY: ...] is provided, use it naturally without announcing it.\n\n" +
 
-  "CONTEXT: ONLY mention time, location or weather if the user explicitly asked. Never say 'on this morning in Lusaka' unprompted.\n\n" +
+  "CONTEXT: ONLY mention time, location or weather if explicitly asked. Never volunteer it.\n\n" +
 
-  "LIVE DATA: If [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, use it as ground truth. Cite inline naturally: write ¹ ² ³ after facts that come from sources. At the end add a compact **Sources** section listing them.\n\n" +
+  "LIVE DATA: If [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, use it as ground truth. Cite inline with ¹ ² ³. End with a compact **Sources** section.\n\n" +
 
-  "WRITING STYLE — THIS IS CRITICAL:\n" +
-  "- Write like a smart human expert, not an AI template\n" +
-  "- NEVER start with 'Great question!', 'Certainly!', 'Of course!', 'Sure!', 'Absolutely!' or any filler phrase\n" +
-  "- NEVER end every answer with 'In conclusion...' — only use a conclusion when writing a formal essay and the user asked for one\n" +
-  "- DO NOT repeat the question back to the user before answering\n" +
-  "- DO NOT say 'I hope this helps' or 'Feel free to ask' at the end\n" +
-  "- Get straight to the answer immediately\n" +
-  "- Match the length to the question — short questions get direct answers, complex ones get thorough treatment\n" +
-  "- Use **bold** for key terms, ## headings only when genuinely needed for structure\n" +
-  "- Tables are great for comparisons — use them\n" +
-  "- Bullet points only when listing genuinely list-able things, not for everything\n\n" +
+  "FORMATTING — FOLLOW EXACTLY:\n" +
+  "- Use ## for section headings\n" +
+  "- Use **bold** for ALL key terms, main points, and important words in sentences and bullets\n" +
+  "- Bullet format: **Key Term**: explanation on the same line\n" +
+  "- Add a blank line between each bullet point so they breathe\n" +
+  "- Use tables for ANY comparison between 2+ things — never compare in prose\n" +
+  "- Keep paragraphs short — max 3 sentences, then start a new paragraph\n" +
+  "- For steps: use numbered list with **bold** step name\n" +
+  "- NEVER write a wall of text — always break content into clear sections\n\n" +
 
-  "RESPONSE PATTERNS — match format to question type:\n" +
-  "- Factual question → Direct answer + key details + source if available\n" +
-  "- Comparison → Table + brief analysis of what matters most\n" +
-  "- How-to → Numbered steps, clean and direct\n" +
-  "- Essay/report → Proper structure with intro, body, conclusion (when asked)\n" +
-  "- Opinion/advice → Direct take, backed by reasoning\n" +
-  "- Math/science → Show working, use equations with $formula$\n" +
-  "- Creative → Just write it, no preamble\n\n" +
+  "RESPONSE PATTERNS:\n" +
+  "- Comparison → Table first, then key bullet points\n" +
+  "- Explanation/Topic → Short intro, then ## sections with **bold** bullet details\n" +
+  "- Essay → ## Introduction, ## Body sections, ## Conclusion ONLY when asked\n" +
+  "- How-to → Numbered steps with **bold** action verbs\n" +
+  "- Simple question → Direct 1-3 sentence answer, no extra structure\n" +
+  "- Math → Show working with $formula$\n\n" +
 
-  "CONCLUSIONS — STRICT RULES:\n" +
-  "- Only write 'In conclusion' inside a formal essay when the user asked for one\n" +
-  "- Never add a conclusion paragraph to a casual answer, comparison, or factual response\n" +
-  "- Never reference yourself or your limitations in any conclusion\n" +
-  "- A conclusion must only summarize the topic — never 'As I think about this...'\n\n" +
+  "STRICT RULES:\n" +
+  "- NEVER start with 'Great question!', 'Certainly!', 'Of course!', 'Sure!', 'Absolutely!'\n" +
+  "- NEVER end with 'In conclusion...' unless writing a formal essay that was requested\n" +
+  "- NEVER say 'I hope this helps' or insert yourself into answers\n" +
+  "- NEVER write one big paragraph — always use structure\n" +
+  "- Get straight to the answer immediately\n\n" +
 
-  "ACCURACY:\n" +
-  "- When live data is available, cite it with ¹ ² ³ inline\n" +
-  "- Be honest when uncertain: 'Based on available data...' not fake confidence\n" +
-  "- For time-sensitive facts, note they may have changed\n\n" +
-
-  "End every response with exactly this — no exceptions:\n" +
+  "End every response with:\n" +
   "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
 
 let busy = false;
@@ -4662,7 +4649,7 @@ function renderSmartSuggestions() {
   if (!sugEl) {
     sugEl = document.createElement('div');
     sugEl.id = 'smart-sugs';
-    sugEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin-top:4px;max-width:100%;';
+    sugEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;max-width:100%;';
     hero.appendChild(sugEl);
   }
   const sugs = getSmartSuggestions();

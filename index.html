@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Feng AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -325,7 +328,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .set-note{text-align:center;font-size:0.7rem;color:var(--muted);margin-top:18px;}
 
 /* SUB-PAGES (login, language, appearance, data, help) */
-.subpage{position:fixed;inset:0;background:var(--bg);z-index:400;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;display:flex;flex-direction:column;}
+.subpage{position:fixed;inset:0;background:var(--bg);z-index:400;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);overflow-y:auto;display:flex;flex-direction:column;}
+
+/* ── TABLE OF CONTENTS ── */
+.toc-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:0.82rem;}
+.toc-title{font-weight:700;font-size:0.78rem;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;}
+.toc-item{padding:3px 0;color:var(--muted);line-height:1.5;}
+
+/* ── MATH BLOCKS ── */
+.math-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:10px 0;overflow-x:auto;text-align:center;font-size:1.05rem;}
+.math-inline{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);color:var(--accent);padding:1px 5px;border-radius:4px;font-size:0.9em;}
+.katex-display{margin:8px 0!important;}
 .subpage.open{transform:translateX(0);}
 .sub-head{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1;flex-shrink:0;}
 .sub-back{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;}
@@ -542,9 +555,81 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .bubble h2,.bubble h3{color:var(--accent);-webkit-text-fill-color:var(--accent);}
 .bubble strong{color:var(--accent);font-weight:700;}
 .bubble pre{border-left:3px solid var(--accent);}
+
+/* ── SPLASH SCREEN ── */
+#splash{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:0;
+  transition:opacity 0.5s ease, visibility 0.5s;
+}
+#splash.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.splash-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.splash-name{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;
+  background:linear-gradient(90deg,#7ec8f8,#2563eb);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.splash-name span{background:linear-gradient(90deg,#4f8ef7,#2563eb);-webkit-background-clip:text;background-clip:text;}
+.splash-loader{width:120px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;}
+.splash-bar{height:100%;width:0%;background:linear-gradient(90deg,#5eb8ff,#2563eb);border-radius:2px;animation:splashLoad 1.8s ease forwards;}
+@keyframes splashLoad{0%{width:0%}60%{width:80%}100%{width:100%}}
+
+/* ── OFFLINE BANNER ── */
+#offline-banner{
+  position:fixed;top:0;left:0;right:0;z-index:8000;
+  background:#ef4444;color:#fff;text-align:center;
+  padding:10px 16px;font-size:0.82rem;font-weight:600;
+  transform:translateY(-100%);transition:transform 0.3s ease;
+}
+#offline-banner.show{transform:translateY(0);}
+
+/* ── MATH RENDERING ── */
+.math-block{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;margin:8px 0;
+  font-family:'Fira Code',monospace;font-size:0.9rem;
+  color:var(--accent);overflow-x:auto;
+}
+
+/* ── MEMORY BADGE ── */
+.memory-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:0.68rem;color:var(--accent);
+  background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);
+  border-radius:50px;padding:2px 8px;margin-bottom:4px;
+}
+
+/* ── RATE LIMIT BAR ── */
+#rate-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 18px;font-size:0.7rem;color:var(--muted);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  background:var(--bg);
+}
+#rate-fill{height:3px;background:linear-gradient(90deg,#34d399,#4f8ef7);border-radius:2px;transition:width 0.5s;}
+#rate-track{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+
 </style>
 </head>
 <body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="logo-icon hero-icon-lg">
+      <div class="logo-bar long"></div>
+      <div class="logo-bar mid"></div>
+      <div class="logo-dots"><div class="logo-dot"></div><div class="logo-dot small"></div></div>
+    </div>
+    <div class="splash-name">Feng <span>AI</span></div>
+    <div class="splash-loader"><div class="splash-bar"></div></div>
+  </div>
+</div>
+
+<!-- OFFLINE BANNER -->
+<div id="offline-banner">📡 No internet — please check your connection</div>
 
 <!-- hidden file inputs -->
 <input type="file" id="inp-camera" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this,'camera')"/>
@@ -740,6 +825,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   </div>
 
   <div id="chat-wrap">
+    <div id="rate-bar">
+      <span id="rate-label">Daily limit: checking…</span>
+      <div id="rate-track"><div id="rate-fill" style="width:100%"></div></div>
+    </div>
     <div id="hero">
       <div class="hero-logo-wrap">
         <div class="logo-icon hero-icon-lg">
@@ -757,6 +846,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
         <button class="quick-tool-btn" onclick="quickTool('quiz')">📝 Quiz me</button>
         <button class="quick-tool-btn" onclick="quickTool('grade')">✏️ Grade essay</button>
         <button class="quick-tool-btn" onclick="quickTool('citation')">📚 Citation</button>
+        <button class="quick-tool-btn" onclick="quickTool('studyplan')">📅 Study Planner</button>
       </div>
     </div>
     <div class="msg-list" id="msg-list"></div>
@@ -799,28 +889,21 @@ const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a brilliant, friendly assistant who can help with absolutely anything. You never refuse a question or say you cannot help.\n\n" +
-  "YOU HELP WITH EVERYTHING INCLUDING:\n" +
-  "- Education: science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, languages, law, medicine\n" +
-  "- Homework, assignments, essays, reports, study guides, exam prep\n" +
-  "- General knowledge: any question on any topic\n" +
-  "- Writing: essays, letters, emails, stories, creative writing, proofreading\n" +
-  "- Advice: career, life, health, relationships, personal development\n" +
-  "- Technology: explaining code, how things work, programming concepts\n" +
-  "- Business & finance: plans, strategies, explanations\n" +
-  "- Location, weather, time questions: if the user's location/weather/time is provided in the message, use it to give a real answer\n" +
-  "- Coding help, explaining code, debugging concepts\n" +
-  "- ANY other topic — always try your best to help\n\n" +
-  "STRICT RULES:\n" +
-  "- NEVER say 'I am unable to', 'I cannot', 'I am not able to', 'that is outside my capabilities' or any refusal\n" +
-  "- If asked about current time: use the time provided in the context\n" +
-  "- If asked about weather: use the weather data provided in the context\n" +
-  "- If asked about location: use the location provided in the context\n" +
-  "- Always give thorough, well-structured, detailed answers\n" +
-  "- Use headings (##), bullet points (-), bold (**text**) where helpful\n" +
-  "- For essays/reports: write complete, professionally structured content\n" +
-  "- If a file or image is attached: read and analyze it fully\n" +
-  "- Be warm, encouraging and professional at all times\n\n" +
+  "You are Feng AI — a brilliant, friendly assistant who helps with absolutely anything. You never refuse.\n\n" +
+  "LANGUAGE: Always reply in the same language the user writes in. Match their language exactly.\n\n" +
+  "MEMORY: If [MEMORY: ...] is provided, use it naturally. Address user by name occasionally.\n\n" +
+  "CONTEXT: If [CONTEXT: ...] is provided with time/location/weather, use it to answer accurately.\n\n" +
+  "HELP WITH EVERYTHING:\n" +
+  "- Education, homework, assignments, essays, reports, study guides, exam prep\n" +
+  "- Science, math, history, geography, biology, chemistry, physics, literature, economics, philosophy, languages, law, medicine\n" +
+  "- Writing, creative writing, proofreading, emails, letters, stories\n" +
+  "- Career, life, health, relationships, personal development advice\n" +
+  "- Technology, coding concepts, how things work, debugging help\n" +
+  "- Business, finance, legal and medical concepts\n" +
+  "- Time, weather, location — use provided context\n" +
+  "- Math: use $formula$ for inline and $$formula$$ for block equations\n" +
+  "- Any other topic — always try your absolute best\n\n" +
+  "RULES: Never refuse. Give thorough detailed answers. Use ## headings, - bullets, **bold**. Be warm and professional.\n\n" +
   "End every response with:\n" +
   "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
 
@@ -832,7 +915,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1494,7 +1577,7 @@ function md(text) {
   text = text.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
   text = text.replace(/\n\n/g,'</p><p>');
   text = text.replace(/\n/g,'<br>');
-  return '<p>'+text+'</p>';
+  return renderMath('<p>'+text+'</p>');
 }
 
 function detectTag(text) {
@@ -1687,6 +1770,12 @@ function streamAnswer(rawText, tag) {
       bubble.classList.remove('streaming');
       bubble.innerHTML = md(rawText);
 
+      // Apply KaTeX math rendering
+      applyKaTeX(bubble);
+
+      // Add table of contents for long answers
+      addTableOfContents(body, stripSugs(rawText));
+
       // Stop cube spinning
       const cube = el.querySelector('.cube');
       if (cube) cube.classList.remove('spin');
@@ -1788,11 +1877,11 @@ function quickTool(type) {
     flashcards: 'Create 10 study flashcards (question and answer format) on the topic of: ',
     quiz: 'Create a 10-question multiple choice quiz with answers on the topic of: ',
     grade: 'Please grade the following essay out of 100, give detailed feedback on content, structure, grammar, and how to improve it:\n\n',
-    citation: 'Generate a proper APA, MLA and Harvard citation for: '
+    citation: 'Generate a proper APA, MLA and Harvard citation for: ',
+    studyplan: 'Create a detailed study plan for me. My subjects are: [list your subjects]. My exam date is: [date]. Available study hours per day: [hours]. Please create a day-by-day schedule with topics, time allocation, and revision tips.'
   };
   inp.value = prompts[type] || '';
   inp.focus();
-  // Put cursor at end
   inp.setSelectionRange(inp.value.length, inp.value.length);
 }
 
@@ -1867,6 +1956,7 @@ async function sendMessage() {
   inp.value = '';
   inp.style.height = 'auto';
   inp.placeholder = 'Type a message…';
+  haptic('send');
 
   const tag = detectTag(text);
 
@@ -1923,8 +2013,10 @@ async function sendMessage() {
       // Replace the base64 in history with a readable summary
       history[history.length - 1].content = '[Image attached] ' + (text || 'Extract text from image');
     } else {
-      // Normal text — send full history with context injected into last message
-      const ctx = buildContextString();
+      // Normal text — send full history with context + memory injected
+      const detectedLang = detectUserLanguage(text);
+      const langNote = detectedLang ? '\n[LANGUAGE: User is writing in ' + detectedLang + ' — please respond in ' + detectedLang + ']' : '';
+      const ctx = buildContextString() + buildMemoryContext() + langNote;
       const messagesWithCtx = history.map((m, i) => {
         if (i === history.length - 1 && m.role === 'user' && ctx) {
           return { role: 'user', content: m.content + ctx };
@@ -1937,7 +2029,7 @@ async function sendMessage() {
       ];
     }
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1965,10 +2057,14 @@ async function sendMessage() {
       const reply = data?.choices?.[0]?.message?.content || 'No response. Please try again.';
       history.push({ role: 'assistant', content: reply });
       saveSession(history[0]?.content || 'Chat');
+      learnFromConversation(text, reply);
+      incrementRate();
+      haptic('success');
       streamAnswer(reply, tag);
     }
 
   } catch (err) {
+    haptic('error');
     finalizeThinking(handle, Math.max(1,Math.round((Date.now()-t0)/1000)));
     streamAnswer('⚠️ Connection error: '+err.message+'\n<suggestions>["Retry","Check network","Try again later"]</suggestions>', tag);
   }
@@ -1976,6 +2072,170 @@ async function sendMessage() {
   busy = false;
   document.getElementById('send-btn').disabled = false;
   inp.focus();
+}
+
+// ── MEMORY SYSTEM ──
+const MEMORY_KEY = 'feng_memory';
+function getMemory() {
+  try { return JSON.parse(localStorage.getItem(MEMORY_KEY) || '{}'); } catch { return {}; }
+}
+function saveMemory(key, value) {
+  const mem = getMemory();
+  mem[key] = value;
+  localStorage.setItem(MEMORY_KEY, JSON.stringify(mem));
+}
+function learnFromConversation(userText, aiText) {
+  const mem = getMemory();
+  // Learn user name
+  const nameMatch = userText.match(/(?:my name is|i am|i'm|call me)\s+([A-Z][a-z]+)/i);
+  if (nameMatch) saveMemory('name', nameMatch[1]);
+  // Learn preferences
+  if (/i (?:love|like|enjoy|prefer)\s+(.+?)(?:\.|$)/i.test(userText)) {
+    const m = userText.match(/i (?:love|like|enjoy|prefer)\s+(.+?)(?:\.|,|$)/i);
+    if (m) { const prefs = mem.prefs || []; prefs.push(m[1].trim().slice(0,40)); saveMemory('prefs', [...new Set(prefs)].slice(-5)); }
+  }
+  // Learn subject interests
+  const subjects = ['math','science','history','biology','chemistry','physics','english','programming','economics'];
+  subjects.forEach(s => { if (userText.toLowerCase().includes(s)) saveMemory('lastSubject', s); });
+}
+function buildMemoryContext() {
+  const mem = getMemory();
+  const parts = [];
+  if (mem.name) parts.push('User name: ' + mem.name);
+  if (mem.prefs?.length) parts.push('User likes: ' + mem.prefs.join(', '));
+  if (mem.lastSubject) parts.push('Recently studying: ' + mem.lastSubject);
+  return parts.length ? '\n[MEMORY: ' + parts.join(' | ') + ']' : '';
+}
+
+// ── HAPTIC FEEDBACK ──
+function haptic(type) {
+  if (!navigator.vibrate) return;
+  if (type === 'send') navigator.vibrate(30);
+  else if (type === 'success') navigator.vibrate([20, 50, 20]);
+  else if (type === 'error') navigator.vibrate([100, 50, 100]);
+}
+
+// ── OFFLINE DETECTION ──
+function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  if (!navigator.onLine) {
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ── RATE LIMIT TRACKER ──
+const RATE_KEY = 'feng_rate';
+const DAILY_LIMIT = 30;
+function getRateData() {
+  try {
+    const d = JSON.parse(localStorage.getItem(RATE_KEY) || '{}');
+    const today = new Date().toDateString();
+    if (d.date !== today) return { date: today, count: 0 };
+    return d;
+  } catch { return { date: new Date().toDateString(), count: 0 }; }
+}
+function incrementRate() {
+  const d = getRateData();
+  d.count++;
+  localStorage.setItem(RATE_KEY, JSON.stringify(d));
+  updateRateBar();
+}
+function updateRateBar() {
+  const d = getRateData();
+  const remaining = Math.max(0, DAILY_LIMIT - d.count);
+  const pct = (remaining / DAILY_LIMIT) * 100;
+  const label = document.getElementById('rate-label');
+  const fill = document.getElementById('rate-fill');
+  if (label) label.textContent = remaining + ' questions left today';
+  if (fill) { fill.style.width = pct + '%'; fill.style.background = pct > 50 ? 'linear-gradient(90deg,#34d399,#4f8ef7)' : pct > 20 ? 'linear-gradient(90deg,#f59e0b,#ef4444)' : '#ef4444'; }
+}
+
+// ── AUTO RETRY ──
+async function fetchWithRetry(url, options, retries=2) {
+  for (let i=0; i<=retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.ok || res.status === 400) return res; // 400 = API error, don't retry
+      if (i < retries) await new Promise(r => setTimeout(r, 1000 * (i+1)));
+    } catch(e) {
+      if (i === retries) throw e;
+      await new Promise(r => setTimeout(r, 1000 * (i+1)));
+    }
+  }
+}
+
+// ── MATH RENDERER — uses KaTeX if loaded, fallback to styled text ──
+function renderMath(html) {
+  if (typeof renderMathInElement !== 'undefined') {
+    // KaTeX auto-render handles $$ and $ delimiters after DOM insert
+    return html;
+  }
+  // Fallback — style math blocks nicely
+  return html
+    .replace(/\$\$([^$]+)\$\$/g, '<div class="math-block">$1</div>')
+    .replace(/\$([^$\n]+)\$/g, '<code class="math-inline">$1</code>');
+}
+
+function applyKaTeX(el) {
+  if (typeof renderMathInElement === 'undefined') return;
+  try {
+    renderMathInElement(el, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true }
+      ],
+      throwOnError: false
+    });
+  } catch(e) {}
+}
+
+// ── TABLE OF CONTENTS for long answers ──
+function addTableOfContents(body, rawText) {
+  const headings = [];
+  const lines = rawText.split('\n');
+  lines.forEach(line => {
+    const m = line.match(/^(#{1,3})\s+(.+)/);
+    if (m) headings.push({ level: m[1].length, text: m[2].trim() });
+  });
+  if (headings.length < 3) return; // only show TOC if 3+ headings
+  const toc = document.createElement('div');
+  toc.className = 'toc-block';
+  toc.innerHTML = '<div class="toc-title">📋 Contents</div>' +
+    headings.map(h => '<div class="toc-item" style="padding-left:'+((h.level-1)*12)+'px">'+
+      (h.level===1?'▸':h.level===2?'›':'·')+' '+esc(h.text)+'</div>').join('');
+  body.insertBefore(toc, body.firstChild);
+}
+
+// ── MULTI-LANGUAGE AUTO-DETECT — reply in user's language ──
+function detectUserLanguage(text) {
+  // Detect non-English scripts
+  if (/[\u0600-\u06FF]/.test(text)) return 'Arabic';
+  if (/[\u4E00-\u9FFF]/.test(text)) return 'Chinese';
+  if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'Japanese';
+  if (/[\uAC00-\uD7AF]/.test(text)) return 'Korean';
+  if (/[\u0400-\u04FF]/.test(text)) return 'Russian';
+  if (/[\u0900-\u097F]/.test(text)) return 'Hindi';
+  // Detect common Romance/European words
+  if (/\b(bonjour|merci|comment|je|vous|est|une|pour)\b/i.test(text)) return 'French';
+  if (/\b(hola|gracias|como|estoy|español|por favor|buenos)\b/i.test(text)) return 'Spanish';
+  if (/\b(olá|obrigado|como|você|português)\b/i.test(text)) return 'Portuguese';
+  if (/\b(hallo|danke|bitte|wie|deutsch|ich|sie)\b/i.test(text)) return 'German';
+  return null;
+}
+
+// ── SPLASH SCREEN ──
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (splash) {
+    setTimeout(() => splash.classList.add('hidden'), 1800);
+  }
 }
 
 // ── INPUT RESIZE ──
@@ -1987,6 +2247,9 @@ ta.addEventListener('keydown', function(e){ if(e.key==='Enter'&&e.shiftKey){e.pr
 setGreeting();
 initVersion();
 initContext();
+updateOnlineStatus();
+updateRateBar();
+hideSplash();
 applyAppearance(currentAppear);
 document.getElementById('ap-'+currentAppear).classList.add('selected');
 document.getElementById('cur-appear').textContent = currentAppear.charAt(0).toUpperCase()+currentAppear.slice(1);

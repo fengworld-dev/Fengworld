@@ -431,6 +431,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .help-detail{font-size:0.78rem;color:var(--muted);}
 .help-arr{color:var(--muted2);}
 
+/* ── MIND MAP ── */
+.mindmap{padding:10px 0;}
+.mm-center{display:inline-block;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;padding:10px 20px;border-radius:50px;margin-bottom:16px;box-shadow:0 0 20px rgba(79,142,247,0.4);}
+.mm-branches{display:flex;flex-wrap:wrap;gap:10px;}
+.mm-branch{border:2px solid var(--bc,var(--accent));border-radius:12px;padding:10px 12px;min-width:130px;flex:1;}
+.mm-branch-label{font-weight:700;font-size:0.82rem;color:var(--bc,var(--accent));margin-bottom:7px;}
+.mm-child{font-size:0.78rem;color:var(--muted);padding:3px 0 3px 10px;border-left:2px solid var(--bc,var(--border));margin-bottom:3px;}
+
 /* ── TOAST ── */
 .feng-toast{
   position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -694,14 +702,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 }
 
 /* ── RATE LIMIT BAR ── */
-#rate-bar{
-  display:flex;align-items:center;gap:8px;
-  padding:4px 18px;font-size:0.7rem;color:var(--muted);
-  border-bottom:1px solid var(--border);flex-shrink:0;
-  background:var(--bg);
-}
-#rate-fill{height:3px;background:linear-gradient(90deg,#34d399,#4f8ef7);border-radius:2px;transition:width 0.5s;}
-#rate-track{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
 
 </style>
 </head>
@@ -792,6 +792,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
       <div class="set-row" onclick="openSubpage('page-themes')"><div class="s-icon">🎨</div><div class="s-label">Chat Theme</div><div class="s-val" id="cur-theme">Default</div><div class="s-arr">›</div></div>
       <div class="set-row" onclick="openSubpage('page-persona')"><div class="s-icon">🎭</div><div class="s-label">AI Persona</div><div class="s-val" id="cur-persona">Default</div><div class="s-arr">›</div></div>
       <div class="set-row" onclick="openSubpage('page-response')"><div class="s-icon">⚙️</div><div class="s-label">Response Style</div><div class="s-val" id="cur-response">Balanced</div><div class="s-arr">›</div></div>
+      <div class="set-row" onclick="openSubpage('page-voice')"><div class="s-icon">🔊</div><div class="s-label">Voice & Audio</div><div class="s-arr">›</div></div>
     </div>
     <span class="set-label">About</span>
     <div class="set-group">
@@ -964,6 +965,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   <div class="sub-body" id="dashboard-body"></div>
 </div>
 
+<!-- VOICE SETTINGS PAGE -->
+<div class="subpage" id="page-voice">
+  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-voice')">←</button><div class="sub-title">Voice & Audio</div></div>
+  <div class="sub-body" id="voice-body"></div>
+</div>
+
 <!-- PERSONAS PAGE -->
 <div class="subpage" id="page-persona">
   <div class="sub-head">
@@ -1022,10 +1029,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   </div>
 
   <div id="chat-wrap">
-    <div id="rate-bar">
-      <span id="rate-label">Daily limit: checking…</span>
-      <div id="rate-track"><div id="rate-fill" style="width:100%"></div></div>
-    </div>
     <div id="hero">
       <div class="hero-logo-wrap">
         <div class="logo-icon hero-icon-lg">
@@ -1070,6 +1073,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
         <textarea id="user-input" placeholder="Type a message…" rows="1"></textarea>
+        <button class="mic-btn" id="deep-think-btn" onclick="toggleDeepThink()" title="Deep Think OFF" style="font-size:0.8rem;">🧠</button>
+        <button class="mic-btn" id="reading-mode-btn" onclick="toggleReadingMode()" title="Reading Mode" style="font-size:0.8rem;">📖</button>
         <button class="mic-btn" id="web-search-btn" onclick="toggleWebSearch()" title="Web search OFF" style="font-size:0.8rem;">🌐</button>
         <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Speak">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -1116,7 +1121,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.0.4';
+const APP_VERSION = '1.0.5';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -1381,7 +1386,7 @@ function openSubpage(id) {
   if (id === 'page-bookmarks') renderBookmarks();
   if (id === 'page-notebook') renderNotes();
   if (id === 'page-dashboard') renderDashboard();
-  if (id === 'page-pomodoro') updatePomoUI();
+  if (id === 'page-voice') { setTimeout(renderVoicePage, 300); }
 }
 function closeSubpage(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -2040,6 +2045,9 @@ function streamAnswer(rawText, tag) {
         });
         body.appendChild(wrap);
       }
+      // Auto-read if enabled
+      if (autoRead) speakText(stripSugs(rawText));
+
       el.removeAttribute('id');
       scrollDown();
     }
@@ -2229,6 +2237,15 @@ async function sendMessage() {
   attachedPreviewUrl = null;
   clearAttach();
 
+  // Smart shortcuts — calculator, currency, units, mind map
+  if (isCalcRequest(text) && !attachedFileContent) { const r = tryCalculate(text.replace(/[^0-9\+\-\*\/\.\(\)\%\^ ]/g,'').trim()); if (r!==null) { showCalcResult(text); return; } }
+  if (isCurrencyRequest(text)) { handleCurrency(text); return; }
+  if (isUnitRequest(text)) { if (handleUnit(text)) return; }
+  if (isMindMapRequest(text)) {
+    const topic = text.replace(/\b(mind map|mindmap|create|make|generate|for|about|on)\b/gi,'').trim() || text;
+    generateMindMap(topic); return;
+  }
+
   // Image request
   if (isImgReq(text) && !msgContent.includes('[ATTACHED FILE:')) {
     generateImage(text); busy=false; document.getElementById('send-btn').disabled=false; inp.focus(); return;
@@ -2264,7 +2281,7 @@ async function sendMessage() {
       // Normal text — send full history with context + memory injected
       const detectedLang = detectUserLanguage(text);
       const langNote = detectedLang ? '\n[LANGUAGE: User is writing in ' + detectedLang + ' — please respond in ' + detectedLang + ']' : '';
-      const ctx = buildContextString() + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote();
+      const ctx = buildContextString() + buildMemoryContext() + langNote + getPersonaPrompt() + getStyleNote() + getWebSearchNote() + getDeepThinkNote();
       const messagesWithCtx = history.map((m, i) => {
         if (i === history.length - 1 && m.role === 'user' && ctx) {
           return { role: 'user', content: m.content + ctx };
@@ -2306,7 +2323,6 @@ async function sendMessage() {
       history.push({ role: 'assistant', content: reply });
       saveSession(history[0]?.content || 'Chat');
       learnFromConversation(text, reply);
-      incrementRate();
       haptic('success');
       streamAnswer(reply, tag);
     }
@@ -2376,33 +2392,6 @@ function updateOnlineStatus() {
 }
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
-
-// ── RATE LIMIT TRACKER ──
-const RATE_KEY = 'feng_rate';
-const DAILY_LIMIT = 30;
-function getRateData() {
-  try {
-    const d = JSON.parse(localStorage.getItem(RATE_KEY) || '{}');
-    const today = new Date().toDateString();
-    if (d.date !== today) return { date: today, count: 0 };
-    return d;
-  } catch { return { date: new Date().toDateString(), count: 0 }; }
-}
-function incrementRate() {
-  const d = getRateData();
-  d.count++;
-  localStorage.setItem(RATE_KEY, JSON.stringify(d));
-  updateRateBar();
-}
-function updateRateBar() {
-  const d = getRateData();
-  const remaining = Math.max(0, DAILY_LIMIT - d.count);
-  const pct = (remaining / DAILY_LIMIT) * 100;
-  const label = document.getElementById('rate-label');
-  const fill = document.getElementById('rate-fill');
-  if (label) label.textContent = remaining + ' questions left today';
-  if (fill) { fill.style.width = pct + '%'; fill.style.background = pct > 50 ? 'linear-gradient(90deg,#34d399,#4f8ef7)' : pct > 20 ? 'linear-gradient(90deg,#f59e0b,#ef4444)' : '#ef4444'; }
-}
 
 // ── AUTO RETRY ──
 async function fetchWithRetry(url, options, retries=2) {
@@ -2972,6 +2961,330 @@ function getWebSearchNote() {
   return '\n\nWEB SEARCH MODE: The user has enabled web search. For current events, recent news, prices, scores, or time-sensitive questions, clearly note when your knowledge may be outdated and suggest the user verify online. For stable facts, answer normally.';
 }
 
+// ── VOICE MODE (Full Conversation) ──
+let voiceMode = false;
+let voiceSynth = window.speechSynthesis;
+let voiceActive = false;
+let selectedVoiceIdx = parseInt(localStorage.getItem('feng_voice_idx')||'0');
+let voiceSpeed = parseFloat(localStorage.getItem('feng_voice_speed')||'1');
+let autoRead = localStorage.getItem('feng_autoread') === 'true';
+
+function getVoices() {
+  return voiceSynth ? voiceSynth.getVoices().filter(v => v.lang.startsWith('en')) : [];
+}
+
+function speakText(text) {
+  if (!voiceSynth) return;
+  voiceSynth.cancel();
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').replace(/```[\s\S]*?```/g,'[code block]').trim().slice(0,2000);
+  const utt = new SpeechSynthesisUtterance(clean);
+  const voices = getVoices();
+  if (voices[selectedVoiceIdx]) utt.voice = voices[selectedVoiceIdx];
+  utt.rate = voiceSpeed;
+  utt.pitch = 1.0;
+  utt.lang = 'en-US';
+  voiceActive = true;
+  utt.onend = () => { voiceActive = false; };
+  utt.onerror = () => { voiceActive = false; };
+  voiceSynth.speak(utt);
+}
+
+function stopVoice() {
+  if (voiceSynth) voiceSynth.cancel();
+  voiceActive = false;
+}
+
+// Add voice subpage to settings
+function renderVoicePage() {
+  const el = document.getElementById('voice-body');
+  if (!el) return;
+  const voices = getVoices();
+  el.innerHTML =
+    '<div style="margin-bottom:20px;">' +
+      '<div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">VOICE</div>' +
+      voices.slice(0,8).map((v,i) =>
+        '<div onclick="selectVoice('+i+')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid '+(i===selectedVoiceIdx?'var(--accent)':'var(--border)')+';margin-bottom:8px;cursor:pointer;background:var(--surface);">' +
+          '<span style="font-size:1.1rem;">🔊</span>' +
+          '<div style="flex:1;"><div style="font-size:0.87rem;font-weight:600;">'+(v.name.split(' ').slice(0,3).join(' '))+'</div><div style="font-size:0.72rem;color:var(--muted);">'+v.lang+'</div></div>' +
+          (i===selectedVoiceIdx?'<span style="color:var(--accent);font-size:0.8rem;">✓</span>':'') +
+        '</div>'
+      ).join('') +
+      (voices.length===0?'<div style="color:var(--muted);font-size:0.83rem;padding:10px;">No voices available on this browser.</div>':'') +
+    '</div>' +
+    '<div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">SPEED</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:20px;">' +
+      ['0.75','1','1.25','1.5','1.75'].map(s =>
+        '<button onclick="selectVoiceSpeed('+s+')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid '+(parseFloat(s)===voiceSpeed?'var(--accent)':'var(--border)')+';background:var(--surface);color:'+(parseFloat(s)===voiceSpeed?'var(--accent)':'var(--muted)')+';font-size:0.78rem;cursor:pointer;">'+s+'x</button>'
+      ).join('') +
+    '</div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;">' +
+      '<div><div style="font-size:0.87rem;font-weight:600;">Auto-read responses</div><div style="font-size:0.75rem;color:var(--muted);">Speak every AI answer automatically</div></div>' +
+      '<button class="toggle '+(autoRead?'on':'')+'" id="autoread-toggle" onclick="toggleAutoRead()"></button>' +
+    '</div>' +
+    '<button onclick="speakText(\'Hello! I am Feng AI, your personal assistant. How can I help you today?\')" style="width:100%;padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;">🔊 Test Voice</button>';
+}
+
+function selectVoice(i) {
+  selectedVoiceIdx = i;
+  localStorage.setItem('feng_voice_idx', i);
+  renderVoicePage();
+  speakText('Hello, I am Feng AI.');
+}
+
+function selectVoiceSpeed(s) {
+  voiceSpeed = parseFloat(s);
+  localStorage.setItem('feng_voice_speed', s);
+  renderVoicePage();
+}
+
+function toggleAutoRead() {
+  autoRead = !autoRead;
+  localStorage.setItem('feng_autoread', autoRead);
+  renderVoicePage();
+}
+
+// ── DEEP THINKING MODE ──
+let deepThinkMode = false;
+function toggleDeepThink() {
+  deepThinkMode = !deepThinkMode;
+  const btn = document.getElementById('deep-think-btn');
+  if (btn) {
+    btn.style.color = deepThinkMode ? 'var(--accent)' : 'var(--muted)';
+    btn.style.borderColor = deepThinkMode ? 'var(--accent)' : 'var(--border)';
+    btn.title = deepThinkMode ? 'Deep Think ON' : 'Deep Think OFF';
+  }
+  showToast(deepThinkMode ? '🧠 Deep thinking mode ON — slower but smarter' : '🧠 Deep thinking mode OFF');
+}
+
+function getDeepThinkNote() {
+  if (!deepThinkMode) return '';
+  return '\n\nDEEP THINKING MODE: Take extra time to reason through this carefully. Break down the problem step by step. Consider multiple angles, identify potential errors in your reasoning, and provide the most accurate, well-reasoned answer possible. Show your reasoning process clearly.';
+}
+
+// ── LIVE CALCULATOR ──
+function tryCalculate(text) {
+  const t = text.trim();
+  if (!/^[\d\s\+\-\*\/\.\(\)\%\^]+$/.test(t)) return null;
+  try {
+    const result = Function('"use strict"; return (' + t.replace(/\^/g,'**') + ')')();
+    if (typeof result === 'number' && isFinite(result)) return result;
+  } catch {}
+  return null;
+}
+
+function isCalcRequest(text) {
+  return /^[\d\s\+\-\*\/\.\(\)\%\^]+$/.test(text.trim()) ||
+    /\b(calculate|compute|what is|solve|evaluate)\b.*[\d\+\-\*\/]/i.test(text) ||
+    /\b\d+\s*[\+\-\*\/\^]\s*\d+/.test(text);
+}
+
+function showCalcResult(text) {
+  const expr = text.replace(/[^0-9\+\-\*\/\.\(\)\%\^ ]/g,'').trim();
+  const result = tryCalculate(expr);
+  if (result === null) return false;
+  hideHero();
+  addUserBubble(text);
+  history.push({role:'user', content: text});
+  const list = document.getElementById('msg-list');
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  el.innerHTML = '<div>'+cubeHTML('edu',false)+'</div>' +
+    '<div class="msg-body">' +
+      '<div class="msg-tag tag-edu">🔢 Calculator</div>' +
+      '<div class="bubble" style="font-size:1.4rem;font-weight:800;font-family:\'Syne\',sans-serif;color:var(--accent);">' +
+        esc(expr) + ' = ' + result +
+      '</div>' +
+    '</div>';
+  list.appendChild(el);
+  scrollDown();
+  if (autoRead) speakText(expr + ' equals ' + result);
+  return true;
+}
+
+// ── CURRENCY CONVERTER ──
+async function fetchCurrency(from, to, amount) {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/'+from.toUpperCase());
+    const data = await res.json();
+    if (data.rates && data.rates[to.toUpperCase()]) {
+      return (amount * data.rates[to.toUpperCase()]).toFixed(2);
+    }
+  } catch {}
+  return null;
+}
+
+function isCurrencyRequest(text) {
+  return /\b(\d+\.?\d*)\s*(USD|GBP|EUR|ZMW|KES|NGN|ZAR|JPY|CNY|INR|AUD|CAD)\s*(to|in)\s*(USD|GBP|EUR|ZMW|KES|NGN|ZAR|JPY|CNY|INR|AUD|CAD)\b/i.test(text);
+}
+
+async function handleCurrency(text) {
+  const m = text.match(/(\d+\.?\d*)\s*([A-Z]{3})\s*(?:to|in)\s*([A-Z]{3})/i);
+  if (!m) return false;
+  const [,amt,from,to] = m;
+  hideHero();
+  addUserBubble(text);
+  history.push({role:'user',content:text});
+  const result = await fetchCurrency(from, to, parseFloat(amt));
+  const list = document.getElementById('msg-list');
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  const answer = result ? amt+' '+from.toUpperCase()+' = '+result+' '+to.toUpperCase() : 'Could not fetch exchange rate. Please try again.';
+  el.innerHTML = '<div>'+cubeHTML('edu',false)+'</div>' +
+    '<div class="msg-body">' +
+      '<div class="msg-tag tag-edu">💱 Currency</div>' +
+      '<div class="bubble" style="font-size:1.3rem;font-weight:800;font-family:\'Syne\',sans-serif;color:var(--accent);">'+esc(answer)+'</div>' +
+      '<div style="font-size:0.72rem;color:var(--muted);margin-top:6px;">Live exchange rate via Open Exchange Rates</div>' +
+    '</div>';
+  list.appendChild(el);
+  scrollDown();
+  if (autoRead && result) speakText(answer);
+  return true;
+}
+
+// ── UNIT CONVERTER ──
+const UNIT_CONVERSIONS = {
+  // Length
+  'km to miles': v => v*0.621371, 'miles to km': v => v*1.60934,
+  'cm to inches': v => v*0.393701, 'inches to cm': v => v*2.54,
+  'm to feet': v => v*3.28084, 'feet to m': v => v*0.3048,
+  // Weight
+  'kg to lbs': v => v*2.20462, 'lbs to kg': v => v*0.453592,
+  'g to oz': v => v*0.035274, 'oz to g': v => v*28.3495,
+  // Temperature
+  'c to f': v => v*9/5+32, 'f to c': v => (v-32)*5/9,
+  'celsius to fahrenheit': v => v*9/5+32, 'fahrenheit to celsius': v => (v-32)*5/9,
+};
+
+function isUnitRequest(text) {
+  const t = text.toLowerCase();
+  return /\b\d+\.?\d*\s*(km|miles|cm|inches|kg|lbs|g|oz|m|feet|°?c|°?f|celsius|fahrenheit)\b/i.test(t) &&
+    /\b(to|in|convert)\b/i.test(t);
+}
+
+function handleUnit(text) {
+  const t = text.toLowerCase();
+  const numMatch = t.match(/(\d+\.?\d*)/);
+  if (!numMatch) return false;
+  const val = parseFloat(numMatch[1]);
+  for (const [key, fn] of Object.entries(UNIT_CONVERSIONS)) {
+    if (t.includes(key)) {
+      const result = fn(val).toFixed(3).replace(/\.?0+$/, '');
+      const parts = key.split(' to ');
+      hideHero(); addUserBubble(text);
+      history.push({role:'user',content:text});
+      const list = document.getElementById('msg-list');
+      const el = document.createElement('div');
+      el.className = 'msg ai';
+      const answer = val+' '+parts[0]+' = '+result+' '+parts[1];
+      el.innerHTML = '<div>'+cubeHTML('edu',false)+'</div>' +
+        '<div class="msg-body">' +
+          '<div class="msg-tag tag-edu">📐 Unit Converter</div>' +
+          '<div class="bubble" style="font-size:1.3rem;font-weight:800;font-family:\'Syne\',sans-serif;color:var(--accent);">'+esc(answer)+'</div>' +
+        '</div>';
+      list.appendChild(el); scrollDown();
+      if (autoRead) speakText(answer);
+      return true;
+    }
+  }
+  return false;
+}
+
+// ── LIVE NEWS ──
+async function fetchNews() {
+  try {
+    const res = await fetch('https://gnews.io/api/v4/top-headlines?category=general&lang=en&max=5&apikey=free');
+    const data = await res.json();
+    return data.articles || [];
+  } catch {
+    // Fallback to RSS via proxy
+    return [];
+  }
+}
+
+function isNewsRequest(text) {
+  return /\b(news|headlines|today|latest|happening|current events)\b/i.test(text) &&
+    /\b(what|show|tell|give|any)\b/i.test(text);
+}
+
+// ── READING MODE ──
+let readingMode = false;
+function toggleReadingMode() {
+  readingMode = !readingMode;
+  const app = document.getElementById('app');
+  const btn = document.getElementById('reading-mode-btn');
+  if (readingMode) {
+    app.style.maxWidth = '680px';
+    app.style.margin = '0 auto';
+    document.getElementById('chat-wrap').style.fontSize = '1.05rem';
+    document.getElementById('chat-wrap').style.lineHeight = '1.9';
+    if (btn) { btn.style.color='var(--accent)'; btn.style.borderColor='var(--accent)'; }
+    showToast('📖 Reading mode ON');
+  } else {
+    app.style.maxWidth = '';
+    app.style.margin = '';
+    document.getElementById('chat-wrap').style.fontSize = '';
+    document.getElementById('chat-wrap').style.lineHeight = '';
+    if (btn) { btn.style.color=''; btn.style.borderColor=''; }
+    showToast('📖 Reading mode OFF');
+  }
+}
+
+// ── MIND MAP GENERATOR ──
+function isMindMapRequest(text) {
+  return /\b(mind map|mindmap|mind.map|concept map|diagram|map out|visual.*topic)\b/i.test(text);
+}
+
+function generateMindMap(topic) {
+  hideHero();
+  addUserBubble('Create a mind map for: ' + topic);
+  history.push({role:'user', content:'Create a mind map for: '+topic});
+  const uid = 'mm'+Date.now();
+  const list = document.getElementById('msg-list');
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  el.innerHTML = '<div>'+cubeHTML('edu',true)+'</div>' +
+    '<div class="msg-body">' +
+      '<div class="msg-tag tag-edu">🗺️ Mind Map</div>' +
+      '<div id="'+uid+'"><div style="color:var(--muted);font-size:0.83rem;">Generating mind map…</div></div>' +
+    '</div>';
+  list.appendChild(el); scrollDown();
+
+  // Ask AI for mind map data then render
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+    body: JSON.stringify({
+      model: GROQ_MODEL, max_tokens: 800,
+      messages: [{role:'user', content:'Create a mind map for "'+topic+'". Return ONLY a JSON object like: {"center":"'+topic+'","branches":[{"label":"Branch 1","children":["item1","item2","item3"]},{"label":"Branch 2","children":["item1","item2","item3"]},{"label":"Branch 3","children":["item1","item2"]},{"label":"Branch 4","children":["item1","item2","item3"]}]}. No other text.'}]
+    })
+  }).then(r=>r.json()).then(data => {
+    try {
+      const raw = data.choices[0].message.content;
+      const json = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]);
+      renderMindMap(uid, json);
+    } catch { document.getElementById(uid).innerHTML = '<div style="color:var(--muted);">Could not generate mind map.</div>'; }
+  }).catch(() => { document.getElementById(uid).innerHTML = '<div style="color:var(--muted);">Network error.</div>'; });
+}
+
+function renderMindMap(uid, data) {
+  const colors = ['#4f8ef7','#34d399','#f59e0b','#ec4899','#a855f7','#ef4444','#14b8a6','#fb923c'];
+  const el = document.getElementById(uid);
+  if (!el) return;
+  let html = '<div class="mindmap">' +
+    '<div class="mm-center">'+esc(data.center)+'</div>' +
+    '<div class="mm-branches">';
+  data.branches.forEach((b, i) => {
+    html += '<div class="mm-branch" style="--bc:'+colors[i%colors.length]+'">' +
+      '<div class="mm-branch-label">'+esc(b.label)+'</div>' +
+      '<div class="mm-children">' +
+        b.children.map(c=>'<div class="mm-child">'+esc(c)+'</div>').join('') +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+  scrollDown();
+}
+
 // ── INPUT RESIZE ──
 const ta = document.getElementById('user-input');
 ta.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,180)+'px'; });
@@ -2982,7 +3295,6 @@ setGreeting();
 initVersion();
 initContext();
 updateOnlineStatus();
-updateRateBar();
 hideSplash();
 applyAppearance(currentAppear);
 applyTheme(currentThemeId);

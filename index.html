@@ -1674,43 +1674,63 @@ async function callAI(messages, model) {
 }
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a highly intelligent assistant. Respond like a knowledgeable expert.\n\n" +
+  "You are Feng AI — a warm, knowledgeable, and genuinely helpful assistant. You communicate like a thoughtful human expert, not a machine.\n\n" +
 
-  "LANGUAGE: Always reply in the same language the user writes in.\n\n" +
+  "CORE PERSONALITY:\n" +
+  "- Be conversational but professional — use natural language, contractions, and a warm tone\n" +
+  "- Show genuine curiosity about the user's questions\n" +
+  "- Be honest about limitations — never make up facts\n" +
+  "- Use humor lightly when appropriate, but never forced\n" +
+  "- Celebrate the user's progress and encourage their curiosity\n\n" +
 
-  "MEMORY: If [MEMORY: ...] is provided, use it naturally without announcing it.\n\n" +
+  "LANGUAGE: Detect the user's language automatically and respond in the same language. Match their formality level.\n\n" +
 
-  "CONTEXT: ONLY mention time, location or weather if explicitly asked. Never volunteer it.\n\n" +
+  "MEMORY: Use [MEMORY: ...] naturally to personalize responses. Reference past conversations when relevant.\n\n" +
 
-  "LIVE DATA: If [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, use it as ground truth. Cite inline with ¹ ² ³. End with a compact **Sources** section.\n\n" +
+  "CONTEXT: Only mention time, location, or weather if the user explicitly asks. Never volunteer unsolicited context.\n\n" +
 
-  "FORMATTING — FOLLOW EXACTLY:\n" +
-  "- Use ## for section headings\n" +
-  "- Use **bold** for ALL key terms, main points, and important words in sentences and bullets\n" +
-  "- Bullet format: **Key Term**: explanation on the same line\n" +
-  "- Add a blank line between each bullet point so they breathe\n" +
-  "- Use tables for ANY comparison between 2+ things — never compare in prose\n" +
-  "- Keep paragraphs short — max 3 sentences, then start a new paragraph\n" +
-  "- For steps: use numbered list with **bold** step name\n" +
-  "- NEVER write a wall of text — always break content into clear sections\n\n" +
+  "LIVE DATA: When [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, integrate it seamlessly. Cite sources naturally with ¹ ² ³. Add a compact **Sources** section at the end.\n\n" +
+
+  "FORMATTING — NATURAL & READABLE:\n" +
+  "- Use ## for clear section headings\n" +
+  "- Use **bold** for emphasis on key terms — only in bullet points and key phrases, not everywhere\n" +
+  "- Bullet format: **Key point**: brief explanation (keep it scannable)\n" +
+  "- One blank line between bullet points for readability\n" +
+  "- Use tables ONLY for genuine comparisons (2+ items side-by-side)\n" +
+  "- Keep paragraphs short (2-4 sentences max) — white space is your friend\n" +
+  "- For steps: numbered list with clear, actionable language\n" +
+  "- For code: clean, commented blocks with language label\n\n" +
 
   "RESPONSE PATTERNS:\n" +
-  "- Comparison → Table first, then key bullet points\n" +
-  "- Explanation/Topic → Short intro, then ## sections with **bold** bullet details\n" +
-  "- Essay → ## Introduction, ## Body sections, ## Conclusion ONLY when asked\n" +
-  "- How-to → Numbered steps with **bold** action verbs\n" +
-  "- Simple question → Direct 1-3 sentence answer, no extra structure\n" +
-  "- Math → Show working with $formula$\n\n" +
+  "- Direct questions → Give the answer FIRST, then explain if needed\n" +
+  "- 'How do I...' → Step-by-step, encouraging, with tips for common pitfalls\n" +
+  "- 'Explain...' → Start with a simple analogy, then deepen\n" +
+  "- 'Compare...' → Table first, then nuanced bullet points\n" +
+  "- 'Write...' (essay/code) → Ask clarifying questions if unclear, otherwise dive in\n" +
+  "- Emotional/personal → Be empathetic, validate their feelings, then help\n\n" +
 
-  "STRICT RULES:\n" +
-  "- NEVER start with 'Great question!', 'Certainly!', 'Of course!', 'Sure!', 'Absolutely!'\n" +
-  "- NEVER end with 'In conclusion...' unless writing a formal essay that was requested\n" +
-  "- NEVER say 'I hope this helps' or insert yourself into answers\n" +
-  "- NEVER write one big paragraph — always use structure\n" +
-  "- Get straight to the answer immediately\n\n" +
+  "WHAT TO AVOID:\n" +
+  "- NEVER start with 'Great question!', 'Certainly!', 'Sure!', 'Absolutely!' — just answer\n" +
+  "- NEVER say 'As an AI...' or mention being an AI unless directly relevant\n" +
+  "- NEVER use 'In conclusion...' or summarize unless explicitly asked\n" +
+  "- NEVER say 'I hope this helps' — end with a forward-looking invitation instead\n" +
+  "- NEVER write walls of text — break into digestible chunks\n" +
+  "- NEVER be preachy or overly formal\n\n" +
 
-  "End every response with:\n" +
-  "<suggestions>[\"Follow-up 1?\", \"Follow-up 2?\", \"Follow-up 3?\"]</suggestions>";
+  "GREAT ENDINGS (choose naturally):\n" +
+  "- 'What aspect would you like to explore further?'\n" +
+  "- 'Does this approach work for your situation?'\n" +
+  "- 'Want me to dive deeper into any part?'\n" +
+  "- Or simply end confidently if the answer is complete\n\n" +
+
+  "CODING RESPONSES:\n" +
+  "- Provide complete, runnable code\n" +
+  "- Explain the 'why' behind non-obvious choices\n" +
+  "- Include brief comments for clarity\n" +
+  "- Mention edge cases or improvements if relevant\n\n" +
+
+  "Always end with relevant follow-ups:\n" +
+  "<suggestions>[\"Natural follow-up 1?\", \"Natural follow-up 2?\", \"Natural follow-up 3?\"]</suggestions>";
 
 let busy = false;
 let heroOn = true;
@@ -1720,7 +1740,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.1.6';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -2390,6 +2410,15 @@ function parseSugs(text) {
   try { return JSON.parse(m[1].trim()); } catch { return []; }
 }
 function stripSugs(text) { return text.replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim(); }
+
+function generateSmartSuggestions(query, tag) {
+  const q = (query||'').toLowerCase();
+  if (tag === 'code') return ['Can you explain how this works step by step?','What are the edge cases I should handle?','How would you optimize this further?'];
+  if (tag === 'edu') return ['Can you give me a real-world example?','How does this connect to related topics?','What should I learn next?'];
+  if (/\b(compare|vs|difference|better|best)\b/i.test(q)) return ['What are the trade-offs in more detail?','Which would you choose and why?','Are there other alternatives worth considering?'];
+  if (/\b(how do I|how to|steps?|guide)\b/i.test(q)) return ['What are common mistakes to avoid?','Can you show me an advanced version?','What tools do I need for this?'];
+  return ['Tell me more about that','How did you arrive at that conclusion?','What are the practical implications?'];
+}
 function scrollDown(force=false) {
   const w = document.getElementById('chat-wrap');
   const btn = document.getElementById('scroll-btn');
@@ -2677,24 +2706,43 @@ function startThinking(userText, tag) {
 
 function generateThinkingText(query, tag) {
   const q = query.trim().slice(0, 150);
-  const lines = [
-    'The user is asking: "' + q + (query.length > 150 ? '…' : '') + '"',
-    '',
-    tag === 'code' ?
-      'This is a technical question. I need to consider the best implementation approach, potential edge cases, and how to explain it clearly.' :
-    tag === 'edu' ?
-      'This is an educational question. I should think about what the user needs to learn, what level of detail is appropriate, and how to make it easy to understand.' :
-      'Let me think through what the user really needs and the best way to answer accurately.',
-    '',
-    'Key things to consider:',
-    '• What is the core question being asked?',
-    '• What background context is relevant?',
-    '• What sources or data can I draw from?',
-    '• How should I structure this answer to be most helpful?',
-    '',
-    'Let me look at any live data available and think through the most accurate, complete response…',
+  const intros = [
+    'Looking at "' + q + '..."',
+    'Considering "' + q + '..."',
+    'Working through "' + q + '..."',
+    'Exploring "' + q + '..."'
   ];
-  return lines.join('\n');
+  const intro = intros[Math.floor(Math.random() * intros.length)];
+
+  const approaches = {
+    code: [
+      'Analyzing the technical requirements...',
+      'Considering best practices and potential edge cases...',
+      'Thinking through the cleanest implementation...',
+      'Checking for common pitfalls and optimization opportunities...'
+    ],
+    edu: [
+      'Breaking this down into understandable parts...',
+      'Finding the clearest way to explain this concept...',
+      'Thinking about helpful examples and analogies...',
+      'Considering what background knowledge might be needed...'
+    ],
+    design: [
+      'Considering visual hierarchy and user experience...',
+      'Thinking about color theory and accessibility...',
+      'Exploring layout options and responsive behavior...',
+      'Balancing aesthetics with functionality...'
+    ],
+    general: [
+      'Gathering the most relevant information...',
+      'Considering different angles on this...',
+      'Thinking about what would be most helpful here...',
+      'Connecting this to broader context...'
+    ]
+  };
+
+  const thoughts = approaches[tag] || approaches.general;
+  return intro + '\n\n' + thoughts.map(t => '• ' + t).join('\n') + '\n\nFormulating the best response...';
 }
 
 function finalizeThinking(handle, secs) {
@@ -2751,77 +2799,116 @@ function streamAnswer(rawText, tag) {
 
   const sugs = parseSugs(rawText);
   const display = stripSugs(rawText);
-  const chunks = display.match(/\S+|\s+/g) || [];
-  let idx=0, acc='';
+
+  // Better chunking — respect natural breaks
+  const chunks = display.split(/(\s+|[.,;:!?]\s*|\n)/).filter(c => c.length > 0);
+  let idx = 0, acc = '';
+  let lastScroll = Date.now();
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble streaming';
   body.appendChild(bubble);
   scrollDown();
 
-  const iv = setInterval(() => {
-    const batch = Math.floor(Math.random()*2)+1;
-    for (let b=0; b<batch && idx<chunks.length; b++) { acc+=chunks[idx]; idx++; }
-    // Show clean text during streaming — strip markdown symbols
-    bubble.textContent = acc.replace(/#{1,3} /g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[-*] /gm,'').replace(/^\d+\. /gm,'');
-    scrollDown();
+  // Variable speed for natural feel
+  const getDelay = () => {
+    const base = 14;
+    const variance = Math.random() * 18;
+    const isPunctuation = /[.,;:!?]$/.test(chunks[idx - 1] || '');
+    return base + variance + (isPunctuation ? 70 : 0);
+  };
 
-    if (idx >= chunks.length) {
-      clearInterval(iv);
-      bubble.classList.remove('streaming');
-      bubble.innerHTML = md(rawText);
-
-      // Apply KaTeX math rendering
-      applyKaTeX(bubble);
-
-      // Add table of contents for long answers
-      addTableOfContents(body, stripSugs(rawText));
-
-      // Stop cube spinning
-      const cube = el.querySelector('.cube');
-      if (cube) cube.classList.remove('spin');
-
-      // Add doc download buttons if this was a document request
-      const lastUserMsg = history.filter(m=>m.role==='user').slice(-1)[0]?.content || '';
-      if (isDocRequest(lastUserMsg)) {
-        const fname = lastUserMsg.match(/\b(essay|report|letter|cv|resume|assignment|document)\b/i)?.[1] || 'Feng-Document';
-        addDocButtons(body, stripSugs(rawText), fname);
-      }
-
-      // Add action bar — copy, share, bookmark, regenerate
-      addActionBar(body, stripSugs(rawText), tag);
-
-      // Show live sources if available — always show if any exist
-      if (window._pendingSources && window._pendingSources.length) {
-        addSourcesPanel(body, window._pendingSources);
-        window._pendingSources = null;
-      }
-
-      // Add timestamp
-      const timeEl = document.createElement('div');
-      timeEl.className = 'msg-time';
-      timeEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      body.appendChild(timeEl);
-
-      if (sugs.length) {
-        const wrap = document.createElement('div');
-        wrap.className = 'sugs';
-        sugs.forEach(s => {
-          const btn = document.createElement('button');
-          btn.className = 'sug';
-          btn.textContent = '→ '+s;
-          btn.addEventListener('click', () => { document.getElementById('user-input').value = s; sendMessage(); });
-          wrap.appendChild(btn);
-        });
-        body.appendChild(wrap);
-      }
-      // Auto-read if enabled
-      if (autoRead) speakText(stripSugs(rawText));
-
-      el.removeAttribute('id');
-      scrollDown();
+  const tick = () => {
+    if (stopRequested || idx >= chunks.length) {
+      if (!stopRequested) finishStreaming(bubble, rawText, body, sugs, tag, el);
+      return;
     }
-  }, 20);
+    const batchSize = Math.random() > 0.7 ? 2 : 1;
+    for (let b = 0; b < batchSize && idx < chunks.length; b++) {
+      acc += chunks[idx]; idx++;
+    }
+    if (Date.now() - lastScroll > 250) { scrollDown(); lastScroll = Date.now(); }
+    bubble.textContent = acc
+      .replace(/#{1,3} /g, '')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/^[-*] /gm, '• ')
+      .replace(/^\d+\. /gm, m => m);
+    setTimeout(tick, getDelay());
+  };
+  setTimeout(tick, getDelay());
+}
+
+function finishStreaming(bubble, rawText, body, sugs, tag, el) {
+  bubble.classList.remove('streaming');
+  bubble.innerHTML = md(rawText);
+  applyKaTeX(bubble);
+  addTableOfContents(body, stripSugs(rawText));
+
+  // Stop cube spinning
+  if (el) { const cube = el.querySelector('.cube'); if (cube) cube.classList.remove('spin'); }
+
+  // Doc buttons
+  const lastUserMsg = history.filter(m => m.role === 'user').slice(-1)[0]?.content || '';
+  if (isDocRequest(lastUserMsg)) {
+    const fname = lastUserMsg.match(/\b(essay|report|letter|cv|resume|assignment|document)\b/i)?.[1] || 'Feng-Document';
+    addDocButtons(body, stripSugs(rawText), fname);
+  }
+
+  addActionBar(body, stripSugs(rawText), tag);
+
+  if (window._pendingSources && window._pendingSources.length) {
+    addSourcesPanel(body, window._pendingSources);
+    window._pendingSources = null;
+  }
+
+  // Timestamp
+  const timeEl = document.createElement('div');
+  timeEl.className = 'msg-time';
+  timeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  body.appendChild(timeEl);
+
+  const finalSugs = sugs.length ? sugs : generateSmartSuggestions(
+    history.filter(m=>m.role==='user').slice(-1)[0]?.content || '', tag
+  );
+  if (finalSugs.length) {
+    const wrap = document.createElement('div');
+    wrap.className = 'sugs';
+    finalSugs.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'sug';
+      btn.textContent = '→ ' + s;
+      btn.addEventListener('click', () => { document.getElementById('user-input').value = s; sendMessage(); });
+      wrap.appendChild(btn);
+    });
+    body.appendChild(wrap);
+  }
+
+  if (autoRead) speakText(stripSugs(rawText));
+  if (el) el.removeAttribute('id');
+  scrollDown();
+}
+
+// ── TYPING INDICATOR ──
+function addTypingIndicator() {
+  const list = document.getElementById('msg-list');
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  el.id = 'typing-indicator';
+  el.innerHTML =
+    '<div class="msg-body">' +
+      '<div class="think-dots" style="padding:10px 0;">' +
+        '<span></span><span></span><span></span>' +
+      '</div>' +
+    '</div>';
+  list.appendChild(el);
+  scrollDown();
+  return el;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
 }
 
 // ── ACTION BAR (copy, share, regenerate) ──
@@ -3340,12 +3427,31 @@ function editMessage(btn) {
 
 // ── PERSONAS ──
 const PERSONAS = [
-  { id:'default', icon:'🤖', name:'Default', desc:'Balanced, helpful and professional', prompt:'' },
-  { id:'teacher', icon:'👩‍🏫', name:'Teacher', desc:'Patient, clear explanations with examples', prompt:'You are a patient, encouraging teacher. Always explain with simple examples, analogies and step-by-step breakdowns. Check for understanding.' },
-  { id:'coach', icon:'💪', name:'Life Coach', desc:'Motivating, positive and action-oriented', prompt:'You are an energetic life coach. Be motivating, positive and always give practical actionable steps. Celebrate progress.' },
-  { id:'friend', icon:'😊', name:'Friendly', desc:'Casual, warm and conversational', prompt:'You are a knowledgeable friend. Be casual, warm, use contractions and everyday language. Be relatable and fun.' },
-  { id:'expert', icon:'🎓', name:'Expert', desc:'Deep, technical and highly detailed', prompt:'You are a world-class expert. Give extremely detailed, technically precise answers. Include nuance, edge cases and advanced insights.' },
-  { id:'tutor', icon:'📚', name:'Study Tutor', desc:'Focused on learning and academic success', prompt:'You are a dedicated academic tutor. Focus on helping the student truly understand concepts, not just memorize. Use the Socratic method when helpful.' }
+  {
+    id: 'default', icon: '🤖', name: 'Balanced',
+    desc: 'Warm, helpful, and naturally conversational',
+    prompt: 'You are a warm, knowledgeable friend. Be conversational, use natural language, and show genuine interest in helping. Avoid robotic phrasing.'
+  },
+  {
+    id: 'teacher', icon: '👨‍🏫', name: 'Patient Teacher',
+    desc: 'Encouraging mentor who celebrates your progress',
+    prompt: 'You are a patient, encouraging teacher who celebrates small wins. Use positive reinforcement, clear explanations, and check for understanding gently.'
+  },
+  {
+    id: 'collaborator', icon: '🤝', name: 'Collaborator',
+    desc: 'Brainstorms with you, explores ideas together',
+    prompt: "You are a collaborative partner. Use 'we' and 'let\\'s', explore ideas together, ask clarifying questions, and build on the user\\'s thoughts."
+  },
+  {
+    id: 'expert', icon: '🎯', name: 'Expert Consultant',
+    desc: 'Direct, insightful, cuts to the chase',
+    prompt: 'You are a seasoned expert. Be direct and insightful, prioritize accuracy over pleasantries, but remain respectful and clear.'
+  },
+  {
+    id: 'creative', icon: '✨', name: 'Creative Partner',
+    desc: 'Imaginative, inspiring, thinks outside the box',
+    prompt: 'You are a creative partner. Be imaginative, use vivid language, offer unexpected connections, and inspire new ideas.'
+  }
 ];
 let currentPersona = localStorage.getItem('feng_persona') || 'default';
 

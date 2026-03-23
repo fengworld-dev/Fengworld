@@ -1671,14 +1671,14 @@ async function readSSEStream(res, provider) {
   let reasoning = '';
   let buffer = '';
 
-  // Show live streaming in the bubble
+  // Show live streaming in the bubble — uses a single marked element
   const showLive = (chunk) => {
     const el = document.getElementById('live-msg');
     if (!el) return;
-    let bubble = el.querySelector('.bubble.streaming');
+    let bubble = el.querySelector('.live-bubble');
     if (!bubble) {
       bubble = document.createElement('div');
-      bubble.className = 'bubble streaming';
+      bubble.className = 'bubble streaming live-bubble';
       const body = el.querySelector('.msg-body');
       if (body) body.appendChild(bubble);
     }
@@ -2865,25 +2865,24 @@ function streamAnswer(rawText, tag) {
 
   const sugs = parseSugs(rawText);
 
-  // Find or create bubble — SSE streaming already populated it live
-  let bubble = body.querySelector('.bubble.streaming');
+  // Find the live-bubble created during SSE streaming, or create fresh
+  let bubble = body.querySelector('.live-bubble') || body.querySelector('.bubble.streaming');
   if (!bubble) {
     bubble = document.createElement('div');
-    bubble.className = 'bubble streaming';
     body.appendChild(bubble);
   }
 
-  // Render final markdown immediately
-  bubble.classList.remove('streaming');
+  // Render final markdown ONCE
+  bubble.className = 'bubble';
   bubble.innerHTML = md(rawText);
   applyKaTeX(bubble);
+
   finishStreaming(bubble, rawText, body, sugs, tag, el);
 }
 
 function finishStreaming(bubble, rawText, body, sugs, tag, el) {
-  bubble.classList.remove('streaming');
-  bubble.innerHTML = md(rawText);
-  applyKaTeX(bubble);
+  bubble.classList.remove('streaming', 'live-bubble');
+  // DON'T re-render — bubble.innerHTML already set by streamAnswer
   addTableOfContents(body, stripSugs(rawText));
 
   // Stop cube spinning

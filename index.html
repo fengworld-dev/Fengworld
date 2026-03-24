@@ -117,7 +117,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 /* CHAT WRAP */
 #chat-wrap{
   flex:1;overflow-y:auto;
-  padding:0 0 160px;
+  padding:0 0 200px;
 }
 
 /* HERO */
@@ -292,8 +292,41 @@ body.light .source-item:hover{background:#f8fafc;}
 /* INPUT */
 .input-area{
   position:fixed;bottom:0;left:0;right:0;z-index:50;
-  padding:10px 14px 24px;
+  padding:6px 14px 24px;
   background:linear-gradient(to top,var(--bg) 60%,transparent);
+}
+
+/* BOTTOM TOOLBAR */
+.bottom-toolbar{
+  display:flex;align-items:center;gap:6px;
+  padding:0 4px 8px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.bottom-toolbar::-webkit-scrollbar{display:none;}
+.toolbar-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:50px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--muted);font-size:0.75rem;
+  cursor:pointer;white-space:nowrap;
+  font-family:'DM Sans',sans-serif;font-weight:500;
+  transition:all 0.15s;flex-shrink:0;
+}
+.toolbar-btn:hover,.toolbar-btn.active{
+  border-color:var(--accent);color:var(--accent);
+  background:rgba(79,142,247,0.08);
+}
+
+/* WEBSITE BUILDER STYLE BUTTONS */
+.wb-style-btn{
+  padding:7px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);
+  font-size:0.73rem;cursor:pointer;text-align:center;
+  font-family:'DM Sans',sans-serif;transition:all 0.15s;
+}
+.wb-style-btn:hover,.wb-style-btn.active{
+  border-color:var(--accent);color:var(--accent);
+  background:rgba(79,142,247,0.08);
 }
 .input-box{
   background:var(--surface);border:1.5px solid var(--border);
@@ -1507,6 +1540,9 @@ body.light .source-item:hover{background:#f8fafc;}
     <button class="nav-btn" onclick="newChat()" title="New chat">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     </button>
+    <button class="nav-btn" id="nav-tts-btn" onclick="toggleNavTTS()" title="Read aloud">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+    </button>
   </div>
 
   <!-- MODE PANEL (slides up like Claude) -->
@@ -1551,6 +1587,24 @@ body.light .source-item:hover{background:#f8fafc;}
       <div class="mode-check" id="check-reading" style="opacity:0">✓</div>
     </div>
 
+    <div class="mode-option" id="mode-agent" onclick="selectMode('agent')">
+      <div class="mode-icon" style="background:rgba(52,211,153,0.15);">🤖</div>
+      <div class="mode-info">
+        <div class="mode-name">Agent</div>
+        <div class="mode-desc">Research, build websites, generate slides, create documents</div>
+      </div>
+      <div class="mode-check" id="check-agent" style="opacity:0">✓</div>
+    </div>
+
+    <div class="mode-option" id="mode-deepresearch" onclick="selectMode('deepresearch')">
+      <div class="mode-icon" style="background:rgba(239,68,68,0.15);">🔬</div>
+      <div class="mode-info">
+        <div class="mode-name">Deep Research</div>
+        <div class="mode-desc">Searches all sources, writes long-form detailed reports</div>
+      </div>
+      <div class="mode-check" id="check-deepresearch" style="opacity:0">✓</div>
+    </div>
+
     <div class="mode-divider"></div>
     <div class="mode-panel-title" style="margin-top:0;">Extended Thinking</div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;">
@@ -1571,11 +1625,134 @@ body.light .source-item:hover{background:#f8fafc;}
   </div>
 
   <!-- SCROLL TO BOTTOM BUTTON -->
-  <button id="scroll-btn" onclick="scrollDown(true)" style="display:none;position:fixed;bottom:100px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,0.3);cursor:pointer;z-index:100;display:none;align-items:center;justify-content:center;">
+  <button id="scroll-btn" onclick="scrollDown(true)" style="display:none;position:fixed;bottom:160px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,0.3);cursor:pointer;z-index:100;align-items:center;justify-content:center;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
   </button>
 
+  <!-- WEBSITE BUILDER PANEL -->
+  <div id="website-panel" style="display:none;position:fixed;inset:0;z-index:400;background:var(--bg);flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="closeWebsiteBuilder()" style="border:none;background:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">←</button>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;flex:1;">Website Builder</span>
+      <span id="wb-status" style="font-size:0.75rem;color:var(--muted);">Ready</span>
+      <button id="wb-download" onclick="downloadWebsite()" style="display:none;padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ Download</button>
+    </div>
+    <div style="display:flex;gap:0;flex:1;overflow:hidden;">
+      <!-- Input side -->
+      <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px;gap:10px;overflow-y:auto;">
+        <div style="font-size:0.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Describe your website</div>
+        <textarea id="wb-prompt" placeholder="e.g. A portfolio website for a photographer with dark theme, gallery, and contact form" style="flex:1;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;resize:none;outline:none;line-height:1.6;"></textarea>
+        <div style="font-size:0.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Style</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="wb-styles">
+          <button class="wb-style-btn active" data-style="Modern & Clean" onclick="selectWbStyle(this)">Modern & Clean</button>
+          <button class="wb-style-btn" data-style="Bold & Colorful" onclick="selectWbStyle(this)">Bold & Colorful</button>
+          <button class="wb-style-btn" data-style="Minimalist" onclick="selectWbStyle(this)">Minimalist</button>
+          <button class="wb-style-btn" data-style="Corporate" onclick="selectWbStyle(this)">Corporate</button>
+          <button class="wb-style-btn" data-style="Creative & Artistic" onclick="selectWbStyle(this)">Creative</button>
+          <button class="wb-style-btn" data-style="Dark & Elegant" onclick="selectWbStyle(this)">Dark & Elegant</button>
+        </div>
+        <button onclick="buildWebsite()" id="wb-build-btn" style="padding:12px;border-radius:var(--r);border:none;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;">✨ Build Website</button>
+        <div id="wb-suggestions" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+      </div>
+      <!-- Preview side -->
+      <div style="flex:1;display:flex;flex-direction:column;background:#1a1a2e;overflow:hidden;">
+        <div id="wb-preview-bar" style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border);">
+          <div style="display:flex;gap:5px;"><div style="width:10px;height:10px;border-radius:50%;background:#ef4444;"></div><div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div><div style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div></div>
+          <div style="flex:1;background:var(--surface);border-radius:6px;padding:4px 10px;font-size:0.72rem;color:var(--muted);">preview.feng.ai</div>
+          <button onclick="refreshWbPreview()" style="border:none;background:none;color:var(--muted);cursor:pointer;font-size:0.85rem;">⟳</button>
+        </div>
+        <div id="wb-loading" style="display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+          <div class="think-dots"><span></span><span></span><span></span></div>
+          <div style="font-size:0.85rem;color:var(--muted);">Building your website…</div>
+        </div>
+        <iframe id="wb-iframe" style="flex:1;border:none;display:block;" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div id="wb-empty" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted);">
+          <div style="font-size:2rem;">🌐</div>
+          <div style="font-size:0.85rem;">Your website will appear here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDES BUILDER PANEL -->
+  <div id="slides-panel" style="display:none;position:fixed;inset:0;z-index:400;background:var(--bg);flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="closeSlidesBuilder()" style="border:none;background:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">←</button>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;flex:1;">Slides Generator</span>
+      <button id="slides-download" onclick="downloadSlides()" style="display:none;padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:0.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ Download</button>
+    </div>
+    <div style="display:flex;gap:0;flex:1;overflow:hidden;">
+      <div style="width:300px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px;gap:10px;">
+        <div style="font-size:0.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Topic or paste content</div>
+        <textarea id="slides-prompt" placeholder="e.g. The impact of climate change on African agriculture" style="flex:1;min-height:100px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;resize:none;outline:none;"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:0.78rem;color:var(--muted);">Slides:</span>
+          <select id="slides-count" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;">
+            <option value="5">5 slides</option>
+            <option value="8" selected>8 slides</option>
+            <option value="12">12 slides</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="slides-themes">
+          <button class="wb-style-btn active" data-theme="dark" onclick="selectSlidesTheme(this)">Dark Pro</button>
+          <button class="wb-style-btn" data-theme="light" onclick="selectSlidesTheme(this)">Light Clean</button>
+          <button class="wb-style-btn" data-theme="gradient" onclick="selectSlidesTheme(this)">Gradient</button>
+          <button class="wb-style-btn" data-theme="minimal" onclick="selectSlidesTheme(this)">Minimal</button>
+        </div>
+        <button onclick="generateSlides()" id="slides-gen-btn" style="padding:12px;border-radius:var(--r);border:none;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;">✨ Generate Slides</button>
+        <!-- Slide thumbnails -->
+        <div id="slides-thumbs" style="display:flex;flex-direction:column;gap:6px;overflow-y:auto;flex:1;"></div>
+      </div>
+      <!-- Slide preview -->
+      <div style="flex:1;display:flex;flex-direction:column;background:#0a0a0f;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:10px;border-bottom:1px solid var(--border);">
+          <button onclick="prevSlide()" style="border:none;background:var(--surface2);color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;">‹</button>
+          <span id="slides-counter" style="font-size:0.8rem;color:var(--muted);">— / —</span>
+          <button onclick="nextSlide()" style="border:none;background:var(--surface2);color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;">›</button>
+        </div>
+        <div id="slides-loading" style="display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+          <div class="think-dots"><span></span><span></span><span></span></div>
+          <div style="font-size:0.85rem;color:var(--muted);">Generating slides…</div>
+        </div>
+        <div id="slides-display" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:20px;">
+          <div style="color:var(--muted);font-size:0.85rem;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">📊</div>
+            Your slides will appear here
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="input-area">
+    <!-- BOTTOM TOOLBAR (like Kimi) -->
+    <div class="bottom-toolbar" id="bottom-toolbar">
+      <button class="toolbar-btn" onclick="activateAgentMode()" id="tb-agent">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Agent
+      </button>
+      <button class="toolbar-btn" onclick="openWebsiteBuilder()" id="tb-websites">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Websites
+      </button>
+      <button class="toolbar-btn" onclick="openSlidesBuilder()" id="tb-slides">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Slides
+      </button>
+      <button class="toolbar-btn" onclick="selectMode('deepresearch');closeModePanel();" id="tb-deepresearch">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Deep Research
+      </button>
+      <button class="toolbar-btn" onclick="selectMode('deep');closeModePanel();" id="tb-deep">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.96-4.03A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.96-4.03A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+        Deep Think
+      </button>
+      <button class="toolbar-btn" onclick="startVoiceConversation()" id="tb-voice">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        Voice
+      </button>
+    </div>
+
     <div class="input-box">
       <!-- FILE PREVIEW STRIP — shows thumbnail/icon before sending -->
       <div id="preview-strip"></div>
@@ -1791,7 +1968,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.1.7';
+const APP_VERSION = '1.2.0';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -3136,6 +3313,9 @@ async function sendMessage() {
   attachedPreviewUrl = null;
   clearAttach();
 
+  // Check for website/slides builder requests
+  if (checkSpecialRequests(text)) return;
+
   // Smart shortcuts — calculator, currency, units, mind map
   if (isCalcRequest(text) && !attachedFileContent) { const r = tryCalculate(text.replace(/[^0-9\+\-\*\/\.\(\)\%\^ ]/g,'').trim()); if (r!==null) { showCalcResult(text); return; } }
   if (isCurrencyRequest(text)) { handleCurrency(text); return; }
@@ -4048,7 +4228,7 @@ function closeModePanel() {
 }
 
 function selectMode(mode) {
-  const modes = ['standard','deep','research','reading'];
+  const modes = ['standard','deep','research','reading','agent','deepresearch'];
   modes.forEach(m => {
     const opt = document.getElementById('mode-'+m);
     const chk = document.getElementById('check-'+m);
@@ -4086,29 +4266,56 @@ function selectMode(mode) {
     applyReadingMode(true);
   }
 
+  // ── AGENT: Research + auto-detect special tasks
+  if (mode === 'agent') {
+    deepThinkMode = false;
+    webSearchEnabled = true;
+    if (readingMode) applyReadingMode(false);
+    document.getElementById('user-input').placeholder = '🤖 Agent: Research, build websites, generate slides, create docs…';
+  }
+
+  // ── DEEP RESEARCH: Maximum sources + detailed long-form report
+  if (mode === 'deepresearch') {
+    deepThinkMode = true;
+    webSearchEnabled = true;
+    applyReadingMode(true);
+    document.getElementById('user-input').placeholder = '🔬 Deep Research: Ask anything — I\'ll search everything and write a comprehensive report…';
+  }
+
+  if (!['agent','deepresearch'].includes(mode)) {
+    const inp = document.getElementById('user-input');
+    if (inp && inp.placeholder.startsWith('🤖') || inp && inp.placeholder.startsWith('🔬')) {
+      inp.placeholder = 'Type a message…';
+    }
+  }
+
   localStorage.setItem('feng_websearch', webSearchEnabled);
 
   // Update nav label
   const labels = {
-    standard: 'Standard ⚡',
-    deep:     'Deep Think 🧠',
-    research: 'Research 🌐',
-    reading:  'Reading 📖'
+    standard:     'Standard ⚡',
+    deep:         'Deep Think 🧠',
+    research:     'Research 🌐',
+    reading:      'Reading 📖',
+    agent:        'Agent 🤖',
+    deepresearch: 'Deep Research 🔬'
   };
   const lbl = document.getElementById('nav-mode-label');
-  if (lbl) lbl.textContent = labels[mode];
+  if (lbl) lbl.textContent = labels[mode] || 'Standard ⚡';
 
   // Sync extended thinking toggle
   const dt = document.getElementById('deep-think-toggle');
   if (dt) dt.classList.toggle('on', deepThinkMode);
 
   const toasts = {
-    standard: '⚡ Standard — fast, balanced answers',
-    deep:     '🧠 Deep Think — DeepSeek Reasoner activated',
-    research: '🌐 Research — live sources fetched every answer',
-    reading:  '📖 Reading — large comfortable text enabled'
+    standard:     '⚡ Standard — fast, balanced answers',
+    deep:         '🧠 Deep Think — DeepSeek Reasoner activated',
+    research:     '🌐 Research — live sources fetched every answer',
+    reading:      '📖 Reading — large comfortable text enabled',
+    agent:        '🤖 Agent — I can build websites, slides, and research for you',
+    deepresearch: '🔬 Deep Research — comprehensive reports with all sources'
   };
-  showToast(toasts[mode]);
+  showToast(toasts[mode] || '');
   setTimeout(closeModePanel, 500);
 }
 
@@ -5158,6 +5365,308 @@ function addSourcesPanel(body, sources) {
     '</div>';
   body.appendChild(panel);
   scrollDown();
+}
+
+// ══════════════════════════════════
+// ── WEBSITE BUILDER ──
+// ══════════════════════════════════
+let wbStyle = 'Modern & Clean';
+let wbCurrentHTML = '';
+
+function openWebsiteBuilder() {
+  const panel = document.getElementById('website-panel');
+  panel.style.display = 'flex';
+  document.getElementById('wb-iframe').style.display = 'none';
+  document.getElementById('wb-empty').style.display = 'flex';
+  document.getElementById('wb-loading').style.display = 'none';
+}
+
+function closeWebsiteBuilder() {
+  document.getElementById('website-panel').style.display = 'none';
+}
+
+function selectWbStyle(btn) {
+  document.querySelectorAll('#wb-styles .wb-style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  wbStyle = btn.dataset.style;
+}
+
+async function buildWebsite() {
+  const prompt = document.getElementById('wb-prompt').value.trim();
+  if (!prompt) { showToast('Please describe your website first'); return; }
+
+  document.getElementById('wb-loading').style.display = 'flex';
+  document.getElementById('wb-iframe').style.display = 'none';
+  document.getElementById('wb-empty').style.display = 'none';
+  document.getElementById('wb-build-btn').disabled = true;
+  document.getElementById('wb-status').textContent = 'Building…';
+
+  const sysPrompt = `You are an expert web developer. Create a COMPLETE, beautiful, single-file HTML website.
+Style: ${wbStyle}
+Requirements:
+- Full HTML5 with embedded CSS and JS
+- Mobile responsive
+- Professional design with great typography
+- Smooth animations and hover effects
+- Real content (not lorem ipsum)
+- Dark/light mode compatible
+- NO external dependencies except Google Fonts
+Return ONLY the complete HTML code, nothing else.`;
+
+  try {
+    const result = await callAI([
+      { role: 'system', content: sysPrompt },
+      { role: 'user', content: 'Build a website: ' + prompt }
+    ]);
+
+    const html = result.content;
+    const match = html.match(/<!DOCTYPE[\s\S]*<\/html>/i) || html.match(/<html[\s\S]*<\/html>/i);
+    wbCurrentHTML = match ? match[0] : html;
+
+    const iframe = document.getElementById('wb-iframe');
+    iframe.style.display = 'block';
+    document.getElementById('wb-loading').style.display = 'none';
+    document.getElementById('wb-empty').style.display = 'none';
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(wbCurrentHTML);
+    iframe.contentDocument.close();
+
+    document.getElementById('wb-download').style.display = 'block';
+    document.getElementById('wb-status').textContent = 'Done ✓';
+    showToast('✅ Website built!');
+
+    // Show suggestions
+    const sugs = ['Add a contact form', 'Make it more colorful', 'Add animations', 'Add a dark/light toggle'];
+    document.getElementById('wb-suggestions').innerHTML =
+      '<div style="font-size:0.72rem;color:var(--muted);margin:4px 0;">Refine it:</div>' +
+      sugs.map(s => '<button onclick="refineWebsite(\''+s+'\')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.72rem;cursor:pointer;text-align:left;">'+s+'</button>').join('');
+  } catch(e) {
+    document.getElementById('wb-loading').style.display = 'none';
+    document.getElementById('wb-status').textContent = 'Error';
+    showToast('Failed to build website. Try again.');
+  }
+  document.getElementById('wb-build-btn').disabled = false;
+}
+
+async function refineWebsite(instruction) {
+  document.getElementById('wb-prompt').value = document.getElementById('wb-prompt').value + '\n\nRefine: ' + instruction;
+  await buildWebsite();
+}
+
+function refreshWbPreview() {
+  if (!wbCurrentHTML) return;
+  const iframe = document.getElementById('wb-iframe');
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(wbCurrentHTML);
+  iframe.contentDocument.close();
+}
+
+function downloadWebsite() {
+  if (!wbCurrentHTML) return;
+  const blob = new Blob([wbCurrentHTML], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'feng-website.html';
+  a.click();
+  showToast('⬇ Website downloaded!');
+}
+
+// ══════════════════════════════════
+// ── SLIDES GENERATOR ──
+// ══════════════════════════════════
+let slidesData = [];
+let currentSlideIdx = 0;
+let slidesTheme = 'dark';
+
+function openSlidesBuilder() {
+  document.getElementById('slides-panel').style.display = 'flex';
+}
+
+function closeSlidesBuilder() {
+  document.getElementById('slides-panel').style.display = 'none';
+}
+
+function selectSlidesTheme(btn) {
+  document.querySelectorAll('#slides-themes .wb-style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  slidesTheme = btn.dataset.theme;
+  if (slidesData.length) renderSlide(currentSlideIdx);
+}
+
+async function generateSlides() {
+  const prompt = document.getElementById('slides-prompt').value.trim();
+  const count = document.getElementById('slides-count').value;
+  if (!prompt) { showToast('Please enter a topic'); return; }
+
+  document.getElementById('slides-loading').style.display = 'flex';
+  document.getElementById('slides-display').style.display = 'none';
+  document.getElementById('slides-gen-btn').disabled = true;
+
+  try {
+    const result = await callAI([
+      { role: 'system', content: 'You are a presentation expert. Create slide content. Return ONLY a JSON array.' },
+      { role: 'user', content: `Create ${count} presentation slides about: "${prompt}". Return ONLY a JSON array like:
+[{"title":"Slide Title","subtitle":"Optional subtitle","points":["Point 1","Point 2","Point 3"],"note":"Speaker note"},...]
+Make it professional and insightful. No other text.` }
+    ]);
+
+    const raw = result.content.match(/\[[\s\S]*\]/)?.[0];
+    slidesData = JSON.parse(raw);
+    currentSlideIdx = 0;
+
+    document.getElementById('slides-loading').style.display = 'none';
+    document.getElementById('slides-display').style.display = 'flex';
+    renderSlide(0);
+    renderSlideThumbs();
+    document.getElementById('slides-download').style.display = 'block';
+    showToast('✅ ' + slidesData.length + ' slides generated!');
+  } catch(e) {
+    document.getElementById('slides-loading').style.display = 'none';
+    document.getElementById('slides-display').style.display = 'flex';
+    showToast('Failed to generate slides. Try again.');
+  }
+  document.getElementById('slides-gen-btn').disabled = false;
+}
+
+const SLIDE_THEMES = {
+  dark: { bg:'#0f0f1a', text:'#f0f0f0', accent:'#4f8ef7', sub:'#8888aa', card:'rgba(255,255,255,0.06)' },
+  light: { bg:'#f8faff', text:'#1a1a2e', accent:'#2563eb', sub:'#6b7280', card:'rgba(0,0,0,0.04)' },
+  gradient: { bg:'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', text:'#fff', accent:'#f59e0b', sub:'#c9b8ff', card:'rgba(255,255,255,0.08)' },
+  minimal: { bg:'#ffffff', text:'#111', accent:'#000', sub:'#666', card:'rgba(0,0,0,0.03)' }
+};
+
+function renderSlide(idx) {
+  if (!slidesData.length) return;
+  const slide = slidesData[idx];
+  const t = SLIDE_THEMES[slidesTheme];
+  document.getElementById('slides-counter').textContent = (idx+1) + ' / ' + slidesData.length;
+
+  const html = `
+    <div style="width:100%;max-width:680px;aspect-ratio:16/9;background:${t.bg};border-radius:14px;padding:40px 50px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:${t.accent};opacity:0.06;border-radius:50%;transform:translate(40%,-40%);"></div>
+      <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:${t.accent};margin-bottom:10px;">Slide ${idx+1} of ${slidesData.length}</div>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:${t.text};margin:0 0 8px;line-height:1.2;">${esc(slide.title)}</h2>
+      ${slide.subtitle ? `<div style="font-size:0.9rem;color:${t.sub};margin-bottom:20px;">${esc(slide.subtitle)}</div>` : '<div style="margin-bottom:20px;"></div>'}
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${(slide.points||[]).map(p => `
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:${t.accent};flex-shrink:0;margin-top:7px;"></div>
+            <div style="font-size:0.88rem;color:${t.text};line-height:1.5;">${esc(p)}</div>
+          </div>`).join('')}
+      </div>
+      ${slide.note ? `<div style="position:absolute;bottom:14px;left:50px;right:50px;font-size:0.65rem;color:${t.sub};font-style:italic;opacity:0.7;">${esc(slide.note)}</div>` : ''}
+    </div>`;
+
+  document.getElementById('slides-display').innerHTML = html;
+  // Update thumb highlight
+  document.querySelectorAll('.slide-thumb').forEach((el,i) => {
+    el.style.borderColor = i===idx ? 'var(--accent)' : 'var(--border)';
+  });
+}
+
+function renderSlideThumbs() {
+  const container = document.getElementById('slides-thumbs');
+  container.innerHTML = slidesData.map((s,i) =>
+    `<div class="slide-thumb" onclick="currentSlideIdx=${i};renderSlide(${i});" style="padding:8px 10px;background:var(--surface2);border-radius:8px;border:1.5px solid ${i===0?'var(--accent)':'var(--border)'};cursor:pointer;font-size:0.72rem;color:var(--muted);">
+      <div style="font-weight:700;color:var(--text);margin-bottom:2px;">${i+1}. ${esc(s.title)}</div>
+      <div style="font-size:0.65rem;">${(s.points||[]).slice(0,2).map(p=>p.slice(0,35)).join(' · ')}</div>
+    </div>`
+  ).join('');
+}
+
+function prevSlide() { if(currentSlideIdx>0){currentSlideIdx--;renderSlide(currentSlideIdx);} }
+function nextSlide() { if(currentSlideIdx<slidesData.length-1){currentSlideIdx++;renderSlide(currentSlideIdx);} }
+
+function downloadSlides() {
+  if (!slidesData.length) return;
+  const t = SLIDE_THEMES[slidesTheme];
+  const allSlides = slidesData.map((s,i) => `
+    <div class="slide" style="width:1280px;height:720px;background:${t.bg};padding:80px 100px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;page-break-after:always;">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:${t.accent};margin-bottom:18px;">${i+1} / ${slidesData.length}</div>
+      <h2 style="font-family:sans-serif;font-size:48px;font-weight:800;color:${t.text};margin:0 0 16px;">${esc(s.title)}</h2>
+      ${s.subtitle?`<div style="font-size:22px;color:${t.sub};margin-bottom:36px;">${esc(s.subtitle)}</div>`:'<div style="margin-bottom:36px;"></div>'}
+      ${(s.points||[]).map(p=>`<div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:14px;"><div style="width:10px;height:10px;border-radius:50%;background:${t.accent};flex-shrink:0;margin-top:8px;"></div><div style="font-size:22px;color:${t.text};">${esc(p)}</div></div>`).join('')}
+    </div>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Feng AI Slides</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#000;}.slide{font-family:sans-serif;}</style></head><body>${allSlides}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'feng-slides.html';
+  a.click();
+  showToast('⬇ Slides downloaded!');
+}
+
+// ══════════════════════════════════
+// ── AGENT MODE ──
+// ══════════════════════════════════
+function activateAgentMode() {
+  selectMode('research');
+  const btn = document.getElementById('tb-agent');
+  btn.classList.add('active');
+  document.getElementById('user-input').placeholder = '🤖 Agent mode: Research, analyze, create documents…';
+  showToast('🤖 Agent mode ON — I will research and create comprehensive outputs');
+}
+
+function quickResearch() {
+  selectMode('research');
+  document.getElementById('user-input').placeholder = '🔍 Research mode: Ask me anything and I\'ll find the latest data…';
+  document.getElementById('user-input').focus();
+  showToast('🌐 Research mode ON');
+}
+
+// Auto-detect website/slides requests in sendMessage
+function checkSpecialRequests(text) {
+  const t = text.toLowerCase();
+  if (/\b(build|create|make|design)\b.*\b(website|webpage|web page|landing page|portfolio|blog)\b/i.test(text)) {
+    document.getElementById('wb-prompt').value = text;
+    openWebsiteBuilder();
+    return true;
+  }
+  if (/\b(create|make|generate|build)\b.*\b(slides|presentation|slideshow|powerpoint|deck)\b/i.test(text)) {
+    document.getElementById('slides-prompt').value = text.replace(/create|make|generate|build|slides|presentation|slideshow|powerpoint|deck/gi,'').trim();
+    openSlidesBuilder();
+    return true;
+  }
+  return false;
+}
+
+// ── NAV TTS TOGGLE ──
+let navTTSActive = false;
+function toggleNavTTS() {
+  navTTSActive = !navTTSActive;
+  const btn = document.getElementById('nav-tts-btn');
+  if (navTTSActive) {
+    autoRead = true;
+    localStorage.setItem('feng_autoread','true');
+    if (btn) btn.style.color = 'var(--accent)';
+    showToast('🔊 Read aloud ON — AI will speak every response');
+  } else {
+    autoRead = false;
+    localStorage.setItem('feng_autoread','false');
+    stopVoice();
+    if (btn) btn.style.color = '';
+    showToast('🔇 Read aloud OFF');
+  }
+}
+
+// ── VOICE CONVERSATION MODE ──
+function startVoiceConversation() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Voice not supported on this browser. Try Chrome.');
+    return;
+  }
+  const btn = document.getElementById('tb-voice');
+  if (isListening) {
+    stopMic();
+    if (btn) { btn.style.color=''; btn.style.borderColor=''; }
+    return;
+  }
+  autoRead = true;
+  selectMode('standard');
+  startMic();
+  if (btn) { btn.style.color='var(--danger)'; btn.style.borderColor='var(--danger)'; }
+  showToast('🎤 Voice mode — speak your question');
 }
 
 // ── INPUT RESIZE ──

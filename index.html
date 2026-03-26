@@ -597,6 +597,25 @@ body.light .source-item:hover{background:#f8fafc;}
 .source-arrow{font-size:0.85rem;color:var(--muted);flex-shrink:0;}
 .source-item:hover .source-arrow{color:var(--accent);}
 
+/* ── VOICE LIST (Kimi style) ── */
+.voice-item{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;position:relative;}
+.voice-item:last-child{border-bottom:none;}
+.voice-item:hover{background:var(--surface2);}
+.voice-item.selected{background:rgba(79,142,247,0.06);}
+.voice-waveform{display:flex;align-items:center;gap:2px;width:22px;flex-shrink:0;}
+.voice-waveform span{display:block;width:2.5px;border-radius:2px;background:var(--muted);transition:height 0.2s,background 0.2s;}
+.voice-item.selected .voice-waveform span{background:var(--accent);}
+.voice-item.playing .voice-waveform span{background:var(--accent);animation:waveAnim 0.8s ease-in-out infinite alternate;}
+.voice-item.playing .voice-waveform span:nth-child(2){animation-delay:0.15s;}
+.voice-item.playing .voice-waveform span:nth-child(3){animation-delay:0.3s;}
+.voice-item.playing .voice-waveform span:nth-child(4){animation-delay:0.45s;}
+@keyframes waveAnim{from{height:4px}to{height:14px}}
+.voice-name{font-size:0.9rem;font-weight:600;color:var(--text);}
+.voice-preview{font-size:0.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.voice-check{color:var(--accent);font-size:1rem;font-weight:700;margin-left:auto;flex-shrink:0;}
+.voice-play-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;}
+.voice-play-btn:hover{border-color:var(--accent);color:var(--accent);}
+
 /* ── TUTOR MODE ── */
 .tutor-lesson{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;font-size:0.87rem;line-height:1.7;}
 
@@ -1474,8 +1493,23 @@ body.light .source-item:hover{background:#f8fafc;}
 
 <!-- VOICE SETTINGS PAGE -->
 <div class="subpage" id="page-voice">
-  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-voice')">←</button><div class="sub-title">Voice & Audio</div></div>
-  <div class="sub-body" id="voice-body"></div>
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-voice')">←</button>
+    <div class="sub-title">Play Voice</div>
+  </div>
+  <div class="sub-body" style="padding:0;">
+    <div style="padding:20px 20px 8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Official Voices</div>
+    <div id="voice-list-official" style="background:var(--surface);border-radius:14px;margin:0 16px;overflow:hidden;border:1px solid var(--border);"></div>
+    <div style="padding:20px 20px 8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Speed</div>
+    <div style="display:flex;gap:8px;margin:0 16px 20px;" id="voice-speed-row"></div>
+    <div style="margin:0 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:0.87rem;font-weight:600;">Auto-read responses</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Speak every AI answer automatically</div>
+      </div>
+      <button class="toggle" id="autoread-toggle" onclick="toggleAutoRead()"></button>
+    </div>
+  </div>
 </div>
 
 <!-- PERSONAS PAGE -->
@@ -1895,7 +1929,7 @@ async function readSSEStream(res, provider) {
       } catch(e) {}
     }
 
-    if (stopRequested) break;
+    if (stopRequested) { await reader.cancel(); break; }
   }
 
   return { content, reasoning: reasoning || null, data: { choices: [{ message: { content, reasoning_content: reasoning } }] } };
@@ -2486,11 +2520,8 @@ function readDOCX(file, item) {
     try {
       const bytes = new Uint8Array(e.target.result);
       // Convert bytes to string and look for XML text content
-      let raw = '';
-      for (let i = 0; i < Math.min(bytes.length, 500000); i++) {
-        if (bytes[i] >= 32 && bytes[i] <= 126) raw += String.fromCharCode(bytes[i]);
-        else raw += ' ';
-      }
+      const decoder = new TextDecoder('ascii');
+      const raw = decoder.decode(bytes.slice(0, 500000)).replace(/[^\x20-\x7E]/g, ' ');
       // Extract text between <w:t> XML tags (Word text nodes)
       const matches = raw.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || [];
       let text = matches
@@ -2521,12 +2552,8 @@ function readPDF(file, item) {
   reader.onload = e => {
     try {
       const bytes = new Uint8Array(e.target.result);
-      let raw = '';
-      for (let i = 0; i < bytes.length; i++) {
-        const c = bytes[i];
-        if (c >= 32 && c <= 126) raw += String.fromCharCode(c);
-        else if (c === 10 || c === 13) raw += ' ';
-      }
+      const decoder = new TextDecoder('ascii');
+      const raw = decoder.decode(bytes.slice(0, 1000000)).replace(/[^\x20-\x7E\n\r]/g, ' ');
       const clean = raw
         .replace(/<<[^>]*>>/g, ' ')
         .replace(/\/(Type|Subtype|Font|Width|Height|Filter|Length|BBox|Matrix)[^\s]*/g, ' ')
@@ -3343,7 +3370,7 @@ async function sendMessage() {
 
     if (isImageAttach) {
       // Vision model — send image + question as ONE fresh message, not full history
-      model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+      model = 'llama-3.2-11b-vision-preview';
       apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
         {
@@ -3390,7 +3417,7 @@ async function sendMessage() {
         const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 8000, messages: apiMessages })
+          body: JSON.stringify({ model: 'llama-3.2-11b-vision-preview', max_tokens: 8000, messages: apiMessages })
         });
         const d = await res.json();
         aiResult = { data: d, content: d.choices?.[0]?.message?.content || '', reasoning: null, source: 'groq' };
@@ -4117,74 +4144,133 @@ function getWebSearchNote() {
   return '\n\nWEB SEARCH MODE: The user has enabled web search. For current events, recent news, prices, scores, or time-sensitive questions, clearly note when your knowledge may be outdated and suggest the user verify online. For stable facts, answer normally.';
 }
 
-// ── VOICE MODE (Full Conversation) ──
+// ── VOICE SYSTEM (Kimi-style named voices) ──
 let voiceMode = false;
-let voiceSynth = window.speechSynthesis;
 let voiceActive = false;
-let selectedVoiceIdx = parseInt(localStorage.getItem('feng_voice_idx')||'0');
-let voiceSpeed = parseFloat(localStorage.getItem('feng_voice_speed')||'1');
 let autoRead = localStorage.getItem('feng_autoread') === 'true';
 
+const FENG_VOICES = [
+  { id:'luna',   name:'Luna',   preview:'Hi this is Luna. How\'s your day? Wanna talk?',         pitch:1.15, rate:1.0,  lang:'en-US', gender:'female' },
+  { id:'aria',   name:'Aria',   preview:'Hello! I\'m Aria, your Feng AI assistant. Ask me anything!', pitch:1.1,  rate:1.05, lang:'en-US', gender:'female' },
+  { id:'nova',   name:'Nova',   preview:'Hey there! Nova here. What can I help you explore today?', pitch:1.05, rate:1.0,  lang:'en-US', gender:'female' },
+  { id:'kai',    name:'Kai',    preview:'Hey, how\'s everything going? Should we talk?',           pitch:0.95, rate:1.0,  lang:'en-US', gender:'male'   },
+  { id:'cole',   name:'Cole',   preview:'Hello! I\'m Cole. You can ask me everything you need.',   pitch:0.9,  rate:0.95, lang:'en-US', gender:'male'   },
+  { id:'rex',    name:'Rex',    preview:'Good to see you! What are we working on today?',          pitch:0.85, rate:1.0,  lang:'en-US', gender:'male'   },
+  { id:'jade',   name:'Jade',   preview:'Hi there! What a day! So what are we going to do next?', pitch:1.2,  rate:1.1,  lang:'en-US', gender:'female' },
+];
+
+let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'luna';
+let voiceSpeed = parseFloat(localStorage.getItem('feng_voice_speed') || '1');
+let currentPreviewId = null;
+
 function getVoices() {
-  return voiceSynth ? voiceSynth.getVoices().filter(v => v.lang.startsWith('en')) : [];
+  return window.speechSynthesis ? window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en')) : [];
+}
+
+function getBestVoice(fengVoice) {
+  const sysVoices = getVoices();
+  if (!sysVoices.length) return null;
+  // Match by gender preference
+  const gender = fengVoice.gender;
+  const femaleKeywords = ['female','woman','girl','samantha','karen','victoria','moira','tessa','fiona','zira'];
+  const maleKeywords = ['male','man','daniel','david','thomas','alex','fred','jorge'];
+  const keywords = gender === 'female' ? femaleKeywords : maleKeywords;
+  const match = sysVoices.find(v => keywords.some(k => v.name.toLowerCase().includes(k)));
+  return match || sysVoices[0];
+}
+
+function renderVoicePage() {
+  const listEl = document.getElementById('voice-list-official');
+  const speedEl = document.getElementById('voice-speed-row');
+  const autoEl = document.getElementById('autoread-toggle');
+  if (!listEl) return;
+
+  // Render voice list
+  listEl.innerHTML = FENG_VOICES.map(v => `
+    <div class="voice-item ${v.id === selectedVoiceName ? 'selected' : ''}" id="voice-item-${v.id}" onclick="selectFengVoice('${v.id}')">
+      <div class="voice-waveform">
+        <span style="height:8px"></span>
+        <span style="height:14px"></span>
+        <span style="height:6px"></span>
+        <span style="height:10px"></span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="voice-name">${v.name}</div>
+        <div class="voice-preview">| ${v.preview}</div>
+      </div>
+      <button class="voice-play-btn" onclick="event.stopPropagation();previewFengVoice('${v.id}')" title="Preview">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      ${v.id === selectedVoiceName ? '<div class="voice-check">✓</div>' : ''}
+    </div>
+  `).join('');
+
+  // Render speed buttons
+  if (speedEl) {
+    speedEl.innerHTML = ['0.75','1','1.25','1.5','1.75'].map(s =>
+      `<button onclick="selectVoiceSpeed(${s})" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid ${parseFloat(s)===voiceSpeed?'var(--accent)':'var(--border)'};background:var(--surface);color:${parseFloat(s)===voiceSpeed?'var(--accent)':'var(--muted)'};font-size:0.78rem;cursor:pointer;">${s}x</button>`
+    ).join('');
+  }
+
+  // Sync auto-read toggle
+  if (autoEl) autoEl.classList.toggle('on', autoRead);
+}
+
+function selectFengVoice(id) {
+  selectedVoiceName = id;
+  localStorage.setItem('feng_voice_name', id);
+  renderVoicePage();
+  // Preview the selected voice
+  previewFengVoice(id);
+}
+
+function previewFengVoice(id) {
+  const voice = FENG_VOICES.find(v => v.id === id);
+  if (!voice) return;
+
+  // Stop current preview
+  window.speechSynthesis?.cancel();
+  if (currentPreviewId) {
+    const prev = document.getElementById('voice-item-' + currentPreviewId);
+    if (prev) prev.classList.remove('playing');
+  }
+
+  const itemEl = document.getElementById('voice-item-' + id);
+  if (itemEl) itemEl.classList.add('playing');
+  currentPreviewId = id;
+
+  const utt = new SpeechSynthesisUtterance(voice.preview);
+  const sysVoice = getBestVoice(voice);
+  if (sysVoice) utt.voice = sysVoice;
+  utt.pitch = voice.pitch;
+  utt.rate = voice.rate * voiceSpeed;
+  utt.lang = voice.lang;
+  utt.onend = utt.onerror = () => {
+    if (itemEl) itemEl.classList.remove('playing');
+    currentPreviewId = null;
+  };
+  window.speechSynthesis?.speak(utt);
 }
 
 function speakText(text) {
-  if (!voiceSynth) return;
-  voiceSynth.cancel();
-  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').replace(/```[\s\S]*?```/g,'[code block]').trim().slice(0,2000);
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const voice = FENG_VOICES.find(v => v.id === selectedVoiceName) || FENG_VOICES[0];
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').replace(/```[\s\S]*?```/g,'[code block]').trim().slice(0, 2000);
   const utt = new SpeechSynthesisUtterance(clean);
-  const voices = getVoices();
-  if (voices[selectedVoiceIdx]) utt.voice = voices[selectedVoiceIdx];
-  utt.rate = voiceSpeed;
-  utt.pitch = 1.0;
-  utt.lang = 'en-US';
+  const sysVoice = getBestVoice(voice);
+  if (sysVoice) utt.voice = sysVoice;
+  utt.pitch = voice.pitch;
+  utt.rate = voice.rate * voiceSpeed;
+  utt.lang = voice.lang;
   voiceActive = true;
-  utt.onend = () => { voiceActive = false; };
-  utt.onerror = () => { voiceActive = false; };
-  voiceSynth.speak(utt);
+  utt.onend = utt.onerror = () => { voiceActive = false; };
+  window.speechSynthesis.speak(utt);
 }
 
 function stopVoice() {
-  if (voiceSynth) voiceSynth.cancel();
+  window.speechSynthesis?.cancel();
   voiceActive = false;
-}
-
-// Add voice subpage to settings
-function renderVoicePage() {
-  const el = document.getElementById('voice-body');
-  if (!el) return;
-  const voices = getVoices();
-  el.innerHTML =
-    '<div style="margin-bottom:20px;">' +
-      '<div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">VOICE</div>' +
-      voices.slice(0,8).map((v,i) =>
-        '<div onclick="selectVoice('+i+')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid '+(i===selectedVoiceIdx?'var(--accent)':'var(--border)')+';margin-bottom:8px;cursor:pointer;background:var(--surface);">' +
-          '<span style="font-size:1.1rem;">🔊</span>' +
-          '<div style="flex:1;"><div style="font-size:0.87rem;font-weight:600;">'+(v.name.split(' ').slice(0,3).join(' '))+'</div><div style="font-size:0.72rem;color:var(--muted);">'+v.lang+'</div></div>' +
-          (i===selectedVoiceIdx?'<span style="color:var(--accent);font-size:0.8rem;">✓</span>':'') +
-        '</div>'
-      ).join('') +
-      (voices.length===0?'<div style="color:var(--muted);font-size:0.83rem;padding:10px;">No voices available on this browser.</div>':'') +
-    '</div>' +
-    '<div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">SPEED</div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:20px;">' +
-      ['0.75','1','1.25','1.5','1.75'].map(s =>
-        '<button onclick="selectVoiceSpeed('+s+')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid '+(parseFloat(s)===voiceSpeed?'var(--accent)':'var(--border)')+';background:var(--surface);color:'+(parseFloat(s)===voiceSpeed?'var(--accent)':'var(--muted)')+';font-size:0.78rem;cursor:pointer;">'+s+'x</button>'
-      ).join('') +
-    '</div>' +
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;">' +
-      '<div><div style="font-size:0.87rem;font-weight:600;">Auto-read responses</div><div style="font-size:0.75rem;color:var(--muted);">Speak every AI answer automatically</div></div>' +
-      '<button class="toggle '+(autoRead?'on':'')+'" id="autoread-toggle" onclick="toggleAutoRead()"></button>' +
-    '</div>' +
-    '<button onclick="speakText(\'Hello! I am Feng AI, your personal assistant. How can I help you today?\')" style="width:100%;padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;">🔊 Test Voice</button>';
-}
-
-function selectVoice(i) {
-  selectedVoiceIdx = i;
-  localStorage.setItem('feng_voice_idx', i);
-  renderVoicePage();
-  speakText('Hello, I am Feng AI.');
 }
 
 function selectVoiceSpeed(s) {
@@ -4196,7 +4282,14 @@ function selectVoiceSpeed(s) {
 function toggleAutoRead() {
   autoRead = !autoRead;
   localStorage.setItem('feng_autoread', autoRead);
-  renderVoicePage();
+  const t = document.getElementById('autoread-toggle');
+  if (t) t.classList.toggle('on', autoRead);
+  showToast(autoRead ? '🔊 Auto-read ON' : '🔇 Auto-read OFF');
+}
+
+// Load voices when available
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => renderVoicePage();
 }
 
 // ── MODE PANEL (Claude-style) ──

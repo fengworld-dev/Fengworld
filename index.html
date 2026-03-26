@@ -4150,13 +4150,13 @@ let voiceActive = false;
 let autoRead = localStorage.getItem('feng_autoread') === 'true';
 
 const FENG_VOICES = [
-  { id:'luna',   name:'Luna',   preview:'Hi this is Luna. How\'s your day? Wanna talk?',         pitch:1.15, rate:1.0,  lang:'en-US', gender:'female' },
+  { id:'luna',   name:'Luna',   preview:'Hi this is Luna. How\'s your day? Wanna talk?',         pitch:1.3,  rate:1.0,  lang:'en-US', gender:'female' },
   { id:'aria',   name:'Aria',   preview:'Hello! I\'m Aria, your Feng AI assistant. Ask me anything!', pitch:1.1,  rate:1.05, lang:'en-US', gender:'female' },
-  { id:'nova',   name:'Nova',   preview:'Hey there! Nova here. What can I help you explore today?', pitch:1.05, rate:1.0,  lang:'en-US', gender:'female' },
-  { id:'kai',    name:'Kai',    preview:'Hey, how\'s everything going? Should we talk?',           pitch:0.95, rate:1.0,  lang:'en-US', gender:'male'   },
+  { id:'nova',   name:'Nova',   preview:'Hey there! Nova here. What can I help you explore today?', pitch:0.95, rate:0.95, lang:'en-US', gender:'female' },
+  { id:'kai',    name:'Kai',    preview:'Hey, how\'s everything going? Should we talk?',           pitch:1.1,  rate:1.05, lang:'en-US', gender:'male'   },
   { id:'cole',   name:'Cole',   preview:'Hello! I\'m Cole. You can ask me everything you need.',   pitch:0.9,  rate:0.95, lang:'en-US', gender:'male'   },
-  { id:'rex',    name:'Rex',    preview:'Good to see you! What are we working on today?',          pitch:0.85, rate:1.0,  lang:'en-US', gender:'male'   },
-  { id:'jade',   name:'Jade',   preview:'Hi there! What a day! So what are we going to do next?', pitch:1.2,  rate:1.1,  lang:'en-US', gender:'female' },
+  { id:'rex',    name:'Rex',    preview:'Good to see you! What are we working on today?',          pitch:0.75, rate:0.9,  lang:'en-US', gender:'male'   },
+  { id:'jade',   name:'Jade',   preview:'Hi there! What a day! So what are we going to do next?', pitch:1.45, rate:1.15, lang:'en-US', gender:'female' },
 ];
 
 let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'luna';
@@ -4170,13 +4170,25 @@ function getVoices() {
 function getBestVoice(fengVoice) {
   const sysVoices = getVoices();
   if (!sysVoices.length) return null;
-  // Match by gender preference
+  
   const gender = fengVoice.gender;
-  const femaleKeywords = ['female','woman','girl','samantha','karen','victoria','moira','tessa','fiona','zira'];
-  const maleKeywords = ['male','man','daniel','david','thomas','alex','fred','jorge'];
-  const keywords = gender === 'female' ? femaleKeywords : maleKeywords;
-  const match = sysVoices.find(v => keywords.some(k => v.name.toLowerCase().includes(k)));
-  return match || sysVoices[0];
+  const femaleKeywords = ['samantha','victoria','karen','moira','tessa','fiona','zira','female','woman','girl'];
+  const maleKeywords = ['daniel','david','thomas','alex','fred','jorge','male','man'];
+  
+  // Filter voices by gender
+  const candidates = sysVoices.filter(v => {
+    const name = v.name.toLowerCase();
+    return gender === 'female' ? femaleKeywords.some(k => name.includes(k)) : maleKeywords.some(k => name.includes(k));
+  });
+
+  if (candidates.length > 0) {
+    // Try to pick a unique voice based on the fengVoice ID
+    // Use a simple hash of the ID to pick an index from the candidates
+    const hash = fengVoice.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return candidates[hash % candidates.length];
+  }
+
+  return sysVoices[0];
 }
 
 function renderVoicePage() {

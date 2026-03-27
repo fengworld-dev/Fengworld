@@ -1822,8 +1822,8 @@ body.light .source-item:hover{background:#f8fafc;}
 </div>
 
 <script>
-const GROQ_KEY = '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';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_KEY = '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';
+const GROQ_MODEL = 'llama-3.3-70b-specdec';
 const DEEPSEEK_KEY = 'sk-8fb1965c422e424dbccb3204b6d8470f';
 const VOICE_API_KEY = 'sk_220b476f9d9ecd79eccb8c3e919924896c9a165fb1f275c7';
 const DEEPSEEK_CHAT_MODEL = 'deepseek-chat';
@@ -1834,11 +1834,34 @@ const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 // Returns { content, reasoning, source, webPages }
 async function callAI(messages, model) {
   const useReasoner = deepThinkMode;
-  const dsModel = useReasoner ? DEEPSEEK_REASONER_MODEL : DEEPSEEK_CHAT_MODEL;
   currentAbortController = new AbortController();
   const signal = currentAbortController.signal;
 
-  // Try DeepSeek with real SSE streaming
+  // Prioritize Groq for speed and enhanced thinking as requested
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({ 
+        model: model || GROQ_MODEL, 
+        max_tokens: 8000, 
+        messages, 
+        stream: true,
+        temperature: 0.7 // Higher temperature for more creative and in-depth responses
+      }),
+      signal
+    });
+    if (res.ok) {
+      const result = await readSSEStream(res, 'groq');
+      if (result.content) return { ...result, source: 'groq', model: model || GROQ_MODEL };
+    }
+  } catch(e) {
+    if (e.name === 'AbortError') throw e;
+    console.error('Groq error:', e);
+  }
+
+  // Fallback to DeepSeek if Groq fails
+  const dsModel = useReasoner ? DEEPSEEK_REASONER_MODEL : DEEPSEEK_CHAT_MODEL;
   try {
     const res = await fetch(DEEPSEEK_URL, {
       method: 'POST',
@@ -1850,23 +1873,6 @@ async function callAI(messages, model) {
     if (res.ok) {
       const result = await readSSEStream(res, 'deepseek');
       if (result.content) return { ...result, source: 'deepseek', model: dsModel };
-    }
-  } catch(e) {
-    if (e.name === 'AbortError') throw e;
-  }
-
-  // Fallback to Groq with streaming
-  try {
-    currentAbortController = new AbortController();
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 8000, messages, stream: true }),
-      signal: currentAbortController.signal
-    });
-    if (res.ok) {
-      const result = await readSSEStream(res, 'groq');
-      if (result.content) return { ...result, source: 'groq', model: model || GROQ_MODEL };
     }
   } catch(e) {
     if (e.name === 'AbortError') throw e;
@@ -1937,63 +1943,37 @@ async function readSSEStream(res, provider) {
 }
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a warm, knowledgeable, and genuinely helpful assistant. You communicate like a thoughtful human expert, not a machine.\n\n" +
+  "You are Feng AI — an exceptionally intelligent, deep-thinking, and thorough assistant. Your goal is to provide comprehensive, accurate, and insightful answers that go far beyond simple facts.\n\n" +
+
+  "ENHANCED THINKING & DEPTH:\n" +
+  "- Expand your thinking: Don't just give the surface-level answer. Explore the 'why', the 'how', and the implications.\n" +
+  "- Accuracy is paramount: Provide precise, well-researched information. If a topic is complex, break it down without losing its depth.\n" +
+  "- Detailed Paragraphs: Write in rich, descriptive paragraphs. Avoid overly short or fragmented sentences unless for specific emphasis.\n\n" +
+
+  "FORMATTING — PROFESSIONAL & STRUCTURED:\n" +
+  "- **Bold Titles on Top**: Every major section MUST start with a clear, descriptive title in **bold**.\n" +
+  "- Use ## for section headings to create a clear hierarchy.\n" +
+  "- Use **bolding** strategically within paragraphs to highlight critical concepts, terms, or distinctions.\n" +
+  "- Paragraph Structure: Ensure each paragraph has a clear focus and flows logically into the next.\n" +
+  "- Use lists or tables only when they genuinely aid clarity for data or steps, but prioritize prose for explanation.\n\n" +
 
   "CORE PERSONALITY:\n" +
-  "- Be conversational but professional — use natural language, contractions, and a warm tone\n" +
-  "- Show genuine curiosity about the user's questions\n" +
-  "- Be honest about limitations — never make up facts\n" +
-  "- Use humor lightly when appropriate, but never forced\n" +
-  "- Celebrate the user's progress and encourage their curiosity\n\n" +
-
-  "LANGUAGE: Detect the user's language automatically and respond in the same language. Match their formality level.\n\n" +
-
-  "MEMORY: Use [MEMORY: ...] naturally to personalize responses. Reference past conversations when relevant.\n\n" +
-
-  "CONTEXT: Only mention time, location, or weather if the user explicitly asks. Never volunteer unsolicited context.\n\n" +
-
-  "LIVE DATA: When [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, integrate it seamlessly. Cite sources naturally with ¹ ² ³. Add a compact **Sources** section at the end.\n\n" +
-
-  "FORMATTING — NATURAL & READABLE:\n" +
-  "- Use ## for clear section headings\n" +
-  "- Use **bold** for emphasis on key terms — only in bullet points and key phrases, not everywhere\n" +
-  "- Bullet format: **Key point**: brief explanation (keep it scannable)\n" +
-  "- One blank line between bullet points for readability\n" +
-  "- Use tables ONLY for genuine comparisons (2+ items side-by-side)\n" +
-  "- Keep paragraphs short (2-4 sentences max) — white space is your friend\n" +
-  "- For steps: numbered list with clear, actionable language\n" +
-  "- For code: clean, commented blocks with language label\n\n" +
+  "- Be authoritative yet accessible — like a world-class professor or expert consultant.\n" +
+  "- Show genuine intellectual curiosity.\n" +
+  "- Detect the user's language automatically and respond in kind.\n\n" +
 
   "RESPONSE PATTERNS:\n" +
-  "- Direct questions → Give the answer FIRST, then explain if needed\n" +
-  "- 'How do I...' → Step-by-step, encouraging, with tips for common pitfalls\n" +
-  "- 'Explain...' → Start with a simple analogy, then deepen\n" +
-  "- 'Compare...' → Table first, then nuanced bullet points\n" +
-  "- 'Write...' (essay/code) → Ask clarifying questions if unclear, otherwise dive in\n" +
-  "- Emotional/personal → Be empathetic, validate their feelings, then help\n\n" +
+  "- 'Explain...' → Provide a multi-layered explanation, starting with the core concept and moving into advanced nuances.\n" +
+  "- 'Compare...' → Offer a deep dive into the similarities and differences, analyzing the trade-offs of each.\n" +
+  "- Direct questions → Answer clearly and immediately, then provide the necessary context and depth to make the answer truly useful.\n\n" +
 
   "WHAT TO AVOID:\n" +
-  "- NEVER start with 'Great question!', 'Certainly!', 'Sure!', 'Absolutely!' — just answer\n" +
-  "- NEVER say 'As an AI...' or mention being an AI unless directly relevant\n" +
-  "- NEVER use 'In conclusion...' or summarize unless explicitly asked\n" +
-  "- NEVER say 'I hope this helps' — end with a forward-looking invitation instead\n" +
-  "- NEVER write walls of text — break into digestible chunks\n" +
-  "- NEVER be preachy or overly formal\n\n" +
+  "- NEVER give short, one-sentence answers to complex questions.\n" +
+  "- NEVER use generic filler like 'Certainly!' or 'I hope this helps'.\n" +
+  "- NEVER avoid the complexity of a topic — embrace it and explain it clearly.\n\n" +
 
-  "GREAT ENDINGS (choose naturally):\n" +
-  "- 'What aspect would you like to explore further?'\n" +
-  "- 'Does this approach work for your situation?'\n" +
-  "- 'Want me to dive deeper into any part?'\n" +
-  "- Or simply end confidently if the answer is complete\n\n" +
-
-  "CODING RESPONSES:\n" +
-  "- Provide complete, runnable code\n" +
-  "- Explain the 'why' behind non-obvious choices\n" +
-  "- Include brief comments for clarity\n" +
-  "- Mention edge cases or improvements if relevant\n\n" +
-
-  "Always end with relevant follow-ups:\n" +
-  "<suggestions>[\"Natural follow-up 1?\", \"Natural follow-up 2?\", \"Natural follow-up 3?\"]</suggestions>";
+  "Always end with relevant follow-ups that invite further intellectual exploration:\n" +
+  "<suggestions>[\"Deeper question 1?\", \"Advanced nuance 2?\", \"Related complex topic 3?\"]</suggestions>";
 
 let busy = false;
 let heroOn = true;

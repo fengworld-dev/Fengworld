@@ -1825,7 +1825,7 @@ body.light .source-item:hover{background:#f8fafc;}
 const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const DEEPSEEK_KEY = 'sk-8fb1965c422e424dbccb3204b6d8470f';
-const VOICE_API_KEY = 'sk_220b476f9d9ecd79eccb8c3e919924896c9a165fb1f275c7';
+const ELEVENLABS_API_KEY = 'sk_3fb6f0acb770bd706af4ea4240ca7f12b79fb9ac0a23512e';
 const DEEPSEEK_CHAT_MODEL = 'deepseek-chat';
 const DEEPSEEK_REASONER_MODEL = 'deepseek-reasoner';
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
@@ -1861,7 +1861,7 @@ async function callAI(messages, model) {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-      body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 8000, messages, stream: true }),
+      body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 16000, messages, stream: true }),
       signal: currentAbortController.signal
     });
     if (res.ok) {
@@ -1937,9 +1937,17 @@ async function readSSEStream(res, provider) {
 }
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — a warm, knowledgeable, and genuinely helpful assistant. You communicate like a thoughtful human expert, not a machine.\n\n" +
+  "You are Feng AI — a highly intelligent, deep-thinking, and comprehensive assistant. You provide expert-level analysis and detailed responses.\n\n" +
 
-  "CORE PERSONALITY:\n" +
+  "
+
+THINKING CAPACITY:
+- Expand your thinking: Analyze questions from multiple angles before answering.
+- Provide depth: Don't just give surface-level answers. Dive deep into the "why" and "how".
+- Be comprehensive: If a topic is complex, write a multi-paragraph response that covers all nuances.
+- Logical reasoning: Show your step-by-step reasoning for complex problems.
+
+CORE PERSONALITY:\n" +
   "- Be conversational but professional — use natural language, contractions, and a warm tone\n" +
   "- Show genuine curiosity about the user's questions\n" +
   "- Be honest about limitations — never make up facts\n" +
@@ -1960,7 +1968,7 @@ const SYSTEM_PROMPT =
   "- Bullet format: **Key point**: brief explanation (keep it scannable)\n" +
   "- One blank line between bullet points for readability\n" +
   "- Use tables ONLY for genuine comparisons (2+ items side-by-side)\n" +
-  "- Keep paragraphs short (2-4 sentences max) — white space is your friend\n" +
+  "- Write long, detailed paragraphs that fully explore the topic. Do not shy away from complexity.\n" +
   "- For steps: numbered list with clear, actionable language\n" +
   "- For code: clean, commented blocks with language label\n\n" +
 
@@ -3418,7 +3426,7 @@ async function sendMessage() {
         const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-          body: JSON.stringify({ model: 'llama-3.2-11b-vision-preview', max_tokens: 8000, messages: apiMessages })
+          body: JSON.stringify({ model: 'llama-3.2-11b-vision-preview', max_tokens: 16000, messages: apiMessages })
         });
         const d = await res.json();
         aiResult = { data: d, content: d.choices?.[0]?.message?.content || '', reasoning: null, source: 'groq' };
@@ -3734,7 +3742,7 @@ const RESPONSE_STYLES = [
   { id:'formal', icon:'👔', name:'Formal', desc:'Professional and academic tone' },
   { id:'simple', icon:'🌱', name:'Simple', desc:'Easy language for all ages' }
 ];
-let currentResponseStyle = localStorage.getItem('feng_style') || 'balanced';
+let currentResponseStyle = localStorage.getItem('feng_style') || 'detailed';
 
 function renderResponseStyleList() {
   const el = document.getElementById('response-style-list');
@@ -3755,7 +3763,7 @@ function selectResponseStyle(id) {
   renderResponseStyleList();
 }
 function getStyleNote() {
-  const notes = { concise:'\nBe concise — short focused answers.', balanced:'', detailed:'\nBe very detailed and comprehensive.', formal:'\nUse formal academic language.', simple:'\nUse very simple easy-to-understand language.' };
+  const notes = { concise:'\nBe concise — short focused answers.', balanced:'', detailed:'\nProvide an extremely detailed, multi-paragraph, and comprehensive response. Expand your thinking to cover all possible nuances and provide deep expert-level analysis.', formal:'\nUse formal academic language.', simple:'\nUse very simple easy-to-understand language.' };
   return notes[currentResponseStyle] || '';
 }
 
@@ -4151,13 +4159,13 @@ let voiceActive = false;
 let autoRead = localStorage.getItem('feng_autoread') === 'true';
 
 const FENG_VOICES = [
-  { id:'luna',   name:'Luna',   preview:'Hi this is Luna. How\'s your day? Wanna talk?',         pitch:1.3,  rate:1.0,  lang:'en-US', gender:'female' },
-  { id:'aria',   name:'Aria',   preview:'Hello! I\'m Aria, your Feng AI assistant. Ask me anything!', pitch:1.1,  rate:1.05, lang:'en-US', gender:'female' },
-  { id:'nova',   name:'Nova',   preview:'Hey there! Nova here. What can I help you explore today?', pitch:0.95, rate:0.95, lang:'en-US', gender:'female' },
-  { id:'kai',    name:'Kai',    preview:'Hey, how\'s everything going? Should we talk?',           pitch:1.1,  rate:1.05, lang:'en-US', gender:'male'   },
-  { id:'cole',   name:'Cole',   preview:'Hello! I\'m Cole. You can ask me everything you need.',   pitch:0.9,  rate:0.95, lang:'en-US', gender:'male'   },
-  { id:'rex',    name:'Rex',    preview:'Good to see you! What are we working on today?',          pitch:0.75, rate:0.9,  lang:'en-US', gender:'male'   },
-  { id:'jade',   name:'Jade',   preview:'Hi there! What a day! So what are we going to do next?', pitch:1.45, rate:1.15, lang:'en-US', gender:'female' },
+  { id:'luna',   name:'Luna',   voiceId:'21m00Tcm4llvDq8ikWAM', preview:'Hi this is Luna. How\'s your day? Wanna talk?' },
+  { id:'aria',   name:'Aria',   voiceId:'EXAVITQu4vr4S4S4S4S4', preview:'Hello! I\'m Aria, your Feng AI assistant. Ask me anything!' },
+  { id:'nova',   name:'Nova',   voiceId:'AZnzlk1XvdvUe3BnEsS6', preview:'Hey there! Nova here. What can I help you explore today?' },
+  { id:'kai',    name:'Kai',    voiceId:'TxGEqnS4S4S4S4S4S4S4', preview:'Hey, how\'s everything going? Should we talk?' },
+  { id:'cole',   name:'Cole',   voiceId:'VR6AewyS6S6S6S6S6S6S', preview:'Hello! I\'m Cole. You can ask me everything you need.' },
+  { id:'rex',    name:'Rex',    voiceId:'ErXwS8S8S8S8S8S8S8S8', preview:'Good to see you! What are we working on today?' },
+  { id:'jade',   name:'Jade',   voiceId:'MF3mGyEYCl7S7S7S7S7S', preview:'Hi there! What a day! So what are we going to do next?' },
 ];
 
 let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'luna';
@@ -4265,28 +4273,106 @@ function previewFengVoice(id) {
   window.speechSynthesis?.speak(utt);
 }
 
-function speakText(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+
+let audioContext = null;
+let currentAudioSource = null;
+
+async function speakText(text) {
+  if (typeof ELEVENLABS_API_KEY === 'undefined' || !ELEVENLABS_API_KEY) return;
+  stopVoice();
+  
   const voice = FENG_VOICES.find(v => v.id === selectedVoiceName) || FENG_VOICES[0];
   const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').replace(/```[\s\S]*?```/g,'[code block]').trim().slice(0, 2000);
-  const utt = new SpeechSynthesisUtterance(clean);
-  const sysVoice = getBestVoice(voice);
-  if (sysVoice) utt.voice = sysVoice;
-  utt.pitch = voice.pitch;
-  utt.rate = voice.rate * voiceSpeed;
-  utt.lang = voice.lang;
+  
   voiceActive = true;
-  utt.onend = utt.onerror = () => { voiceActive = false; };
-  window.speechSynthesis.speak(utt);
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_API_KEY
+      },
+      body: JSON.stringify({
+        text: clean,
+        model_id: 'eleven_monolingual_v1',
+        voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+      })
+    });
+
+    if (!response.ok) throw new Error('ElevenLabs API error');
+
+    const audioData = await response.arrayBuffer();
+    playAudioBuffer(audioData);
+  } catch (err) {
+    console.error('TTS Error:', err);
+    voiceActive = false;
+  }
+}
+
+async function previewFengVoice(id) {
+  const voice = FENG_VOICES.find(v => v.id === id);
+  if (!voice) return;
+
+  stopVoice();
+  const itemEl = document.getElementById('voice-item-' + id);
+  if (itemEl) itemEl.classList.add('playing');
+  currentPreviewId = id;
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_API_KEY
+      },
+      body: JSON.stringify({
+        text: voice.preview,
+        model_id: 'eleven_monolingual_v1',
+        voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+      })
+    });
+
+    if (!response.ok) throw new Error('ElevenLabs API error');
+
+    const audioData = await response.arrayBuffer();
+    playAudioBuffer(audioData, () => {
+      if (itemEl) itemEl.classList.remove('playing');
+      currentPreviewId = null;
+    });
+  } catch (err) {
+    console.error('Preview Error:', err);
+    if (itemEl) itemEl.classList.remove('playing');
+    currentPreviewId = null;
+  }
+}
+
+function playAudioBuffer(buffer, onEnd) {
+  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  
+  audioContext.decodeAudioData(buffer, (decodedData) => {
+    if (currentAudioSource) {
+        try { currentAudioSource.stop(); } catch(e) {}
+    }
+    
+    currentAudioSource = audioContext.createBufferSource();
+    currentAudioSource.buffer = decodedData;
+    currentAudioSource.connect(audioContext.destination);
+    currentAudioSource.onended = () => {
+      voiceActive = false;
+      if (onEnd) onEnd();
+    };
+    currentAudioSource.start(0);
+  });
 }
 
 function stopVoice() {
-  window.speechSynthesis?.cancel();
+  if (currentAudioSource) {
+    try { currentAudioSource.stop(); } catch(e) {}
+    currentAudioSource = null;
+  }
   voiceActive = false;
 }
-
-function selectVoiceSpeed(s) {
+\nfunction selectVoiceSpeed(s) {
   voiceSpeed = parseFloat(s);
   localStorage.setItem('feng_voice_speed', s);
   renderVoicePage();

@@ -597,6 +597,25 @@ body.light .source-item:hover{background:#f8fafc;}
 .source-arrow{font-size:0.85rem;color:var(--muted);flex-shrink:0;}
 .source-item:hover .source-arrow{color:var(--accent);}
 
+/* ── VOICE LIST (Kimi style) ── */
+.voice-item{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;position:relative;}
+.voice-item:last-child{border-bottom:none;}
+.voice-item:hover{background:var(--surface2);}
+.voice-item.selected{background:rgba(79,142,247,0.06);}
+.voice-waveform{display:flex;align-items:center;gap:2px;width:22px;flex-shrink:0;}
+.voice-waveform span{display:block;width:2.5px;border-radius:2px;background:var(--muted);transition:height 0.2s,background 0.2s;}
+.voice-item.selected .voice-waveform span{background:var(--accent);}
+.voice-item.playing .voice-waveform span{background:var(--accent);animation:waveAnim 0.8s ease-in-out infinite alternate;}
+.voice-item.playing .voice-waveform span:nth-child(2){animation-delay:0.15s;}
+.voice-item.playing .voice-waveform span:nth-child(3){animation-delay:0.3s;}
+.voice-item.playing .voice-waveform span:nth-child(4){animation-delay:0.45s;}
+@keyframes waveAnim{from{height:4px}to{height:14px}}
+.voice-name{font-size:0.9rem;font-weight:600;color:var(--text);}
+.voice-preview{font-size:0.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.voice-check{color:var(--accent);font-size:1rem;font-weight:700;margin-left:auto;flex-shrink:0;}
+.voice-play-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;}
+.voice-play-btn:hover{border-color:var(--accent);color:var(--accent);}
+
 /* ── TUTOR MODE ── */
 .tutor-lesson{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;font-size:0.87rem;line-height:1.7;}
 
@@ -1252,9 +1271,9 @@ body.light .source-item:hover{background:#f8fafc;}
   </div>
   <div class="sub-body">
     <p style="font-size:0.85rem;color:var(--muted);margin-bottom:20px;line-height:1.6;">Have a question, found a bug, or want to share feedback? Reach us through any of the channels below.</p>
-    <a class="help-contact-btn" href="/cdn-cgi/l/email-protection#6006050e07170f120c045820070d01090c4e030f0d">
+    <a class="help-contact-btn" href="mailto:fengworld8@gmail.com">
       <div class="help-icon" style="background:rgba(234,67,53,0.12);">📧</div>
-      <div class="help-info"><div class="help-name">Email us</div><div class="help-detail"><span class="__cf_email__" data-cfemail="caacafa4adbda5b8a6aef28aada7aba3a6e4a9a5a7">[email&#160;protected]</span></div></div>
+      <div class="help-info"><div class="help-name">Email us</div><div class="help-detail">fengworld8@gmail.com</div></div>
       <div class="help-arr">›</div>
     </a>
     <a class="help-contact-btn" href="https://wa.me/260770605003" target="_blank">
@@ -1474,8 +1493,23 @@ body.light .source-item:hover{background:#f8fafc;}
 
 <!-- VOICE SETTINGS PAGE -->
 <div class="subpage" id="page-voice">
-  <div class="sub-head"><button class="sub-back" onclick="closeSubpage('page-voice')">←</button><div class="sub-title">Voice & Audio</div></div>
-  <div class="sub-body" id="voice-body"></div>
+  <div class="sub-head">
+    <button class="sub-back" onclick="closeSubpage('page-voice')">←</button>
+    <div class="sub-title">Play Voice</div>
+  </div>
+  <div class="sub-body" style="padding:0;">
+    <div style="padding:20px 20px 8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Official Voices</div>
+    <div id="voice-list-official" style="background:var(--surface);border-radius:14px;margin:0 16px;overflow:hidden;border:1px solid var(--border);"></div>
+    <div style="padding:20px 20px 8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Speed</div>
+    <div style="display:flex;gap:8px;margin:0 16px 20px;" id="voice-speed-row"></div>
+    <div style="margin:0 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:0.87rem;font-weight:600;">Auto-read responses</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Speak every AI answer automatically</div>
+      </div>
+      <button class="toggle" id="autoread-toggle" onclick="toggleAutoRead()"></button>
+    </div>
+  </div>
 </div>
 
 <!-- PERSONAS PAGE -->
@@ -1610,7 +1644,7 @@ body.light .source-item:hover{background:#f8fafc;}
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;">
       <div>
         <div style="font-size:0.88rem;font-weight:600;">Think longer for complex tasks</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;'Feng AI reasons deeply before answering'</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Feng AI reasons deeply before answering</div>
       </div>
       <button class="toggle" id="deep-think-toggle" onclick="toggleDeepThinkFromPanel()"></button>
     </div>
@@ -1787,10 +1821,11 @@ body.light .source-item:hover{background:#f8fafc;}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const DEEPSEEK_KEY = 'sk-8fb1965c422e424dbccb3204b6d8470f';
+const VOICE_API_KEY = 'sk_220b476f9d9ecd79eccb8c3e919924896c9a165fb1f275c7';
 const DEEPSEEK_CHAT_MODEL = 'deepseek-chat';
 const DEEPSEEK_REASONER_MODEL = 'deepseek-reasoner';
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
@@ -1895,14 +1930,14 @@ async function readSSEStream(res, provider) {
       } catch(e) {}
     }
 
-    if (stopRequested) break;
+    if (stopRequested) { await reader.cancel(); break; }
   }
 
   return { content, reasoning: reasoning || null, data: { choices: [{ message: { content, reasoning_content: reasoning } }] } };
 }
 
 const SYSTEM_PROMPT =
-  "You are'Feng AI — a warm, knowledgeable, and genuinely helpful assistant.'You communicate like a thoughtful human expert, not a machine.\n\n" +
+  "You are Feng AI — a warm, knowledgeable, and genuinely helpful assistant. You communicate like a thoughtful human expert, not a machine.\n\n" +
 
   "CORE PERSONALITY:\n" +
   "- Be conversational but professional — use natural language, contractions, and a warm tone\n" +
@@ -2069,15 +2104,7 @@ function startMic() {
     stopMic();
     // Auto-send if there's text
     const val = document.getElementById('user-input').value.trim();
-    if (val) {
-      sendMessage();
-      // Visual feedback for voice send
-      const btn = document.getElementById('send-btn');
-      if (btn) {
-        btn.style.transform = 'scale(1.2)';
-        setTimeout(() => btn.style.transform = '', 300);
-      }
-    }
+    if (val) sendMessage();
   };
   recognition.onerror = () => { stopMic(); };
   recognition.start();
@@ -2232,7 +2259,7 @@ function loadSession(id) {
   history.forEach(m => { if (m.role==='user') addUserBubble(m.content,false); else addAIBubble(m.content,'general',false,null,0); });
 }
 function clearHistory() {
-  sessions = []; localStorage.removeItem('kimi_s');
+  sessions = []; localStorage.removeItem('feng_s');
   newChat();
 }
 
@@ -2311,7 +2338,7 @@ function submitLogin() {
   renderLoginPage();
 }
 function logoutUser() {
-  currentUser = null; localStorage.removeItem('kimi_user');
+  currentUser = null; localStorage.removeItem('feng_user');
   loginMode = 'login'; renderLoginPage();
 }
 
@@ -2494,11 +2521,8 @@ function readDOCX(file, item) {
     try {
       const bytes = new Uint8Array(e.target.result);
       // Convert bytes to string and look for XML text content
-      let raw = '';
-      for (let i = 0; i < Math.min(bytes.length, 500000); i++) {
-        if (bytes[i] >= 32 && bytes[i] <= 126) raw += String.fromCharCode(bytes[i]);
-        else raw += ' ';
-      }
+      const decoder = new TextDecoder('ascii');
+      const raw = decoder.decode(bytes.slice(0, 500000)).replace(/[^\x20-\x7E]/g, ' ');
       // Extract text between <w:t> XML tags (Word text nodes)
       const matches = raw.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || [];
       let text = matches
@@ -2529,12 +2553,8 @@ function readPDF(file, item) {
   reader.onload = e => {
     try {
       const bytes = new Uint8Array(e.target.result);
-      let raw = '';
-      for (let i = 0; i < bytes.length; i++) {
-        const c = bytes[i];
-        if (c >= 32 && c <= 126) raw += String.fromCharCode(c);
-        else if (c === 10 || c === 13) raw += ' ';
-      }
+      const decoder = new TextDecoder('ascii');
+      const raw = decoder.decode(bytes.slice(0, 1000000)).replace(/[^\x20-\x7E\n\r]/g, ' ');
       const clean = raw
         .replace(/<<[^>]*>>/g, ' ')
         .replace(/\/(Type|Subtype|Font|Width|Height|Filter|Length|BBox|Matrix)[^\s]*/g, ' ')
@@ -2585,7 +2605,7 @@ function generateWordDoc(content, filename) {
   const blob = new Blob([rtf], { type: 'application/rtf' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = (filename || 'Kimi-Document') + '.rtf';
+  a.href = url; a.download = (filename || 'Feng-Document') + '.rtf';
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -2600,7 +2620,7 @@ function generatePDFDoc(content, filename) {
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
-  const html = '<!DOCTYPE html><html><head><title>' + (filename||'Kimi Document') + '</title>' +
+  const html = '<!DOCTYPE html><html><head><title>' + (filename||'Feng Document') + '</title>' +
     '<style>body{font-family:Georgia,serif;max-width:750px;margin:40px auto;font-size:14pt;line-height:1.7;color:#111;}' +
     'h1{font-size:22pt;margin-top:20px;}h2{font-size:17pt;margin-top:16px;}' +
     'p{margin:8px 0;}li{margin:4px 0;}@media print{body{margin:0;}}</style></head>' +
@@ -3076,7 +3096,7 @@ function finishStreaming(bubble, rawText, body, sugs, tag, el) {
   // Doc buttons
   const lastUserMsg = history.filter(m => m.role === 'user').slice(-1)[0]?.content || '';
   if (isDocRequest(lastUserMsg)) {
-    const fname = lastUserMsg.match(/\b(essay|report|letter|cv|resume|assignment|document)\b/i)?.[1] || 'Kimi-Document';
+    const fname = lastUserMsg.match(/\b(essay|report|letter|cv|resume|assignment|document)\b/i)?.[1] || 'Feng-Document';
     addDocButtons(body, stripSugs(rawText), fname);
   }
 
@@ -3109,10 +3129,7 @@ function finishStreaming(bubble, rawText, body, sugs, tag, el) {
     body.appendChild(wrap);
   }
 
-  if (autoRead) {
-    // Add a slight delay before speaking for more natural feel
-    setTimeout(() => speakText(stripSugs(rawText)), 500);
-  }
+  if (autoRead) speakText(stripSugs(rawText));
   if (el) el.removeAttribute('id');
   scrollDown();
 }
@@ -3188,7 +3205,7 @@ function copyAnswer(btn, text) {
 function shareAnswer(text) {
   const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').trim().slice(0, 500);
   if (navigator.share) {
-    navigator.share({ title: 'Kimi AI Answer', text: clean, url: window.location.href });
+    navigator.share({ title: 'Feng AI Answer', text: clean, url: window.location.href });
   } else {
     navigator.clipboard.writeText(clean).then(() => alert('Answer copied — paste it anywhere to share!'));
   }
@@ -3220,7 +3237,7 @@ function exportChat() {
   const blob = new Blob([text], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'Kimi-AI-Chat-' + Date.now() + '.txt';
+  a.download = 'Feng-AI-Chat-' + Date.now() + '.txt';
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -3354,7 +3371,7 @@ async function sendMessage() {
 
     if (isImageAttach) {
       // Vision model — send image + question as ONE fresh message, not full history
-      model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+      model = 'llama-3.2-11b-vision-preview';
       apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
         {
@@ -3401,7 +3418,7 @@ async function sendMessage() {
         const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 8000, messages: apiMessages })
+          body: JSON.stringify({ model: 'llama-3.2-11b-vision-preview', max_tokens: 8000, messages: apiMessages })
         });
         const d = await res.json();
         aiResult = { data: d, content: d.choices?.[0]?.message?.content || '', reasoning: null, source: 'groq' };
@@ -4045,7 +4062,7 @@ function statCard(icon, label, val) {
   '</div>';
 }
 function getStreak() {
-  const key = 'kimi_streak';
+  const key = 'feng_streak';
   try {
     const d = JSON.parse(localStorage.getItem(key)||'{}');
     const today = new Date().toDateString();
@@ -4128,212 +4145,145 @@ function getWebSearchNote() {
   return '\n\nWEB SEARCH MODE: The user has enabled web search. For current events, recent news, prices, scores, or time-sensitive questions, clearly note when your knowledge may be outdated and suggest the user verify online. For stable facts, answer normally.';
 }
 
-// ── VOICE MODE (ElevenLabs API + Browser TTS fallback) ──
+// ── VOICE SYSTEM (Kimi-style named voices) ──
 let voiceMode = false;
-let voiceSynth = window.speechSynthesis;
 let voiceActive = false;
-let currentAudio = null; // ElevenLabs audio element
-let selectedVoiceIdx = parseInt(localStorage.getItem('feng_voice_idx')||'0');
-let voiceSpeed = parseFloat(localStorage.getItem('feng_voice_speed')||'1');
 let autoRead = localStorage.getItem('feng_autoread') === 'true';
-let useElevenLabs = localStorage.getItem('feng_use_elevenlabs') !== 'false'; // default ON
 
-// ElevenLabs config
-const ELEVEN_API_KEY = 'sk_220b476f9d9ecd79eccb8c3e919924896c9a165fb1f275c7';
-const ELEVEN_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
-
-// ElevenLabs voices (id, name, description)
-const ELEVEN_VOICES = [
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', desc: 'Soft · American · Female' },
-  { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam',  desc: 'Neutral · American · Male' },
-  { id: 'XB0fDUnXU5powFXDhCwa', name: 'Charlotte', desc: 'Warm · British · Female' },
-  { id: 'bIHbv24MWmeRgasZH58o', name: 'Will',  desc: 'Friendly · American · Male' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily',  desc: 'Expressive · British · Female' },
-  { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', desc: 'Deep · American · Male' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', desc: 'Authoritative · British · Male' },
-  { id: 'SAz9YHcvj6GT2YYXdXww', name: 'River', desc: 'Calm · American · Neutral' }
+const FENG_VOICES = [
+  { id:'luna',   name:'Luna',   preview:'Hi this is Luna. How\'s your day? Wanna talk?',         pitch:1.3,  rate:1.0,  lang:'en-US', gender:'female' },
+  { id:'aria',   name:'Aria',   preview:'Hello! I\'m Aria, your Feng AI assistant. Ask me anything!', pitch:1.1,  rate:1.05, lang:'en-US', gender:'female' },
+  { id:'nova',   name:'Nova',   preview:'Hey there! Nova here. What can I help you explore today?', pitch:0.95, rate:0.95, lang:'en-US', gender:'female' },
+  { id:'kai',    name:'Kai',    preview:'Hey, how\'s everything going? Should we talk?',           pitch:1.1,  rate:1.05, lang:'en-US', gender:'male'   },
+  { id:'cole',   name:'Cole',   preview:'Hello! I\'m Cole. You can ask me everything you need.',   pitch:0.9,  rate:0.95, lang:'en-US', gender:'male'   },
+  { id:'rex',    name:'Rex',    preview:'Good to see you! What are we working on today?',          pitch:0.75, rate:0.9,  lang:'en-US', gender:'male'   },
+  { id:'jade',   name:'Jade',   preview:'Hi there! What a day! So what are we going to do next?', pitch:1.45, rate:1.15, lang:'en-US', gender:'female' },
 ];
-let selectedElevenVoiceIdx = parseInt(localStorage.getItem('feng_eleven_voice_idx')||'0');
+
+let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'luna';
+let voiceSpeed = parseFloat(localStorage.getItem('feng_voice_speed') || '1');
+let currentPreviewId = null;
 
 function getVoices() {
-  return voiceSynth ? voiceSynth.getVoices().filter(v => v.lang.startsWith('en')) : [];
+  return window.speechSynthesis ? window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en')) : [];
 }
 
-function cleanTextForSpeech(text) {
-  return text
-    .replace(/<[^>]+>/g, '')
-    .replace(/\*+/g, '')
-    .replace(/#+ /g, '')
-    .replace(/```[\s\S]*?```/g, 'code block')
-    .replace(/`[^`]+`/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-    .slice(0, 2500);
-}
+function getBestVoice(fengVoice) {
+  const sysVoices = getVoices();
+  if (!sysVoices.length) return null;
+  
+  const gender = fengVoice.gender;
+  const femaleKeywords = ['samantha','victoria','karen','moira','tessa','fiona','zira','female','woman','girl'];
+  const maleKeywords = ['daniel','david','thomas','alex','fred','jorge','male','man'];
+  
+  // Filter voices by gender
+  const candidates = sysVoices.filter(v => {
+    const name = v.name.toLowerCase();
+    return gender === 'female' ? femaleKeywords.some(k => name.includes(k)) : maleKeywords.some(k => name.includes(k));
+  });
 
-async function speakWithElevenLabs(text) {
-  if (!ELEVEN_API_KEY) return false;
-  try {
-    stopVoice();
-    const voice = ELEVEN_VOICES[selectedElevenVoiceIdx] || ELEVEN_VOICES[0];
-    const speedVal = Math.max(0.7, Math.min(1.2, voiceSpeed)); // ElevenLabs stability range
-    const res = await fetch(`${ELEVEN_API_URL}/${voice.id}`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': ELEVEN_API_KEY,
-        'Content-Type': 'application/json',
-        'Accept': 'audio/mpeg'
-      },
-      body: JSON.stringify({
-        text: text,
-        model_id: 'eleven_turbo_v2_5',
-        voice_settings: {
-          stability: 0.45,
-          similarity_boost: 0.78,
-          style: 0.35,
-          use_speaker_boost: true,
-          speed: speedVal
-        }
-      })
-    });
-    if (!res.ok) throw new Error('ElevenLabs API error: ' + res.status);
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    currentAudio = new Audio(url);
-    voiceActive = true;
-    currentAudio.onended = () => { voiceActive = false; URL.revokeObjectURL(url); currentAudio = null; };
-    currentAudio.onerror = () => { voiceActive = false; currentAudio = null; };
-    currentAudio.play();
-    return true;
-  } catch(e) {
-    console.warn('ElevenLabs TTS failed, falling back to browser TTS:', e.message);
-    return false;
-  }
-}
-
-async function speakText(text) {
-  const clean = cleanTextForSpeech(text);
-  if (!clean) return;
-
-  if (useElevenLabs) {
-    const ok = await speakWithElevenLabs(clean);
-    if (ok) return;
+  if (candidates.length > 0) {
+    // Try to pick a unique voice based on the fengVoice ID
+    // Use a simple hash of the ID to pick an index from the candidates
+    const hash = fengVoice.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return candidates[hash % candidates.length];
   }
 
-  // Browser TTS fallback
-  if (!voiceSynth) return;
-  voiceSynth.cancel();
+  return sysVoices[0];
+}
+
+function renderVoicePage() {
+  const listEl = document.getElementById('voice-list-official');
+  const speedEl = document.getElementById('voice-speed-row');
+  const autoEl = document.getElementById('autoread-toggle');
+  if (!listEl) return;
+
+  // Render voice list
+  listEl.innerHTML = FENG_VOICES.map(v => `
+    <div class="voice-item ${v.id === selectedVoiceName ? 'selected' : ''}" id="voice-item-${v.id}" onclick="selectFengVoice('${v.id}')">
+      <div class="voice-waveform">
+        <span style="height:8px"></span>
+        <span style="height:14px"></span>
+        <span style="height:6px"></span>
+        <span style="height:10px"></span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="voice-name">${v.name}</div>
+        <div class="voice-preview">| ${v.preview}</div>
+      </div>
+      <button class="voice-play-btn" onclick="event.stopPropagation();previewFengVoice('${v.id}')" title="Preview">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      ${v.id === selectedVoiceName ? '<div class="voice-check">✓</div>' : ''}
+    </div>
+  `).join('');
+
+  // Render speed buttons
+  if (speedEl) {
+    speedEl.innerHTML = ['0.75','1','1.25','1.5','1.75'].map(s =>
+      `<button onclick="selectVoiceSpeed(${s})" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid ${parseFloat(s)===voiceSpeed?'var(--accent)':'var(--border)'};background:var(--surface);color:${parseFloat(s)===voiceSpeed?'var(--accent)':'var(--muted)'};font-size:0.78rem;cursor:pointer;">${s}x</button>`
+    ).join('');
+  }
+
+  // Sync auto-read toggle
+  if (autoEl) autoEl.classList.toggle('on', autoRead);
+}
+
+function selectFengVoice(id) {
+  selectedVoiceName = id;
+  localStorage.setItem('feng_voice_name', id);
+  renderVoicePage();
+  // Preview the selected voice
+  previewFengVoice(id);
+}
+
+function previewFengVoice(id) {
+  const voice = FENG_VOICES.find(v => v.id === id);
+  if (!voice) return;
+
+  // Stop current preview
+  window.speechSynthesis?.cancel();
+  if (currentPreviewId) {
+    const prev = document.getElementById('voice-item-' + currentPreviewId);
+    if (prev) prev.classList.remove('playing');
+  }
+
+  const itemEl = document.getElementById('voice-item-' + id);
+  if (itemEl) itemEl.classList.add('playing');
+  currentPreviewId = id;
+
+  const utt = new SpeechSynthesisUtterance(voice.preview);
+  const sysVoice = getBestVoice(voice);
+  if (sysVoice) utt.voice = sysVoice;
+  utt.pitch = voice.pitch;
+  utt.rate = voice.rate * voiceSpeed;
+  utt.lang = voice.lang;
+  utt.onend = utt.onerror = () => {
+    if (itemEl) itemEl.classList.remove('playing');
+    currentPreviewId = null;
+  };
+  window.speechSynthesis?.speak(utt);
+}
+
+function speakText(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const voice = FENG_VOICES.find(v => v.id === selectedVoiceName) || FENG_VOICES[0];
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').replace(/```[\s\S]*?```/g,'[code block]').trim().slice(0, 2000);
   const utt = new SpeechSynthesisUtterance(clean);
-  const voices = getVoices();
-  if (voices[selectedVoiceIdx]) utt.voice = voices[selectedVoiceIdx];
-  utt.rate = voiceSpeed;
-  utt.pitch = 1.0;
-  utt.lang = 'en-US';
+  const sysVoice = getBestVoice(voice);
+  if (sysVoice) utt.voice = sysVoice;
+  utt.pitch = voice.pitch;
+  utt.rate = voice.rate * voiceSpeed;
+  utt.lang = voice.lang;
   voiceActive = true;
-  utt.onend = () => { voiceActive = false; };
-  utt.onerror = () => { voiceActive = false; };
-  voiceSynth.speak(utt);
+  utt.onend = utt.onerror = () => { voiceActive = false; };
+  window.speechSynthesis.speak(utt);
 }
 
 function stopVoice() {
-  // Stop ElevenLabs audio
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-  // Stop browser TTS
-  if (voiceSynth) voiceSynth.cancel();
+  window.speechSynthesis?.cancel();
   voiceActive = false;
-}
-
-// Add voice subpage to settings
-function renderVoicePage() {
-  const el = document.getElementById('voice-body');
-  if (!el) return;
-  const browserVoices = getVoices();
-
-  el.innerHTML =
-    // ElevenLabs toggle banner
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(192,132,252,0.08));border:1px solid rgba(79,142,247,0.25);border-radius:12px;margin-bottom:16px;">' +
-      '<div>' +
-        '<div style="font-size:0.9rem;font-weight:700;margin-bottom:2px;">⚡ ElevenLabs AI Voice</div>' +
-        '<div style="font-size:0.73rem;color:var(--muted);">High-quality natural speech synthesis</div>' +
-      '</div>' +
-      '<button class="toggle '+(useElevenLabs?'on':'')+'" id="elevenlabs-toggle" onclick="toggleElevenLabs()"></button>' +
-    '</div>' +
-
-    // ElevenLabs voice list
-    '<div id="eleven-voice-section" style="'+(useElevenLabs?'':'display:none')+'">' +
-      '<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">AI VOICES</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">' +
-        ELEVEN_VOICES.map((v,i) =>
-          '<div onclick="selectElevenVoice('+i+')" style="padding:11px 12px;border-radius:10px;border:1.5px solid '+(i===selectedElevenVoiceIdx?'var(--accent)':'var(--border)')+';cursor:pointer;background:var(--surface);transition:border-color 0.15s;">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">' +
-              '<span style="font-size:0.86rem;font-weight:700;color:'+(i===selectedElevenVoiceIdx?'var(--accent)':'var(--text)')+'">'+v.name+'</span>' +
-              (i===selectedElevenVoiceIdx?'<span style="color:var(--accent);font-size:0.75rem;">✓</span>':'') +
-            '</div>' +
-            '<div style="font-size:0.7rem;color:var(--muted);">'+v.desc+'</div>' +
-          '</div>'
-        ).join('') +
-      '</div>' +
-    '</div>' +
-
-    // Browser TTS fallback section (shown when ElevenLabs off)
-    '<div id="browser-voice-section" style="'+(useElevenLabs?'display:none':'')+'">' +
-      '<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">BROWSER VOICES</div>' +
-      browserVoices.slice(0,8).map((v,i) =>
-        '<div onclick="selectVoice('+i+')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid '+(i===selectedVoiceIdx?'var(--accent)':'var(--border)')+';margin-bottom:8px;cursor:pointer;background:var(--surface);">' +
-          '<span style="font-size:1.1rem;">🔊</span>' +
-          '<div style="flex:1;"><div style="font-size:0.87rem;font-weight:600;">'+(v.name.split(' ').slice(0,3).join(' '))+'</div><div style="font-size:0.72rem;color:var(--muted);">'+v.lang+'</div></div>' +
-          (i===selectedVoiceIdx?'<span style="color:var(--accent);font-size:0.8rem;">✓</span>':'') +
-        '</div>'
-      ).join('') +
-      (browserVoices.length===0?'<div style="color:var(--muted);font-size:0.83rem;padding:10px;">No voices available on this browser.</div>':'') +
-    '</div>' +
-
-    // Speed
-    '<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">SPEED</div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
-      ['0.75','1','1.25','1.5','1.75'].map(s =>
-        '<button onclick="selectVoiceSpeed('+s+')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid '+(parseFloat(s)===voiceSpeed?'var(--accent)':'var(--border)')+';background:var(--surface);color:'+(parseFloat(s)===voiceSpeed?'var(--accent)':'var(--muted)')+';font-size:0.78rem;cursor:pointer;transition:all 0.15s;">'+s+'x</button>'
-      ).join('') +
-    '</div>' +
-
-    // Auto-read toggle
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;">' +
-      '<div><div style="font-size:0.87rem;font-weight:600;">Auto-read responses</div><div style="font-size:0.75rem;color:var(--muted);">Speak every AI answer automatically</div></div>' +
-      '<button class="toggle '+(autoRead?'on':'')+'" id="autoread-toggle" onclick="toggleAutoRead()"></button>' +
-    '</div>' +
-
-    // Test button
-    '<button onclick="speakText(\'Hello! I am Feng AI, your personal assistant. How can I help you today?\')" style="width:100%;padding:12px;border-radius:var(--r);border:1px solid var(--accent);background:rgba(79,142,247,0.08);color:var(--accent);font-size:0.85rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-weight:600;transition:all 0.15s;">🔊 Test Voice</button>';
-}
-
-function toggleElevenLabs() {
-  useElevenLabs = !useElevenLabs;
-  localStorage.setItem('feng_use_elevenlabs', useElevenLabs);
-  const tog = document.getElementById('elevenlabs-toggle');
-  if (tog) tog.classList.toggle('on', useElevenLabs);
-  const elSection = document.getElementById('eleven-voice-section');
-  const brSection = document.getElementById('browser-voice-section');
-  if (elSection) elSection.style.display = useElevenLabs ? '' : 'none';
-  if (brSection) brSection.style.display = useElevenLabs ? 'none' : '';
-  showToast(useElevenLabs ? '⚡ ElevenLabs AI voice ON' : '🔊 Browser TTS fallback ON');
-}
-
-function selectElevenVoice(i) {
-  selectedElevenVoiceIdx = i;
-  localStorage.setItem('feng_eleven_voice_idx', i);
-  renderVoicePage();
-  speakText('Hi, I\'m ' + ELEVEN_VOICES[i].name + '. How can I help you today?');
-}
-
-function selectVoice(i) {
-  selectedVoiceIdx = i;
-  localStorage.setItem('feng_voice_idx', i);
-  renderVoicePage();
-  speakText('Hello, I am Feng AI.');
 }
 
 function selectVoiceSpeed(s) {
@@ -4345,7 +4295,14 @@ function selectVoiceSpeed(s) {
 function toggleAutoRead() {
   autoRead = !autoRead;
   localStorage.setItem('feng_autoread', autoRead);
-  renderVoicePage();
+  const t = document.getElementById('autoread-toggle');
+  if (t) t.classList.toggle('on', autoRead);
+  showToast(autoRead ? '🔊 Auto-read ON' : '🔇 Auto-read OFF');
+}
+
+// Load voices when available
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => renderVoicePage();
 }
 
 // ── MODE PANEL (Claude-style) ──
@@ -4776,7 +4733,7 @@ function saveCitation(text) {
 function renderBibliography() {
   const el = document.getElementById('bibliography-body');
   if (!el) return;
-  if (!bibliography.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;">No citations saved yet.<br>Ask Kimi to generate citations and save them here.</div>'; return; }
+  if (!bibliography.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:0.85rem;">No citations saved yet.<br>Ask Feng to generate citations and save them here.</div>'; return; }
   el.innerHTML = bibliography.map((c,i) =>
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;">' +
       '<div style="font-size:0.8rem;color:var(--text);line-height:1.6;margin-bottom:8px;">'+esc(c.text)+'</div>' +
@@ -4872,7 +4829,7 @@ function renderStats() {
       '<div style="font-weight:700;font-size:0.85rem;margin-bottom:12px;">📋 Details</div>' +
       '<div style="font-size:0.82rem;color:var(--muted);line-height:2.2;">' +
         (mem.name?'👤 Name: <strong style="color:var(--text);">'+esc(mem.name)+'</strong><br>':'') +
-        '📅 Using Kimi AI since: <strong style="color:var(--text);">'+firstChat+'</strong><br>' +
+        '📅 Using Feng AI since: <strong style="color:var(--text);">'+firstChat+'</strong><br>' +
         '📚 Upcoming exams: <strong style="color:var(--text);">'+totalExams+'</strong><br>' +
         '🗂️ Saved citations: <strong style="color:var(--text);">'+bibliography.length+'</strong>' +
       '</div>' +
@@ -5244,7 +5201,7 @@ function setQuoteTheme(i) {
 function shareQuoteCard() {
   const text = document.getElementById('quote-text')?.textContent || '';
   if (navigator.share) {
-    navigator.share({ title:'Feng AI', text: text + '\n\' — Feng AI'});
+    navigator.share({ title:'Feng AI', text: text + '\n\n— Feng AI' });
   } else {
     navigator.clipboard.writeText(text + '\n\n— Feng AI');
     showToast('Quote copied to clipboard! 📋');
@@ -5815,12 +5772,7 @@ function startVoiceConversation() {
   selectMode('standard');
   startMic();
   if (btn) { btn.style.color='var(--danger)'; btn.style.borderColor='var(--danger)'; }
-    showToast('🎤 Voice mode — speak your question');
-    // Enhanced Audio Feedback
-    if (voiceSynth) {
-      speakText("I'm listening. How can I help you?");
-      return; // speakText handles voice now
-    }
+  showToast('🎤 Voice mode — speak your question');
 }
 
 // ── INPUT RESIZE ──
@@ -5848,7 +5800,10 @@ if (webSearchEnabled) { const wb=document.getElementById('web-search-btn'); if(w
 const initModeLabels = { standard:'Standard ⚡', deep:'Deep Think 🧠', research:'Research 🌐', reading:'Reading 📖' };
 const modeLbl = document.getElementById('nav-mode-label');
 if (modeLbl) modeLbl.textContent = initModeLabels[currentMode] || 'Standard ⚡';
-}
+// Apply saved mode
+if (currentMode !== 'standard') selectMode(currentMode);
+if (currentUser) { const sb = document.querySelector('.sb-name'); if (sb) sb.textContent = currentUser.name; }
+renderSmartSuggestions();
 </script>
 </body>
 </html>

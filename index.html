@@ -4318,15 +4318,24 @@ function selectVoiceSpeed(s) {
 }
 
 function toggleAutoRead() {
-  autoRead = !autoRead;
-  localStorage.setItem('feng_autoread', autoRead);
-  const t = document.getElementById('autoread-toggle');
-  if (t) t.classList.toggle('on', autoRead);
-  showToast(autoRead ? '🔊 Auto-read ON' : '🔇 Auto-read OFF');
+  // Sync with the global nav button
+  toggleNavTTS();
+}
+
+// Sync UI states on load
+function syncAudioUI() {
+  const btn = document.getElementById('nav-tts-btn');
+  if (btn) {
+    btn.style.color = autoRead ? 'var(--accent)' : '';
+    btn.style.borderColor = autoRead ? 'var(--accent)' : '';
+  }
+  const autoEl = document.getElementById('autoread-toggle');
+  if (autoEl) autoEl.classList.toggle('on', autoRead);
 }
 
 // Voice page is rendered manually when opened
 renderVoicePage();
+setTimeout(syncAudioUI, 100);
 
 // ── MODE PANEL (Claude-style) ──
 let deepThinkMode = false;
@@ -5763,18 +5772,30 @@ function checkSpecialRequests(text) {
 // ── NAV TTS TOGGLE ──
 let navTTSActive = false;
 function toggleNavTTS() {
-  navTTSActive = !navTTSActive;
+  autoRead = !autoRead;
+  localStorage.setItem('feng_autoread', autoRead ? 'true' : 'false');
+  
   const btn = document.getElementById('nav-tts-btn');
-  if (navTTSActive) {
-    autoRead = true;
-    localStorage.setItem('feng_autoread','true');
-    if (btn) btn.style.color = 'var(--accent)';
+  const autoEl = document.getElementById('autoread-toggle');
+  
+  if (autoRead) {
+    if (btn) {
+      btn.style.color = 'var(--accent)';
+      btn.style.borderColor = 'var(--accent)';
+    }
+    if (autoEl) autoEl.classList.add('on');
     showToast('🔊 Read aloud ON — AI will speak every response');
+    
+    // If there's already a message, read the last AI response
+    const lastAI = history.filter(m => m.role === 'assistant').slice(-1)[0];
+    if (lastAI) speakText(lastAI.content);
   } else {
-    autoRead = false;
-    localStorage.setItem('feng_autoread','false');
     stopVoice();
-    if (btn) btn.style.color = '';
+    if (btn) {
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }
+    if (autoEl) autoEl.classList.remove('on');
     showToast('🔇 Read aloud OFF');
   }
 }

@@ -1825,49 +1825,20 @@ body.light .source-item:hover{background:#f8fafc;}
 const GROQ_KEY = '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';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const DEEPSEEK_KEY = 'sk-8fb1965c422e424dbccb3204b6d8470f';
-const VOICE_API_KEY = 'sk_220b476f9d9ecd79eccb8c3e919924896c9a165fb1f275c7';
+const ELEVENLABS_KEY = 'sk_3fb6f0acb770bd706af4ea4240ca7f12b79fb9ac0a23512e';
 const DEEPSEEK_CHAT_MODEL = 'deepseek-chat';
 const DEEPSEEK_REASONER_MODEL = 'deepseek-reasoner';
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
-// Primary AI call — uses reasoner when deep think is on, chat otherwise
+// Primary AI call -- uses reasoner when deep think is on, chat otherwise
 // Returns { content, reasoning, source, webPages }
 async function callAI(messages, model) {
   const useReasoner = deepThinkMode;
+  const dsModel = useReasoner ? DEEPSEEK_REASONER_MODEL : DEEPSEEK_CHAT_MODEL;
   currentAbortController = new AbortController();
   const signal = currentAbortController.signal;
 
-  // Prioritize Groq for speed and enhanced thinking as requested
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'Authorization': 'Bearer ' + GROQ_KEY.trim() 
-      },
-      body: JSON.stringify({ 
-        model: model || GROQ_MODEL, 
-        max_tokens: 8000, // Reset to standard for stability, but prompt still demands depth
-        messages, 
-        stream: true,
-        temperature: 0.7 
-      }),
-      signal
-    });
-    if (res.ok) {
-      const result = await readSSEStream(res, 'groq');
-      if (result.content) return { ...result, source: 'groq', model: model || GROQ_MODEL };
-    } else {
-      const err = await res.json().catch(() => ({}));
-      console.error('Groq API Error:', res.status, err);
-    }
-  } catch(e) {
-    if (e.name === 'AbortError') throw e;
-    console.error('Groq connection/fetch error:', e);
-  }
-
-  // Fallback to DeepSeek if Groq fails
-  const dsModel = useReasoner ? DEEPSEEK_REASONER_MODEL : DEEPSEEK_CHAT_MODEL;
+  // Try DeepSeek with real SSE streaming
   try {
     const res = await fetch(DEEPSEEK_URL, {
       method: 'POST',
@@ -1884,10 +1855,27 @@ async function callAI(messages, model) {
     if (e.name === 'AbortError') throw e;
   }
 
+  // Fallback to Groq with streaming
+  try {
+    currentAbortController = new AbortController();
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      body: JSON.stringify({ model: model || GROQ_MODEL, max_tokens: 8000, messages, stream: true }),
+      signal: currentAbortController.signal
+    });
+    if (res.ok) {
+      const result = await readSSEStream(res, 'groq');
+      if (result.content) return { ...result, source: 'groq', model: model || GROQ_MODEL };
+    }
+  } catch(e) {
+    if (e.name === 'AbortError') throw e;
+  }
+
   throw new Error('All AI services unavailable. Please check your connection.');
 }
 
-// Real SSE streaming reader — text flows live word by word
+// Real SSE streaming reader -- text flows live word by word
 async function readSSEStream(res, provider) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -1895,7 +1883,7 @@ async function readSSEStream(res, provider) {
   let reasoning = '';
   let buffer = '';
 
-  // Show live streaming in the bubble — uses a single marked element
+  // Show live streaming in the bubble -- uses a single marked element
   const showLive = (chunk) => {
     const el = document.getElementById('live-msg');
     if (!el) return;
@@ -1910,7 +1898,7 @@ async function readSSEStream(res, provider) {
       .replace(/#{1,3} /g, '')
       .replace(/\*\*/g, '')
       .replace(/\*/g, '')
-      .replace(/^[-*] /gm, '• ');
+      .replace(/^[-*] /gm, '* ');
     scrollDown();
   };
 
@@ -1942,60 +1930,70 @@ async function readSSEStream(res, provider) {
       } catch(e) {}
     }
 
-    if (stopRequested) { await reader.cancel(); break; }
+    if (stopRequested) break;
   }
 
   return { content, reasoning: reasoning || null, data: { choices: [{ message: { content, reasoning_content: reasoning } }] } };
 }
 
 const SYSTEM_PROMPT =
-  "You are Feng AI — an exceptionally intelligent, deep-thinking, and thorough assistant with world-class expertise. Your goal is to provide extraordinarily comprehensive, accurate, and profoundly insightful answers that go far beyond simple facts.\n\n" +
-
-  "RESPONSE LENGTH & DEPTH REQUIREMENTS:\n" +
-  "- MINIMUM LENGTH: Every response must be substantial and thorough. Aim for 500-1500+ words depending on topic complexity.\n" +
-  "- EXTENDED THINKING: Before answering, mentally explore multiple angles, implications, historical context, and nuances.\n" +
-  "- MULTI-LAYERED ANALYSIS: Provide foundational understanding, intermediate concepts, advanced insights, and practical applications.\n" +
-  "- COMPREHENSIVE COVERAGE: Address not just 'what' and 'how', but 'why', 'when', 'where', 'who benefits', and 'what are the implications'.\n" +
-  "- AVOID BREVITY: Short answers are unacceptable. Expand, elaborate, and explore every dimension of the topic.\n\n" +
-
-  "ENHANCED THINKING & DEPTH:\n" +
-  "- Expand your thinking relentlessly: Don't just give the surface-level answer. Explore the 'why', the 'how', the implications, the history, and the future.\n" +
-  "- Accuracy is paramount: Provide precise, well-researched information with nuance. If a topic is complex, break it down without losing its depth or sophistication.\n" +
-  "- Rich Paragraphs: Write in eloquent, descriptive paragraphs with full sentences. Each paragraph should build on the last, creating a cohesive narrative.\n" +
-  "- Intellectual Rigor: Demonstrate deep knowledge. Reference concepts, theories, and frameworks when relevant. Show your thinking process.\n\n" +
-
-  "FORMATTING — PROFESSIONAL & STRUCTURED:\n" +
-  "- **Bold Titles on Top**: Every major section MUST start with a clear, descriptive title in **bold**. Use ## for hierarchy.\n" +
-  "- Strategic Bolding: Use **bold** within paragraphs to highlight critical concepts, terms, distinctions, and key takeaways.\n" +
-  "- Paragraph Excellence: Each paragraph should have 4-6 sentences minimum, exploring one central idea thoroughly.\n" +
-  "- Use lists or tables ONLY for genuine data clarity or step-by-step procedures. Prioritize prose for explanation and analysis.\n" +
-  "- Create Natural Flow: Ensure logical transitions between sections. Build complexity gradually from foundational to advanced.\n\n" +
+  "You are Feng AI -- a warm, knowledgeable, and genuinely helpful assistant. You communicate like a thoughtful human expert, not a machine.\n\n" +
 
   "CORE PERSONALITY:\n" +
-  "- Be authoritative yet accessible — like a world-class professor, research scientist, or expert consultant.\n" +
-  "- Demonstrate genuine intellectual curiosity and engagement with the topic.\n" +
-  "- Show confidence in your knowledge while remaining open to nuance and complexity.\n" +
-  "- Detect the user's language automatically and respond in kind, maintaining the same formality level.\n\n" +
+  "- Be conversational but professional -- use natural language, contractions, and a warm tone\n" +
+  "- Show genuine curiosity about the user's questions\n" +
+  "- Be honest about limitations -- never make up facts\n" +
+  "- Use humor lightly when appropriate, but never forced\n" +
+  "- Celebrate the user's progress and encourage their curiosity\n\n" +
+
+  "LANGUAGE: Detect the user's language automatically and respond in the same language. Match their formality level.\n\n" +
+
+  "MEMORY: Use [MEMORY: ...] naturally to personalize responses. Reference past conversations when relevant.\n\n" +
+
+  "CONTEXT: Only mention time, location, or weather if the user explicitly asks. Never volunteer unsolicited context.\n\n" +
+
+  "LIVE DATA: When [LIVE DATA FROM MULTIPLE SOURCES: ...] is provided, integrate it seamlessly. Cite sources naturally with 1 2 3. Add a compact **Sources** section at the end.\n\n" +
+
+  "FORMATTING -- NATURAL & READABLE:\n" +
+  "- Use ## for clear section headings\n" +
+  "- Use **bold** for emphasis on key terms -- only in bullet points and key phrases, not everywhere\n" +
+  "- Bullet format: **Key point**: brief explanation (keep it scannable)\n" +
+  "- One blank line between bullet points for readability\n" +
+  "- Use tables ONLY for genuine comparisons (2+ items side-by-side)\n" +
+  "- Keep paragraphs short (2-4 sentences max) -- white space is your friend\n" +
+  "- For steps: numbered list with clear, actionable language\n" +
+  "- For code: clean, commented blocks with language label\n\n" +
 
   "RESPONSE PATTERNS:\n" +
-  "- 'Explain...' → Provide a comprehensive, multi-layered explanation spanning foundational concepts to advanced nuances. Use examples and analogies.\n" +
-  "- 'Compare...' → Offer an exhaustive analysis of similarities, differences, trade-offs, and contextual factors for each option.\n" +
-  "- 'How do I...' → Provide detailed step-by-step guidance with context, reasoning, common pitfalls, and advanced tips.\n" +
-  "- Direct questions → Answer clearly and immediately, then provide extensive context, implications, and related insights.\n\n" +
+  "- Direct questions -> Give the answer FIRST, then explain if needed\n" +
+  "- 'How do I...' -> Step-by-step, encouraging, with tips for common pitfalls\n" +
+  "- 'Explain...' -> Start with a simple analogy, then deepen\n" +
+  "- 'Compare...' -> Table first, then nuanced bullet points\n" +
+  "- 'Write...' (essay/code) -> Ask clarifying questions if unclear, otherwise dive in\n" +
+  "- Emotional/personal -> Be empathetic, validate their feelings, then help\n\n" +
 
   "WHAT TO AVOID:\n" +
-  "- NEVER give short, one-sentence answers to complex questions. This is unacceptable.\n" +
-  "- NEVER use generic filler like 'Certainly!', 'Sure!', 'I hope this helps', or 'As an AI'.\n" +
-  "- NEVER avoid the complexity of a topic — embrace it fully and explain it with clarity and sophistication.\n" +
-  "- NEVER write fragmented, bullet-point-heavy responses. Use full paragraphs and complete thoughts.\n\n" +
+  "- NEVER start with 'Great question!', 'Certainly!', 'Sure!', 'Absolutely!' -- just answer\n" +
+  "- NEVER say 'As an AI...' or mention being an AI unless directly relevant\n" +
+  "- NEVER use 'In conclusion...' or summarize unless explicitly asked\n" +
+  "- NEVER say 'I hope this helps' -- end with a forward-looking invitation instead\n" +
+  "- NEVER write walls of text -- break into digestible chunks\n" +
+  "- NEVER be preachy or overly formal\n\n" +
 
-  "EXCELLENCE STANDARDS:\n" +
-  "- Your responses should read like articles from leading publications or chapters from authoritative books.\n" +
-  "- Demonstrate expertise through depth, nuance, and thoughtful analysis.\n" +
-  "- Make every word count. Avoid filler while maintaining engaging prose.\n\n" +
+  "GREAT ENDINGS (choose naturally):\n" +
+  "- 'What aspect would you like to explore further?'\n" +
+  "- 'Does this approach work for your situation?'\n" +
+  "- 'Want me to dive deeper into any part?'\n" +
+  "- Or simply end confidently if the answer is complete\n\n" +
 
-  "Always end with relevant follow-ups that invite further intellectual exploration:\n" +
-  "<suggestions>[\"What deeper aspect would you like to explore?\", \"How does this apply to your specific situation?\", \"What related advanced topic interests you?\"]</suggestions>";
+  "CODING RESPONSES:\n" +
+  "- Provide complete, runnable code\n" +
+  "- Explain the 'why' behind non-obvious choices\n" +
+  "- Include brief comments for clarity\n" +
+  "- Mention edge cases or improvements if relevant\n\n" +
+
+  "Always end with relevant follow-ups:\n" +
+  "<suggestions>[\"Natural follow-up 1?\", \"Natural follow-up 2?\", \"Natural follow-up 3?\"]</suggestions>";
 
 let busy = false;
 let heroOn = true;
@@ -2005,7 +2003,7 @@ let curSession = null;
 let attachOpen = false;
 
 // ── VERSION ──
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 function initVersion() {
   const el = document.getElementById('app-version');
   if (el) el.textContent = 'v' + APP_VERSION;
@@ -2093,7 +2091,7 @@ function startMic() {
   recognition.onstart = () => {
     isListening = true;
     document.getElementById('mic-btn').classList.add('listening');
-    document.getElementById('user-input').placeholder = '🎤 Listening…';
+    document.getElementById('user-input').placeholder = '🎤 Listening...';
   };
   recognition.onresult = e => {
     let transcript = '';
@@ -2114,7 +2112,7 @@ function startMic() {
 function stopMic() {
   isListening = false;
   document.getElementById('mic-btn').classList.remove('listening');
-  document.getElementById('user-input').placeholder = 'Type a message…';
+  document.getElementById('user-input').placeholder = 'Type a message...';
   if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
 }
 
@@ -2146,18 +2144,25 @@ function toggleTTS(pid, text) {
   playTTS(pid, text);
 }
 
-async function playTTS(pid, text) {
+function playTTS(pid, text) {
+  if (!('speechSynthesis' in window)) { alert('Text-to-speech not supported on this browser.'); return; }
   stopTTS(pid);
-  const voice = FENG_VOICES.find(v => v.id === selectedVoiceName) || FENG_VOICES[0];
+  ttsUtterance = new SpeechSynthesisUtterance(text);
+  ttsUtterance.rate = 0.95;
+  ttsUtterance.pitch = 1.0;
+  ttsUtterance.lang = 'en-US';
+
   const btn = document.getElementById('tts-btn-' + pid);
   const prog = document.getElementById('tts-prog-' + pid);
 
+  // Swap to pause icon
   if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
   ttsActive = true;
 
+  // Animate progress bar
   let progress = 0;
   const words = text.split(' ').length;
-  const estMs = words * 350;
+  const estMs = words * 350; // ~350ms per word
   const startTime = Date.now();
   const progIv = setInterval(() => {
     const pct = Math.min(((Date.now() - startTime) / estMs) * 100, 98);
@@ -2165,24 +2170,22 @@ async function playTTS(pid, text) {
     if (!ttsActive) clearInterval(progIv);
   }, 100);
 
-  await playElevenLabsTTS(text, voice.id, () => {
+  ttsUtterance.onend = () => {
     ttsActive = false;
     clearInterval(progIv);
     if (prog) prog.style.width = '100%';
     if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
     setTimeout(() => { if (prog) prog.style.width = '0%'; }, 800);
-  }, () => {
-    ttsActive = false;
-    clearInterval(progIv);
-  });
+  };
+  ttsUtterance.onerror = () => { ttsActive = false; clearInterval(progIv); };
+
+  window.speechSynthesis.speak(ttsUtterance);
 }
 
 function stopTTS(pid) {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
+  window.speechSynthesis?.cancel();
   ttsActive = false;
+  ttsUtterance = null;
   const btn = document.getElementById('tts-btn-' + pid);
   if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
 }
@@ -2349,7 +2352,7 @@ function renderLangList(filter) {
   list.innerHTML = filtered.map(l =>
     '<div class="lang-item' + (l===selectedLang?' selected':'') + '" onclick="selectLang(\'' + l + '\')">' +
       '<span>' + l + '</span>' +
-      (l===selectedLang ? '<span class="lang-check">✓</span>' : '') +
+      (l===selectedLang ? '<span class="lang-check">v</span>' : '') +
     '</div>'
   ).join('');
 }
@@ -2442,7 +2445,7 @@ function showPreview(file, type) {
       attachedPreviewUrl = e.target.result;
       item.innerHTML =
         '<img src="' + e.target.result + '" alt="' + file.name + '"/>' +
-        '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading…</span></div>' +
+        '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading...</span></div>' +
         '<button class="preview-remove" onclick="clearAttach()">✕</button>';
       strip.innerHTML = '';
       strip.appendChild(item);
@@ -2457,7 +2460,7 @@ function showPreview(file, type) {
         '<div class="prev-file-icon">' + icon + '</div>' +
         '<div class="prev-file-name">' + file.name + '</div>' +
       '</div>' +
-      '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading…</span></div>' +
+      '<div class="preview-processing" id="prev-status"><div class="prev-spinner"></div><span>Reading...</span></div>' +
       '<button class="preview-remove" onclick="clearAttach()">✕</button>';
     strip.appendChild(item);
 
@@ -2485,7 +2488,7 @@ function clearAttach() {
 function markPreviewDone(item, msg) {
   const status = item.querySelector('.preview-processing') || document.getElementById('prev-status');
   if (status) {
-    status.innerHTML = '<span style="font-size:0.65rem;">✓ ' + msg + '</span>';
+    status.innerHTML = '<span style="font-size:0.65rem;">v ' + msg + '</span>';
     setTimeout(() => { if(status) status.style.display='none'; }, 1800);
   }
 }
@@ -2495,7 +2498,7 @@ function markPreviewError(item, msg) {
 }
 
 function runOCR(dataUrl, filename, item) {
-  // Store base64 image — AI will analyze it visually via the prompt
+  // Store base64 image -- AI will analyze it visually via the prompt
   attachedFileContent = dataUrl;
   attachedFileName = filename;
   markPreviewDone(item, 'Ready to analyze');
@@ -2512,14 +2515,17 @@ function readTextFile(file, item) {
 }
 
 function readDOCX(file, item) {
-  // DOCX files are ZIP archives containing XML — extract text from the XML directly
+  // DOCX files are ZIP archives containing XML -- extract text from the XML directly
   const reader = new FileReader();
   reader.onload = e => {
     try {
       const bytes = new Uint8Array(e.target.result);
       // Convert bytes to string and look for XML text content
-      const decoder = new TextDecoder('ascii');
-      const raw = decoder.decode(bytes.slice(0, 500000)).replace(/[^\x20-\x7E]/g, ' ');
+      let raw = '';
+      for (let i = 0; i < Math.min(bytes.length, 500000); i++) {
+        if (bytes[i] >= 32 && bytes[i] <= 126) raw += String.fromCharCode(bytes[i]);
+        else raw += ' ';
+      }
       // Extract text between <w:t> XML tags (Word text nodes)
       const matches = raw.match(/<w:t[^>]*>([^<]+)<\/w:t>/g) || [];
       let text = matches
@@ -2533,8 +2539,8 @@ function readDOCX(file, item) {
         attachedFileContent = '[DOCX: ' + file.name + ']\n' + text.slice(0, 6000);
         markPreviewDone(item, 'Document read!');
       } else {
-        // Fallback — send filename and ask AI to note it
-        attachedFileContent = '[DOCX attached: ' + file.name + ' — content could not be extracted. Please describe what you need help with regarding this document.]';
+        // Fallback -- send filename and ask AI to note it
+        attachedFileContent = '[DOCX attached: ' + file.name + ' -- content could not be extracted. Please describe what you need help with regarding this document.]';
         markPreviewDone(item, 'File attached');
       }
     } catch(err) {
@@ -2550,8 +2556,12 @@ function readPDF(file, item) {
   reader.onload = e => {
     try {
       const bytes = new Uint8Array(e.target.result);
-      const decoder = new TextDecoder('ascii');
-      const raw = decoder.decode(bytes.slice(0, 1000000)).replace(/[^\x20-\x7E\n\r]/g, ' ');
+      let raw = '';
+      for (let i = 0; i < bytes.length; i++) {
+        const c = bytes[i];
+        if (c >= 32 && c <= 126) raw += String.fromCharCode(c);
+        else if (c === 10 || c === 13) raw += ' ';
+      }
       const clean = raw
         .replace(/<<[^>]*>>/g, ' ')
         .replace(/\/(Type|Subtype|Font|Width|Height|Filter|Length|BBox|Matrix)[^\s]*/g, ' ')
@@ -2562,7 +2572,7 @@ function readPDF(file, item) {
         attachedFileContent = '[PDF: ' + file.name + ']\n' + clean.slice(0, 6000);
         markPreviewDone(item, 'PDF read!');
       } else {
-        attachedFileContent = '[PDF: ' + file.name + ' — scanned image PDF, no text]';
+        attachedFileContent = '[PDF: ' + file.name + ' -- scanned image PDF, no text]';
         markPreviewDone(item, 'PDF attached');
       }
     } catch(err) { markPreviewError(item, 'Read failed'); }
@@ -2652,7 +2662,7 @@ function newChat() {
   history = []; curSession = null;
   document.getElementById('msg-list').innerHTML = '';
   showHero();
-  document.getElementById('user-input').placeholder = 'Type a message…';
+  document.getElementById('user-input').placeholder = 'Type a message...';
 }
 
 // ── UTILS ──
@@ -2698,7 +2708,7 @@ document.getElementById('chat-wrap')?.addEventListener('scroll', () => {
 function md(text) {
   text = stripSugs(text);
 
-  // 1. Protect code blocks first — replace with placeholders
+  // 1. Protect code blocks first -- replace with placeholders
   const codeBlocks = [];
   text = text.replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
     const trimmed = code.trim();
@@ -2749,7 +2759,7 @@ function md(text) {
       return codeBlocks[idx];
     }
 
-    // Heading — split heading text from any inline paragraph that follows
+    // Heading -- split heading text from any inline paragraph that follows
     if (/^### (.+)/.test(block)) {
       const rest = block.replace(/^### /,'');
       const dot = rest.indexOf('. ');
@@ -2896,7 +2906,7 @@ function addAIBubble(text, tag, scroll=true, thinkText=null, thinkSecs=0) {
   }
   let sugsHtml = '';
   if (sugs.length) {
-    sugsHtml = '<div class="sugs">' + sugs.map(s=>'<button class="sug">→ '+esc(s)+'</button>').join('') + '</div>';
+    sugsHtml = '<div class="sugs">' + sugs.map(s=>'<button class="sug">-> '+esc(s)+'</button>').join('') + '</div>';
   }
 
   el.innerHTML =
@@ -2941,7 +2951,7 @@ function startThinking(userText, tag) {
       '<div class="msg-tag '+cls+'">'+lbl+(isDeep?' · 🧠 Deep Think':'')+'</div>' +
       '<div class="think-block">' +
         '<div class="think-header open" id="live-th-toggle">' +
-          '<span id="live-timer">'+(isDeep?'🧠 Deep thinking…':'Thinking…')+'</span>' +
+          '<span id="live-timer">'+(isDeep?'🧠 Deep thinking...':'Thinking...')+'</span>' +
           '<span class="think-chevron">▼</span>' +
         '</div>' +
         '<div class="think-body open streaming" id="live-th-body"></div>' +
@@ -2958,7 +2968,7 @@ function startThinking(userText, tag) {
 
   const timerIv = setInterval(() => {
     elapsed++;
-    if (timerEl) timerEl.textContent = (isDeep ? '🧠 Deep thinking' : 'Thinking') + ' for ' + elapsed + 's…';
+    if (timerEl) timerEl.textContent = (isDeep ? '🧠 Deep thinking' : 'Thinking') + ' for ' + elapsed + 's...';
   }, 1000);
 
   thinkIv = setInterval(() => {
@@ -3010,7 +3020,7 @@ function generateThinkingText(query, tag) {
   };
 
   const thoughts = approaches[tag] || approaches.general;
-  return intro + '\n\n' + thoughts.map(t => '• ' + t).join('\n') + '\n\nFormulating the best response...';
+  return intro + '\n\n' + thoughts.map(t => '* ' + t).join('\n') + '\n\nFormulating the best response...';
 }
 
 function finalizeThinking(handle, secs) {
@@ -3023,7 +3033,7 @@ function finalizeThinking(handle, secs) {
 
   const reasoning = window._pendingReasoning;
   if (reasoning && body) {
-    // Show REAL DeepSeek reasoning — replace fake text
+    // Show REAL DeepSeek reasoning -- replace fake text
     window._pendingReasoning = null;
     body.classList.remove('streaming');
     const cleaned = reasoning.replace(/\n{3,}/g, '\n\n').trim();
@@ -3084,7 +3094,7 @@ function streamAnswer(rawText, tag) {
 
 function finishStreaming(bubble, rawText, body, sugs, tag, el) {
   bubble.classList.remove('streaming', 'live-bubble');
-  // DON'T re-render — bubble.innerHTML already set by streamAnswer
+  // DON'T re-render -- bubble.innerHTML already set by streamAnswer
   addTableOfContents(body, stripSugs(rawText));
 
   // Stop cube spinning
@@ -3119,14 +3129,16 @@ function finishStreaming(bubble, rawText, body, sugs, tag, el) {
     finalSugs.forEach(s => {
       const btn = document.createElement('button');
       btn.className = 'sug';
-      btn.textContent = '→ ' + s;
+      btn.textContent = '-> ' + s;
       btn.addEventListener('click', () => { document.getElementById('user-input').value = s; sendMessage(); });
       wrap.appendChild(btn);
     });
     body.appendChild(wrap);
   }
 
-  if (autoRead) speakText(stripSugs(rawText));
+  if (autoRead) {
+    setTimeout(() => speakText(stripSugs(rawText)), 300);
+  }
   if (el) el.removeAttribute('id');
   scrollDown();
 }
@@ -3168,7 +3180,7 @@ function addActionBar(body, text, tag) {
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>' +
     '</button>' +
     // Read aloud
-    '<button class="act-icon-btn" onclick=\'speakText('+JSON.stringify(text)+')\' title="Read aloud">' +
+    '<button class="act-icon-btn" onclick="speakText('+JSON.stringify(text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').trim().slice(0,2000))+')" title="Read aloud">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
     '</button>' +
     // Save / Bookmark
@@ -3193,7 +3205,7 @@ function addActionBar(body, text, tag) {
 function copyAnswer(btn, text) {
   const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').trim();
   navigator.clipboard.writeText(clean).then(() => {
-    btn.innerHTML = '✓ Copied!';
+    btn.innerHTML = 'v Copied!';
     btn.style.color = 'var(--accent2)';
     setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy'; btn.style.color=''; }, 2000);
   }).catch(() => alert('Copy not supported on this browser.'));
@@ -3204,7 +3216,7 @@ function shareAnswer(text) {
   if (navigator.share) {
     navigator.share({ title: 'Feng AI Answer', text: clean, url: window.location.href });
   } else {
-    navigator.clipboard.writeText(clean).then(() => alert('Answer copied — paste it anywhere to share!'));
+    navigator.clipboard.writeText(clean).then(() => alert('Answer copied -- paste it anywhere to share!'));
   }
 }
 
@@ -3227,7 +3239,7 @@ function regenerateAnswer(tag) {
 // ── EXPORT CHAT ──
 function exportChat() {
   if (!history.length) { alert('No conversation to export yet.'); return; }
-  let text = 'Feng AI — Chat Export\n' + new Date().toLocaleString() + '\n\n';
+  let text = 'Feng AI -- Chat Export\n' + new Date().toLocaleString() + '\n\n';
   history.forEach(m => {
     text += (m.role === 'user' ? 'You: ' : 'Feng AI: ') + m.content.replace(/<[^>]+>/g,'').replace(/<suggestions>[\s\S]*?<\/suggestions>/g,'').trim() + '\n\n';
   });
@@ -3271,12 +3283,12 @@ function generateImage(text) {
   const stopCube = () => { if (cubeEl) cubeEl.classList.remove('spin'); };
 
   const img = new Image();
-  // Do NOT set crossOrigin — it causes errors with Pollinations
+  // Do NOT set crossOrigin -- it causes errors with Pollinations
 
   const timeout = setTimeout(() => {
     stopCube();
     const st = document.getElementById('ist'+uid);
-    if (st) st.innerHTML = '⚠️ Taking too long. <a style="color:var(--accent);cursor:pointer;" onclick="this.parentElement.innerHTML=\'Retrying…\';generateImageDirect(\''+encoded+'\',\''+uid+'\')">Retry</a>';
+    if (st) st.innerHTML = '⚠️ Taking too long. <a style="color:var(--accent);cursor:pointer;" onclick="this.parentElement.innerHTML=\'Retrying...\';generateImageDirect(\''+encoded+'\',\''+uid+'\')">Retry</a>';
   }, 25000);
 
   img.onload = () => {
@@ -3310,18 +3322,18 @@ async function sendMessage() {
   hideHero();
   inp.value = '';
   inp.style.height = 'auto';
-  inp.placeholder = 'Type a message…';
+  inp.placeholder = 'Type a message...';
   haptic('send');
 
   const tag = detectTag(text);
 
-  // Build message — for images store base64 temporarily, for text store content
+  // Build message -- for images store base64 temporarily, for text store content
   let msgContent = text;
   let previewUrl = attachedPreviewUrl;
   let isImageAttach = attachedFileContent && attachedFileContent.startsWith('data:image');
 
   if (isImageAttach) {
-    msgContent = attachedFileContent; // base64 — handled specially in fetch
+    msgContent = attachedFileContent; // base64 -- handled specially in fetch
   } else if (attachedFileContent) {
     msgContent = text + '\n\n[ATTACHED FILE: ' + attachedFileName + ']\n' + attachedFileContent;
   }
@@ -3341,7 +3353,7 @@ async function sendMessage() {
   // Check for website/slides builder requests
   if (checkSpecialRequests(text)) return;
 
-  // Smart shortcuts — calculator, currency, units, mind map
+  // Smart shortcuts -- calculator, currency, units, mind map
   if (isCalcRequest(text) && !attachedFileContent) { const r = tryCalculate(text.replace(/[^0-9\+\-\*\/\.\(\)\%\^ ]/g,'').trim()); if (r!==null) { showCalcResult(text); return; } }
   if (isCurrencyRequest(text)) { handleCurrency(text); return; }
   if (isUnitRequest(text)) { if (handleUnit(text)) return; }
@@ -3367,8 +3379,8 @@ async function sendMessage() {
     let apiMessages;
 
     if (isImageAttach) {
-      // Vision model — send image + question as ONE fresh message, not full history
-      model = 'llama-3.2-11b-vision-preview';
+      // Vision model -- send image + question as ONE fresh message, not full history
+      model = 'meta-llama/llama-4-scout-17b-16e-instruct';
       apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
         {
@@ -3382,9 +3394,9 @@ async function sendMessage() {
       // Replace the base64 in history with a readable summary
       history[history.length - 1].content = '[Image attached] ' + (text || 'Extract text from image');
     } else {
-      // Normal text — fetch from multiple sources simultaneously
+      // Normal text -- fetch from multiple sources simultaneously
       const detectedLang = detectUserLanguage(text);
-      const langNote = detectedLang ? '\n[LANGUAGE: User is writing in ' + detectedLang + ' — please respond in ' + detectedLang + ']' : '';
+      const langNote = detectedLang ? '\n[LANGUAGE: User is writing in ' + detectedLang + ' -- please respond in ' + detectedLang + ']' : '';
 
       // Run multi-source research in parallel
       const liveData = await fetchLiveData(text);
@@ -3415,7 +3427,7 @@ async function sendMessage() {
         const res = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-          body: JSON.stringify({ model: 'llama-3.2-11b-vision-preview', max_tokens: 8000, messages: apiMessages })
+          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', max_tokens: 8000, messages: apiMessages })
         });
         const d = await res.json();
         aiResult = { data: d, content: d.choices?.[0]?.message?.content || '', reasoning: null, source: 'groq' };
@@ -3491,7 +3503,7 @@ function learnFromConversation(userText, aiText) {
   const cityMatch = userText.match(/(?:i(?:'m| am) (?:in|from|at)|i live in)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/i);
   if (cityMatch) saveMemory('city', cityMatch[1]);
 
-  // Learn subjects — expanded list
+  // Learn subjects -- expanded list
   const subjects = ['mathematics','math','science','history','biology','chemistry','physics','english','literature',
     'programming','coding','computer science','economics','geography','psychology','sociology','law','medicine',
     'accounting','business','art','music','french','spanish','portuguese','swahili'];
@@ -3549,13 +3561,13 @@ async function fetchWithRetry(url, options, retries=2) {
   }
 }
 
-// ── MATH RENDERER — uses KaTeX if loaded, fallback to styled text ──
+// ── MATH RENDERER -- uses KaTeX if loaded, fallback to styled text ──
 function renderMath(html) {
   if (typeof renderMathInElement !== 'undefined') {
     // KaTeX auto-render handles $$ and $ delimiters after DOM insert
     return html;
   }
-  // Fallback — style math blocks nicely
+  // Fallback -- style math blocks nicely
   return html
     .replace(/\$\$([^$]+)\$\$/g, '<div class="math-block">$1</div>')
     .replace(/\$([^$\n]+)\$/g, '<code class="math-inline">$1</code>');
@@ -3593,7 +3605,7 @@ function addTableOfContents(body, rawText) {
   body.insertBefore(toc, body.firstChild);
 }
 
-// ── MULTI-LANGUAGE AUTO-DETECT — reply in user's language ──
+// ── MULTI-LANGUAGE AUTO-DETECT -- reply in user's language ──
 function detectUserLanguage(text) {
   // Detect non-English scripts
   if (/[\u0600-\u06FF]/.test(text)) return 'Arabic';
@@ -3752,7 +3764,7 @@ function selectResponseStyle(id) {
   renderResponseStyleList();
 }
 function getStyleNote() {
-  const notes = { concise:'\nBe concise — short focused answers.', balanced:'', detailed:'\nBe very detailed and comprehensive.', formal:'\nUse formal academic language.', simple:'\nUse very simple easy-to-understand language.' };
+  const notes = { concise:'\nBe concise -- short focused answers.', balanced:'', detailed:'\nBe very detailed and comprehensive.', formal:'\nUse formal academic language.', simple:'\nUse very simple easy-to-understand language.' };
   return notes[currentResponseStyle] || '';
 }
 
@@ -3813,7 +3825,7 @@ function highlightCode(code, lang) {
 
 function copyCode(btn, code) {
   navigator.clipboard.writeText(code).then(() => {
-    btn.textContent = '✓ Copied!';
+    btn.textContent = 'v Copied!';
     setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
   });
 }
@@ -3844,7 +3856,7 @@ function runCodeBlock(cid) {
   if (!codeEl) return;
   try {
     const result = Function('"use strict";' + codeEl.textContent)();
-    showToast('✓ ' + (result !== undefined ? String(result).slice(0,80) : 'Done'));
+    showToast('v ' + (result !== undefined ? String(result).slice(0,80) : 'Done'));
   } catch(e) {
     showToast('⚠ ' + e.message, true);
   }
@@ -3897,7 +3909,7 @@ function applyTheme(id) {
 let bookmarks = JSON.parse(localStorage.getItem('feng_bookmarks') || '[]');
 function bookmarkAnswer(bid, text) {
   const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').trim().slice(0,300);
-  const bk = { id: bid, text: clean, ts: Date.now(), preview: clean.slice(0,80)+'…' };
+  const bk = { id: bid, text: clean, ts: Date.now(), preview: clean.slice(0,80)+'...' };
   bookmarks.unshift(bk);
   if (bookmarks.length > 50) bookmarks = bookmarks.slice(0,50);
   localStorage.setItem('feng_bookmarks', JSON.stringify(bookmarks));
@@ -3950,7 +3962,7 @@ function renderNotes() {
           '<strong style="font-size:0.85rem;">'+esc(n.title)+'</strong>' +
           '<button onclick="deleteNote('+i+')" style="border:none;background:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">✕</button>' +
         '</div>' +
-        '<div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">'+esc(n.body.slice(0,120))+(n.body.length>120?'…':'')+'</div>' +
+        '<div style="font-size:0.8rem;color:var(--muted);line-height:1.5;">'+esc(n.body.slice(0,120))+(n.body.length>120?'...':'')+'</div>' +
       '</div>'
     ).join('');
 }
@@ -3965,7 +3977,7 @@ let pomoMode = 'focus', pomoRunning = false, pomoIv = null;
 let pomoSecs = 25*60, pomoTotal = 25*60;
 let pomoSessionCount = parseInt(localStorage.getItem('feng_pomo_count')||'0');
 const POMO_TIMES = { focus:25*60, short:5*60, long:15*60 };
-const POMO_LABELS = { focus:'Stay focused! 🎯', short:'Take a break ☕', long:'Long break — stretch! 🧘' };
+const POMO_LABELS = { focus:'Stay focused! 🎯', short:'Take a break ☕', long:'Long break -- stretch! 🧘' };
 
 function setPomoMode(mode) {
   pomoMode = mode; pomoRunning = false;
@@ -4039,15 +4051,15 @@ function renderDashboard() {
       statCard('⏱️','Focus Sessions', pomoCount) +
       statCard('🔖','Saved Answers', bkCount) +
       statCard('📓','Notes', noteCount) +
-      statCard('🧠','Topics Studied', mem.lastSubject||'—') +
+      statCard('🧠','Topics Studied', mem.lastSubject||'--') +
     '</div>' +
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">' +
       '<div style="font-weight:700;font-size:0.85rem;margin-bottom:10px;">📈 Activity</div>' +
       '<div style="font-size:0.8rem;color:var(--muted);line-height:2;">' +
-        '• Total questions asked: <strong style="color:var(--text);">'+Math.floor(totalMsgs/2)+'</strong><br>' +
-        '• Bookmarked answers: <strong style="color:var(--text);">'+bkCount+'</strong><br>' +
-        '• Notes written: <strong style="color:var(--text);">'+noteCount+'</strong><br>' +
-        (mem.name?'• Logged in as: <strong style="color:var(--accent);">'+esc(mem.name)+'</strong><br>':'') +
+        '* Total questions asked: <strong style="color:var(--text);">'+Math.floor(totalMsgs/2)+'</strong><br>' +
+        '* Bookmarked answers: <strong style="color:var(--text);">'+bkCount+'</strong><br>' +
+        '* Notes written: <strong style="color:var(--text);">'+noteCount+'</strong><br>' +
+        (mem.name?'* Logged in as: <strong style="color:var(--accent);">'+esc(mem.name)+'</strong><br>':'') +
       '</div>' +
     '</div>';
 }
@@ -4146,191 +4158,190 @@ function getWebSearchNote() {
 let voiceMode = false;
 let voiceActive = false;
 let autoRead = localStorage.getItem('feng_autoread') === 'true';
+let currentPreviewId = null;
+let currentAudio = null; // For ElevenLabs audio playback
 
-const ELEVENLABS_API_KEY = 'sk_3fb6f0acb770bd706af4ea4240ca7f12b79fb9ac0a23512e';
-const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
-
+// Real ElevenLabs voices mapped to our character names
 const FENG_VOICES = [
-  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', preview: 'Clear, Engaging Educator', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/Xb7hH8MSUJpSbSDYk0k2/d10f7534-11f6-41fe-a012-2de1e482d336.mp3' },
-  { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', preview: 'Playful, Bright, Warm', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/cgSgspJ2msm6clMCkdW9/56a97bf8-b69b-448f-846c-c3a11683d45a.mp3' },
-  { id: 'pqHfZKP75CvOlQylNhV4', name: 'Bill', preview: 'Wise, Mature, Balanced', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/pqHfZKP75CvOlQylNhV4/d782b3ff-84ba-4029-848c-acf01285524d.mp3' },
-  { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', preview: 'Deep, Resonant, Comforting', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/nPczCjzI2devNBz1zQrb/2dd3e72c-4fd3-42f1-93ea-abc5d4e5aa1d.mp3' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', preview: 'Velvety Actress', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/pFZP5JQG7iQjIQuC4Bku/89b68b35-b3dd-4348-a84a-a3c13a3c2b30.mp3' },
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', preview: 'Dominant, Firm', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/pNInz6obpgDQGcFmaJgB/d6905d7a-dd26-4187-bfff-1bd3a5ea7cac.mp3' },
-  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', preview: 'Knowledgeable, Professional', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/XrExE9yKIg1WjnnlVkGX/b930e18d-6b4d-466e-bab2-0ae97c6d8535.mp3' },
-  { id: 'iP95p4xoKVk53GoZ742B', name: 'Chris', preview: 'Charming, Down-to-Earth', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/iP95p4xoKVk53GoZ742B/3f4bde72-cc48-40dd-829f-57fbf906f4d7.mp3' },
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', preview: 'Warm, Captivating Storyteller', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/JBFqnCBsd6RMkjVDRZzb/e6206d1a-0721-4787-aafb-06a6e705cac5.mp3' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', preview: 'Enthusiast, Quirky Attitude', preview_url: 'https://storage.googleapis.com/eleven-public-prod/premade/voices/FGY2WhTYpPnrIDTdsKH5/67341759-ad08-41a5-be6e-de12fe448618.mp3' }
+  { id:'luna',  name:'Luna',  preview:"Hi this is Luna. How's your day? Wanna talk?",           elId:'21m00Tcm4TlvDq8ikWAM', gender:'female', desc:'Warm & friendly'    },
+  { id:'aria',  name:'Aria',  preview:"Hello! I'm Aria, your Feng AI assistant. Ask me anything!", elId:'EXAVITQu4vr4xnSDxMaL', gender:'female', desc:'Soft & expressive'  },
+  { id:'nova',  name:'Nova',  preview:"Hey there! Nova here. What can I help you explore today?", elId:'MF3mGyEYCl7XYWbV9V6O', gender:'female', desc:'Energetic & clear'   },
+  { id:'jade',  name:'Jade',  preview:"Hi there! What a day! So what are we going to do next?",  elId:'oWAxZDx7w5VEj9dCyTzz', gender:'female', desc:'Bright & cheerful'  },
+  { id:'kai',   name:'Kai',   preview:"Hey, how's everything going? Should we talk?",             elId:'ErXwobaYiN019PkySvjV', gender:'male',   desc:'Smooth & natural'  },
+  { id:'cole',  name:'Cole',  preview:"Hello! I'm Cole. You can ask me everything you need.",    elId:'TxGEqnHWrfWFTfGW9XjX', gender:'male',   desc:'Deep & confident'  },
+  { id:'rex',   name:'Rex',   preview:"Good to see you! What are we working on today?",          elId:'VR6AewLTigWG4xSOukaG', gender:'male',   desc:'Strong & crisp'    },
 ];
 
-let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'Xb7hH8MSUJpSbSDYk0k2';
+let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'luna';
 let voiceSpeed = parseFloat(localStorage.getItem('feng_voice_speed') || '1');
-let currentPreviewId = null;
-let currentAudio = null;
 
-async function playElevenLabsTTS(text, voiceId, onEnd, onError) {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-  
-  if (!text || text.trim().length === 0) {
-    if (onEnd) onEnd();
-    return;
-  }
+function getSelectedFengVoice() {
+  return FENG_VOICES.find(v => v.id === selectedVoiceName) || FENG_VOICES[0];
+}
 
+// ── ELEVENLABS TTS ──
+async function elevenLabsSpeak(text, voiceElId) {
   try {
-    const response = await fetch(`${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}/stream`, {
+    const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + voiceElId, {
       method: 'POST',
       headers: {
-        'xi-api-key': ELEVENLABS_API_KEY,
-        'Content-Type': 'application/json'
+        'xi-api-key': ELEVENLABS_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
       },
       body: JSON.stringify({
-        text: text,
-        model_id: 'eleven_multilingual_v2',
+        text: text.slice(0, 2500),
+        model_id: 'eleven_turbo_v2',
         voice_settings: { stability: 0.5, similarity_boost: 0.75 }
       })
     });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      console.error('ElevenLabs API error:', response.status, errData);
-      throw new Error('ElevenLabs API error: ' + response.status);
-    }
-
-    const blob = await response.blob();
+    if (!res.ok) throw new Error('ElevenLabs ' + res.status);
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
+    if (currentAudio) { currentAudio.pause(); }
     currentAudio = new Audio(url);
     currentAudio.playbackRate = voiceSpeed;
-    
-    const cleanup = () => {
-      if (url.startsWith('blob:')) URL.revokeObjectURL(url);
-      if (currentAudio && currentAudio.src === url) currentAudio = null;
-    };
-
-    currentAudio.onended = () => {
-      cleanup();
-      if (onEnd) onEnd();
-    };
-    currentAudio.onerror = (e) => {
-      console.error('Audio playback error:', e);
-      cleanup();
-      if (onError) onError();
-    };
-    
+    voiceActive = true;
+    currentAudio.onended = () => { voiceActive = false; URL.revokeObjectURL(url); };
+    currentAudio.onerror = () => { voiceActive = false; };
     await currentAudio.play();
-  } catch (e) {
-    console.error('TTS Error:', e);
-    if (onError) onError();
+    return true;
+  } catch(e) {
+    return false;
   }
 }
 
+// ── BROWSER TTS FALLBACK ──
+function browserSpeak(text, fengVoice) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  const doSpeak = () => {
+    const sysVoices = window.speechSynthesis.getVoices();
+    const enVoices = sysVoices.filter(v => v.lang.startsWith('en'));
+    const pool = enVoices.length ? enVoices : sysVoices;
+    const genderKw = fengVoice.gender === 'female'
+      ? ['female','woman','samantha','karen','victoria','moira','tessa','fiona','zira','google uk english female']
+      : ['male','man','daniel','david','thomas','alex','fred','jorge','google uk english male'];
+    const match = pool.find(v => genderKw.some(k => v.name.toLowerCase().includes(k))) || pool[0];
+    const utt = new SpeechSynthesisUtterance(text.slice(0, 2000));
+    if (match) utt.voice = match;
+    utt.pitch = fengVoice.gender === 'female' ? 1.1 : 0.9;
+    utt.rate = voiceSpeed;
+    utt.lang = 'en-US';
+    voiceActive = true;
+    utt.onend = utt.onerror = () => { voiceActive = false; };
+    window.speechSynthesis.speak(utt);
+  };
+
+  // Voices may not be loaded yet — wait for them
+  if (window.speechSynthesis.getVoices().length > 0) {
+    doSpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => { doSpeak(); };
+    // Also try after short delay as extra safety
+    setTimeout(() => { if (!voiceActive) doSpeak(); }, 500);
+  }
+}
+
+async function speakText(text) {
+  const clean = text.replace(/<[^>]+>/g,'').replace(/\*+/g,'').replace(/#+ /g,'').replace(/```[\s\S]*?```/g,'code block.').replace(/\n+/g,' ').trim();
+  if (!clean) return;
+  const voice = getSelectedFengVoice();
+  const ok = await elevenLabsSpeak(clean, voice.elId);
+  if (!ok) browserSpeak(clean, voice);
+}
+
+function stopVoice() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  window.speechSynthesis?.cancel();
+  voiceActive = false;
+}
+
+// ── VOICE PAGE RENDER ──
 function renderVoicePage() {
   const listEl = document.getElementById('voice-list-official');
   const speedEl = document.getElementById('voice-speed-row');
   const autoEl = document.getElementById('autoread-toggle');
   if (!listEl) return;
 
-  // Render voice list
   listEl.innerHTML = FENG_VOICES.map(v => `
     <div class="voice-item ${v.id === selectedVoiceName ? 'selected' : ''}" id="voice-item-${v.id}" onclick="selectFengVoice('${v.id}')">
       <div class="voice-waveform">
-        <span style="height:8px"></span>
-        <span style="height:14px"></span>
-        <span style="height:6px"></span>
-        <span style="height:10px"></span>
+        <span style="height:6px"></span><span style="height:12px"></span><span style="height:4px"></span><span style="height:9px"></span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div class="voice-name">${v.name}</div>
+        <div class="voice-name">${v.name} <span style="font-size:0.68rem;color:var(--muted);font-weight:400;">· ${v.desc}</span></div>
         <div class="voice-preview">| ${v.preview}</div>
       </div>
       <button class="voice-play-btn" onclick="event.stopPropagation();previewFengVoice('${v.id}')" title="Preview">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       </button>
-      ${v.id === selectedVoiceName ? '<div class="voice-check">✓</div>' : ''}
+      ${v.id === selectedVoiceName ? '<div class="voice-check">&#10003;</div>' : ''}
     </div>
   `).join('');
 
-  // Render speed buttons
   if (speedEl) {
-    speedEl.innerHTML = ['0.75','1','1.25','1.5','1.75'].map(s =>
+    speedEl.innerHTML = ['0.75','1','1.25','1.5'].map(s =>
       `<button onclick="selectVoiceSpeed(${s})" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid ${parseFloat(s)===voiceSpeed?'var(--accent)':'var(--border)'};background:var(--surface);color:${parseFloat(s)===voiceSpeed?'var(--accent)':'var(--muted)'};font-size:0.78rem;cursor:pointer;">${s}x</button>`
     ).join('');
   }
-
-  // Sync auto-read toggle
   if (autoEl) autoEl.classList.toggle('on', autoRead);
+}
+
+async function previewFengVoice(id) {
+  const voice = FENG_VOICES.find(v => v.id === id);
+  if (!voice) return;
+
+  stopVoice();
+  if (currentPreviewId) {
+    const prev = document.getElementById('voice-item-' + currentPreviewId);
+    if (prev) prev.classList.remove('playing');
+  }
+  const itemEl = document.getElementById('voice-item-' + id);
+  if (itemEl) itemEl.classList.add('playing');
+  currentPreviewId = id;
+
+  const stopPlaying = () => {
+    if (itemEl) itemEl.classList.remove('playing');
+    currentPreviewId = null;
+  };
+
+  const ok = await elevenLabsSpeak(voice.preview, voice.elId);
+  if (ok && currentAudio) {
+    currentAudio.onended = () => { voiceActive = false; stopPlaying(); };
+  } else {
+    // Browser TTS fallback
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const doPreview = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const en = voices.filter(v => v.lang.startsWith('en'));
+      const pool = en.length ? en : voices;
+      const utt = new SpeechSynthesisUtterance(voice.preview);
+      if (pool.length) utt.voice = pool[0];
+      utt.pitch = voice.gender === 'female' ? 1.1 : 0.9;
+      utt.rate = voiceSpeed;
+      utt.lang = 'en-US';
+      voiceActive = true;
+      utt.onend = utt.onerror = () => { voiceActive = false; stopPlaying(); };
+      window.speechSynthesis.speak(utt);
+    };
+    if (window.speechSynthesis.getVoices().length > 0) {
+      doPreview();
+    } else {
+      window.speechSynthesis.onvoiceschanged = doPreview;
+      setTimeout(() => { if (currentPreviewId === id) doPreview(); }, 500);
+    }
+  }
 }
 
 function selectFengVoice(id) {
   selectedVoiceName = id;
   localStorage.setItem('feng_voice_name', id);
   renderVoicePage();
-  // Preview the selected voice
+  showToast('Voice: ' + (FENG_VOICES.find(v=>v.id===id)?.name || id));
   previewFengVoice(id);
-}
-
-function previewFengVoice(id) {
-  const voice = FENG_VOICES.find(v => v.id === id);
-  if (!voice) return;
-
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-  if (currentPreviewId) {
-    const prev = document.getElementById('voice-item-' + currentPreviewId);
-    if (prev) prev.classList.remove('playing');
-  }
-
-  const itemEl = document.getElementById('voice-item-' + id);
-  if (itemEl) itemEl.classList.add('playing');
-  currentPreviewId = id;
-
-  currentAudio = new Audio(voice.preview_url);
-  currentAudio.onended = () => {
-    if (itemEl) itemEl.classList.remove('playing');
-    currentPreviewId = null;
-    currentAudio = null;
-  };
-  currentAudio.onerror = () => {
-    if (itemEl) itemEl.classList.remove('playing');
-    currentPreviewId = null;
-  };
-  currentAudio.play();
-}
-
-async function speakText(text) {
-  if (!text) return;
-  stopVoice();
-  const voice = FENG_VOICES.find(v => v.id === selectedVoiceName) || FENG_VOICES[0];
-  
-  // Better text cleaning for AI responses
-  const clean = text
-    .replace(/<[^>]+>/g, '') // Remove HTML
-    .replace(/```[\s\S]*?```/g, ' [code block] ') // Replace code blocks
-    .replace(/[\*\#\_]/g, '') // Remove markdown formatting
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim()
-    .slice(0, 4000); // ElevenLabs handles longer text well
-  
-  if (!clean) return;
-  
-  voiceActive = true;
-  await playElevenLabsTTS(clean, voice.id, () => {
-    voiceActive = false;
-  }, () => {
-    voiceActive = false;
-  });
-}
-
-function stopVoice() {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-  voiceActive = false;
 }
 
 function selectVoiceSpeed(s) {
@@ -4340,24 +4351,17 @@ function selectVoiceSpeed(s) {
 }
 
 function toggleAutoRead() {
-  // Sync with the global nav button
-  toggleNavTTS();
+  autoRead = !autoRead;
+  localStorage.setItem('feng_autoread', autoRead);
+  const t = document.getElementById('autoread-toggle');
+  if (t) t.classList.toggle('on', autoRead);
+  showToast(autoRead ? '🔊 Auto-read ON' : '🔇 Auto-read OFF');
 }
 
-// Sync UI states on load
-function syncAudioUI() {
-  const btn = document.getElementById('nav-tts-btn');
-  if (btn) {
-    btn.style.color = autoRead ? 'var(--accent)' : '';
-    btn.style.borderColor = autoRead ? 'var(--accent)' : '';
-  }
-  const autoEl = document.getElementById('autoread-toggle');
-  if (autoEl) autoEl.classList.toggle('on', autoRead);
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => renderVoicePage();
 }
 
-// Voice page is rendered manually when opened
-renderVoicePage();
-setTimeout(syncAudioUI, 100);
 
 // ── MODE PANEL (Claude-style) ──
 let deepThinkMode = false;
@@ -4431,7 +4435,7 @@ function selectMode(mode) {
     deepThinkMode = false;
     webSearchEnabled = true;
     if (readingMode) applyReadingMode(false);
-    document.getElementById('user-input').placeholder = '🤖 Agent: Research, build websites, generate slides, create docs…';
+    document.getElementById('user-input').placeholder = '🤖 Agent: Research, build websites, generate slides, create docs...';
   }
 
   // ── DEEP RESEARCH: Maximum sources + detailed long-form report
@@ -4439,13 +4443,13 @@ function selectMode(mode) {
     deepThinkMode = true;
     webSearchEnabled = true;
     applyReadingMode(true);
-    document.getElementById('user-input').placeholder = '🔬 Deep Research: Ask anything — I\'ll search everything and write a comprehensive report…';
+    document.getElementById('user-input').placeholder = '🔬 Deep Research: Ask anything -- I\'ll search everything and write a comprehensive report...';
   }
 
   if (!['agent','deepresearch'].includes(mode)) {
     const inp = document.getElementById('user-input');
     if (inp && inp.placeholder.startsWith('🤖') || inp && inp.placeholder.startsWith('🔬')) {
-      inp.placeholder = 'Type a message…';
+      inp.placeholder = 'Type a message...';
     }
   }
 
@@ -4468,12 +4472,12 @@ function selectMode(mode) {
   if (dt) dt.classList.toggle('on', deepThinkMode);
 
   const toasts = {
-    standard:     '⚡ Standard — fast, balanced answers',
-    deep:         '🧠 Deep Think — DeepSeek Reasoner activated',
-    research:     '🌐 Research — live sources fetched every answer',
-    reading:      '📖 Reading — large comfortable text enabled',
-    agent:        '🤖 Agent — I can build websites, slides, and research for you',
-    deepresearch: '🔬 Deep Research — comprehensive reports with all sources'
+    standard:     '⚡ Standard -- fast, balanced answers',
+    deep:         '🧠 Deep Think -- DeepSeek Reasoner activated',
+    research:     '🌐 Research -- live sources fetched every answer',
+    reading:      '📖 Reading -- large comfortable text enabled',
+    agent:        '🤖 Agent -- I can build websites, slides, and research for you',
+    deepresearch: '🔬 Deep Research -- comprehensive reports with all sources'
   };
   showToast(toasts[mode] || '');
   setTimeout(closeModePanel, 500);
@@ -4508,7 +4512,7 @@ function toggleDeepThinkFromPanel() {
   }
   const dt = document.getElementById('deep-think-toggle');
   if (dt) dt.classList.toggle('on', deepThinkMode);
-  showToast(deepThinkMode ? '🧠 Deep Think ON — DeepSeek Reasoner' : '🧠 Deep Think OFF');
+  showToast(deepThinkMode ? '🧠 Deep Think ON -- DeepSeek Reasoner' : '🧠 Deep Think OFF');
 }
 
 function toggleDeepThink() { toggleDeepThinkFromPanel(); }
@@ -4534,11 +4538,11 @@ function getDeepThinkNote() {
 function getModePrompt() {
   switch(currentMode) {
     case 'deep':
-      return '\n\n[MODE: DEEP THINK — Reason step by step through every angle before answering. Consider alternatives, edge cases, and potential errors in your thinking. Your answer should reflect deep analysis — but still write naturally, not like a checklist. No filler phrases.]';
+      return '\n\n[MODE: DEEP THINK -- Reason step by step through every angle before answering. Consider alternatives, edge cases, and potential errors in your thinking. Your answer should reflect deep analysis -- but still write naturally, not like a checklist. No filler phrases.]';
     case 'research':
-      return '\n\n[MODE: RESEARCH — Live data from multiple sources is provided above. Cite facts inline using ¹ ² ³ superscripts. At the end, add a compact **Sources** section. Every factual claim should be traceable. Write naturally — not "According to source 1, according to source 2" — weave citations in smoothly.]';
+      return '\n\n[MODE: RESEARCH -- Live data from multiple sources is provided above. Cite facts inline using 1 2 3 superscripts. At the end, add a compact **Sources** section. Every factual claim should be traceable. Write naturally -- not "According to source 1, according to source 2" -- weave citations in smoothly.]';
     case 'reading':
-      return '\n\n[MODE: READING — Write in well-structured prose. Use ## headings to break sections. Favour full paragraphs over bullet points. Make it comfortable to read top to bottom, like a well-written article.]';
+      return '\n\n[MODE: READING -- Write in well-structured prose. Use ## headings to break sections. Favour full paragraphs over bullet points. Make it comfortable to read top to bottom, like a well-written article.]';
     default:
       return '';
   }
@@ -4705,7 +4709,7 @@ function generateMindMap(topic) {
   el.innerHTML = '<div>'+cubeHTML('edu',true)+'</div>' +
     '<div class="msg-body">' +
       '<div class="msg-tag tag-edu">🗺️ Mind Map</div>' +
-      '<div id="'+uid+'"><div style="color:var(--muted);font-size:0.83rem;">Generating mind map…</div></div>' +
+      '<div id="'+uid+'"><div style="color:var(--muted);font-size:0.83rem;">Generating mind map...</div></div>' +
     '</div>';
   list.appendChild(el); scrollDown();
 
@@ -4846,7 +4850,7 @@ function renderVocabHistory() {
     vocabHistory.slice(0,8).map(w=>
       '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">' +
         '<strong style="font-size:0.87rem;color:var(--accent);min-width:100px;">'+w.word+'</strong>' +
-        '<span style="font-size:0.78rem;color:var(--muted);line-height:1.4;">'+w.def.slice(0,60)+'…</span>' +
+        '<span style="font-size:0.78rem;color:var(--muted);line-height:1.4;">'+w.def.slice(0,60)+'...</span>' +
       '</div>'
     ).join('');
 }
@@ -4893,7 +4897,7 @@ function renderStats() {
 // ── CONVERSATION SUMMARY ──
 async function summarizeChat() {
   if (!history.length) { showToast('No conversation to summarize yet.'); return; }
-  showToast('Summarizing conversation…');
+  showToast('Summarizing conversation...');
   const msgs = history.map(m=>(m.role==='user'?'User: ':'AI: ')+m.content.slice(0,300)).join('\n').slice(0,3000);
   try {
     const {data} = await callAI([{role:'user',content:'Summarize this conversation in 3-5 bullet points:\n\n'+msgs}]);
@@ -4926,7 +4930,7 @@ function exportChatPDF() {
   const html = '<!DOCTYPE html><html><head><title>Feng AI Chat Export</title>' +
     '<style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;color:#111;line-height:1.7;}' +
     'h1{color:#2563eb;}h2,h3{color:#1e40af;}@media print{body{margin:20px;}}</style></head>' +
-    '<body><h1>Feng AI — Chat Export</h1><p style="color:#6b7280;font-size:11pt;">'+new Date().toLocaleString()+'</p><hr>'+content+'</body></html>';
+    '<body><h1>Feng AI -- Chat Export</h1><p style="color:#6b7280;font-size:11pt;">'+new Date().toLocaleString()+'</p><hr>'+content+'</body></html>';
   win.document.write(html);
   win.document.close();
   win.setTimeout(()=>win.print(),500);
@@ -5047,7 +5051,7 @@ async function startExamSim() {
   simState.subject=subject; simState.level=level||'General'; simState.current=0; simState.answers=[];
   document.getElementById('exam-sim-setup').style.display='none';
   document.getElementById('exam-sim-running').style.display='block';
-  showToast('Generating exam… please wait ⏳');
+  showToast('Generating exam... please wait ⏳');
 
   try {
     const {data} = await callAI([{role:'user',content:`Create a ${simState.numQ}-question exam for ${level} level ${subject}. Return ONLY a JSON array like: [{"q":"Question text","type":"short"},{"q":"...","type":"essay"}]. Mix short answer and essay questions. No other text.`}]);
@@ -5097,7 +5101,7 @@ async function submitSimAnswer() {
 async function gradeExamSim() {
   document.getElementById('exam-sim-running').style.display='none';
   document.getElementById('exam-sim-results').style.display='block';
-  document.getElementById('exam-sim-results').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Marking your exam… ⏳</div>';
+  document.getElementById('exam-sim-results').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">Marking your exam... ⏳</div>';
   const qa = simState.answers.map((a,i)=>`Q${i+1}: ${a.q}\nAnswer: ${a.a}`).join('\n\n');
   try {
     const {data} = await callAI([{role:'user',content:`Mark this ${simState.subject} exam. Give a score out of 100, grade (A/B/C/D/F), and brief feedback per question. Be encouraging but honest.\n\n${qa}\n\nFormat: Start with "SCORE: X/100 | GRADE: X" then feedback per question.`}]);
@@ -5132,24 +5136,24 @@ function resetExamSim() {
 
 // ── TEMPLATES LIBRARY ──
 const TEMPLATES = [
-  { cat:'📝 Essay', title:'5-Paragraph Essay', preview:'Write a complete 5-paragraph essay about…', prompt:'Write a complete, well-structured 5-paragraph essay about: ' },
-  { cat:'📝 Essay', title:'Argumentative Essay', preview:'Write a persuasive argumentative essay…', prompt:'Write a persuasive argumentative essay arguing that: ' },
-  { cat:'📊 Report', title:'Research Report', preview:'Write a full research report on…', prompt:'Write a comprehensive research report on the topic: ' },
-  { cat:'📊 Report', title:'Science Lab Report', preview:'Write a lab report for the experiment…', prompt:'Write a complete science lab report for this experiment: ' },
-  { cat:'📧 Letter', title:'Formal Letter', preview:'Write a professional formal letter to…', prompt:'Write a professional formal letter to [recipient] regarding: ' },
-  { cat:'📧 Letter', title:'Cover Letter', preview:'Write a job application cover letter for…', prompt:'Write a compelling job application cover letter for the position of: ' },
-  { cat:'📧 Letter', title:'Complaint Letter', preview:'Write a formal complaint letter about…', prompt:'Write a formal complaint letter regarding: ' },
-  { cat:'🎓 Academic', title:'Literature Review', preview:'Write a literature review on…', prompt:'Write an academic literature review on the topic: ' },
-  { cat:'🎓 Academic', title:'Abstract', preview:'Write an abstract for my paper about…', prompt:'Write a concise academic abstract for a paper about: ' },
-  { cat:'🎓 Academic', title:'Bibliography/References', preview:'Generate references for my paper on…', prompt:'Generate a complete bibliography with APA, MLA and Harvard citations for a paper about: ' },
-  { cat:'💼 Business', title:'Business Plan', preview:'Write a business plan for…', prompt:'Write a detailed business plan for: ' },
-  { cat:'💼 Business', title:'SWOT Analysis', preview:'Create a SWOT analysis for…', prompt:'Create a detailed SWOT analysis for: ' },
-  { cat:'📅 Planning', title:'Study Schedule', preview:'Create a study schedule for…', prompt:'Create a detailed day-by-day study schedule for: ' },
-  { cat:'📅 Planning', title:'Project Plan', preview:'Create a project plan for…', prompt:'Create a comprehensive project plan for: ' },
-  { cat:'🧠 Learning', title:'Concept Explanation', preview:'Explain the concept of… in simple terms', prompt:'Explain the concept of [topic] in simple terms with examples: ' },
-  { cat:'🧠 Learning', title:'Mind Map', preview:'Create a mind map for…', prompt:'Create a detailed mind map for the topic: ' },
-  { cat:'✍️ Creative', title:'Short Story', preview:'Write a short story about…', prompt:'Write a creative short story about: ' },
-  { cat:'✍️ Creative', title:'Poem', preview:'Write a poem about…', prompt:'Write a creative poem about: ' }
+  { cat:'📝 Essay', title:'5-Paragraph Essay', preview:'Write a complete 5-paragraph essay about...', prompt:'Write a complete, well-structured 5-paragraph essay about: ' },
+  { cat:'📝 Essay', title:'Argumentative Essay', preview:'Write a persuasive argumentative essay...', prompt:'Write a persuasive argumentative essay arguing that: ' },
+  { cat:'📊 Report', title:'Research Report', preview:'Write a full research report on...', prompt:'Write a comprehensive research report on the topic: ' },
+  { cat:'📊 Report', title:'Science Lab Report', preview:'Write a lab report for the experiment...', prompt:'Write a complete science lab report for this experiment: ' },
+  { cat:'📧 Letter', title:'Formal Letter', preview:'Write a professional formal letter to...', prompt:'Write a professional formal letter to [recipient] regarding: ' },
+  { cat:'📧 Letter', title:'Cover Letter', preview:'Write a job application cover letter for...', prompt:'Write a compelling job application cover letter for the position of: ' },
+  { cat:'📧 Letter', title:'Complaint Letter', preview:'Write a formal complaint letter about...', prompt:'Write a formal complaint letter regarding: ' },
+  { cat:'🎓 Academic', title:'Literature Review', preview:'Write a literature review on...', prompt:'Write an academic literature review on the topic: ' },
+  { cat:'🎓 Academic', title:'Abstract', preview:'Write an abstract for my paper about...', prompt:'Write a concise academic abstract for a paper about: ' },
+  { cat:'🎓 Academic', title:'Bibliography/References', preview:'Generate references for my paper on...', prompt:'Generate a complete bibliography with APA, MLA and Harvard citations for a paper about: ' },
+  { cat:'💼 Business', title:'Business Plan', preview:'Write a business plan for...', prompt:'Write a detailed business plan for: ' },
+  { cat:'💼 Business', title:'SWOT Analysis', preview:'Create a SWOT analysis for...', prompt:'Create a detailed SWOT analysis for: ' },
+  { cat:'📅 Planning', title:'Study Schedule', preview:'Create a study schedule for...', prompt:'Create a detailed day-by-day study schedule for: ' },
+  { cat:'📅 Planning', title:'Project Plan', preview:'Create a project plan for...', prompt:'Create a comprehensive project plan for: ' },
+  { cat:'🧠 Learning', title:'Concept Explanation', preview:'Explain the concept of... in simple terms', prompt:'Explain the concept of [topic] in simple terms with examples: ' },
+  { cat:'🧠 Learning', title:'Mind Map', preview:'Create a mind map for...', prompt:'Create a detailed mind map for the topic: ' },
+  { cat:'✍️ Creative', title:'Short Story', preview:'Write a short story about...', prompt:'Write a creative short story about: ' },
+  { cat:'✍️ Creative', title:'Poem', preview:'Write a poem about...', prompt:'Write a creative poem about: ' }
 ];
 
 let filteredTemplates = TEMPLATES;
@@ -5255,9 +5259,9 @@ function setQuoteTheme(i) {
 function shareQuoteCard() {
   const text = document.getElementById('quote-text')?.textContent || '';
   if (navigator.share) {
-    navigator.share({ title:'Feng AI', text: text + '\n\n— Feng AI' });
+    navigator.share({ title:'Feng AI', text: text + '\n\n-- Feng AI' });
   } else {
-    navigator.clipboard.writeText(text + '\n\n— Feng AI');
+    navigator.clipboard.writeText(text + '\n\n-- Feng AI');
     showToast('Quote copied to clipboard! 📋');
   }
 }
@@ -5328,7 +5332,7 @@ async function fetchLiveData(query) {
   const sources = [];
   const contextParts = [];
 
-  // In Research mode — always fetch everything relevant
+  // In Research mode -- always fetch everything relevant
   const forceAll = currentMode === 'research';
 
   const isNews    = forceAll || /\b(news|latest|today|current|happening|headline|update|recent|2024|2025)\b/i.test(t);
@@ -5356,7 +5360,7 @@ async function fetchLiveData(query) {
   await Promise.allSettled(fetches);
 
   const context = contextParts.length
-    ? '\n\n[LIVE DATA FROM MULTIPLE SOURCES — use this data in your answer and mention the sources:\n' + contextParts.join('\n\n') + '\n]'
+    ? '\n\n[LIVE DATA FROM MULTIPLE SOURCES -- use this data in your answer and mention the sources:\n' + contextParts.join('\n\n') + '\n]'
     : '';
 
   return { context, sources };
@@ -5372,8 +5376,8 @@ async function fetchWikipedia(query) {
     const d = await res.json();
     if (d.type === 'disambiguation' || !d.extract) return null;
     return {
-      context: '📖 Wikipedia: '+d.title+' — '+d.extract.slice(0,600),
-      source: { name:'Wikipedia', title: d.title, url: d.content_urls?.desktop?.page || 'https://wikipedia.org', icon:'📖', desc: d.extract.slice(0,100)+'…' }
+      context: '📖 Wikipedia: '+d.title+' -- '+d.extract.slice(0,600),
+      source: { name:'Wikipedia', title: d.title, url: d.content_urls?.desktop?.page || 'https://wikipedia.org', icon:'📖', desc: d.extract.slice(0,100)+'...' }
     };
   } catch { return null; }
 }
@@ -5382,15 +5386,15 @@ async function fetchWikipedia(query) {
 async function fetchGNews(query) {
   try {
     const clean = encodeURIComponent(query.replace(/\b(news|latest|today|current)\b/gi,'').trim().slice(0,60));
-    // Use RSS-based proxy — no key needed
+    // Use RSS-based proxy -- no key needed
     const url = 'https://gnews.io/api/v4/search?q='+clean+'&lang=en&max=4&apikey=0e4c9d37d4bfedb9c47c8acf0b6b74c4';
     const res = await fetch(url);
     if (!res.ok) return null;
     const d = await res.json();
     if (!d.articles?.length) return null;
     const articles = d.articles.slice(0,4);
-    const context = '📰 Live News:\n' + articles.map(a => '• '+a.title+' ('+a.source.name+') — '+a.description?.slice(0,120)).join('\n');
-    const sources = articles.map(a => ({ name: a.source.name, title: a.title, url: a.url, icon:'📰', desc: a.description?.slice(0,80)+'…', publishedAt: a.publishedAt }));
+    const context = '📰 Live News:\n' + articles.map(a => '* '+a.title+' ('+a.source.name+') -- '+a.description?.slice(0,120)).join('\n');
+    const sources = articles.map(a => ({ name: a.source.name, title: a.title, url: a.url, icon:'📰', desc: a.description?.slice(0,80)+'...', publishedAt: a.publishedAt }));
     return { context, sources };
   } catch { return null; }
 }
@@ -5410,7 +5414,7 @@ async function fetchCountry(query) {
     const curStr = currency ? currency.name+' ('+currency.symbol+')' : 'N/A';
     const langs = Object.values(c.languages||{}).join(', ') || 'N/A';
     const region = c.region+' / '+c.subregion;
-    const context = '🌍 Country Data: '+c.name.common+'\n• Capital: '+capital+'\n• Population: '+pop+'\n• Currency: '+curStr+'\n• Languages: '+langs+'\n• Region: '+region+'\n• Flag: '+c.flag;
+    const context = '🌍 Country Data: '+c.name.common+'\n* Capital: '+capital+'\n* Population: '+pop+'\n* Currency: '+curStr+'\n* Languages: '+langs+'\n* Region: '+region+'\n* Flag: '+c.flag;
     return {
       context,
       source: { name:'REST Countries', title: c.name.common, url:'https://restcountries.com', icon:'🌍', desc: capital+' · Pop: '+pop }
@@ -5429,7 +5433,7 @@ async function fetchDictionary(query) {
     if (!entry) return null;
     const meanings = entry.meanings?.slice(0,2).map(m => {
       const def = m.definitions?.[0];
-      return m.partOfSpeech+': '+def?.definition+(def?.example?' — "'+def.example+'"':'');
+      return m.partOfSpeech+': '+def?.definition+(def?.example?' -- "'+def.example+'"':'');
     }).join('\n');
     const phonetic = entry.phonetic || '';
     const context = '📝 Dictionary: '+entry.word+' '+phonetic+'\n'+meanings;
@@ -5449,7 +5453,7 @@ async function fetchOpenLibrary(query) {
     const d = await res.json();
     if (!d.docs?.length) return null;
     const books = d.docs.slice(0,4);
-    const context = '📚 Open Library Results:\n' + books.map(b => '• "'+b.title+'" by '+(b.author_name?.[0]||'Unknown')+' ('+( b.first_publish_year||'?')+')').join('\n');
+    const context = '📚 Open Library Results:\n' + books.map(b => '* "'+b.title+'" by '+(b.author_name?.[0]||'Unknown')+' ('+( b.first_publish_year||'?')+')').join('\n');
     const sources = books.map(b => ({
       name: 'Open Library', title: '"'+b.title+'"',
       url: 'https://openlibrary.org'+b.key,
@@ -5465,10 +5469,10 @@ async function fetchNASA() {
     const res = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
     if (!res.ok) return null;
     const d = await res.json();
-    const context = '🚀 NASA Today: "'+d.title+'" — '+d.explanation?.slice(0,300);
+    const context = '🚀 NASA Today: "'+d.title+'" -- '+d.explanation?.slice(0,300);
     return {
       context,
-      source: { name:'NASA APOD', title: d.title, url: d.hdurl||d.url, icon:'🚀', desc: d.date+' · '+d.explanation?.slice(0,80)+'…' }
+      source: { name:'NASA APOD', title: d.title, url: d.hdurl||d.url, icon:'🚀', desc: d.date+' · '+d.explanation?.slice(0,80)+'...' }
     };
   } catch { return null; }
 }
@@ -5479,10 +5483,10 @@ async function fetchQuote() {
     const res = await fetch('https://api.quotable.io/random?maxLength=200');
     if (!res.ok) return null;
     const d = await res.json();
-    const context = '💬 Relevant Quote: "'+d.content+'" — '+d.author;
+    const context = '💬 Relevant Quote: "'+d.content+'" -- '+d.author;
     return {
       context,
-      source: { name:'Quotable', title: '"'+d.content.slice(0,60)+'…"', url:'https://quotable.io', icon:'💬', desc: '— '+d.author }
+      source: { name:'Quotable', title: '"'+d.content.slice(0,60)+'..."', url:'https://quotable.io', icon:'💬', desc: '-- '+d.author }
     };
   } catch { return null; }
 }
@@ -5559,7 +5563,7 @@ async function buildWebsite() {
   document.getElementById('wb-iframe').style.display = 'none';
   document.getElementById('wb-empty').style.display = 'none';
   document.getElementById('wb-build-btn').disabled = true;
-  document.getElementById('wb-status').textContent = 'Building…';
+  document.getElementById('wb-status').textContent = 'Building...';
 
   const sysPrompt = `You are an expert web developer. Create a COMPLETE, beautiful, single-file HTML website.
 Style: ${wbStyle}
@@ -5592,7 +5596,7 @@ Return ONLY the complete HTML code, nothing else.`;
     iframe.contentDocument.close();
 
     document.getElementById('wb-download').style.display = 'block';
-    document.getElementById('wb-status').textContent = 'Done ✓';
+    document.getElementById('wb-status').textContent = 'Done v';
     showToast('✅ Website built!');
 
     // Show suggestions
@@ -5764,13 +5768,13 @@ function activateAgentMode() {
   selectMode('research');
   const btn = document.getElementById('tb-agent');
   btn.classList.add('active');
-  document.getElementById('user-input').placeholder = '🤖 Agent mode: Research, analyze, create documents…';
-  showToast('🤖 Agent mode ON — I will research and create comprehensive outputs');
+  document.getElementById('user-input').placeholder = '🤖 Agent mode: Research, analyze, create documents...';
+  showToast('🤖 Agent mode ON -- I will research and create comprehensive outputs');
 }
 
 function quickResearch() {
   selectMode('research');
-  document.getElementById('user-input').placeholder = '🔍 Research mode: Ask me anything and I\'ll find the latest data…';
+  document.getElementById('user-input').placeholder = '🔍 Research mode: Ask me anything and I\'ll find the latest data...';
   document.getElementById('user-input').focus();
   showToast('🌐 Research mode ON');
 }
@@ -5792,32 +5796,27 @@ function checkSpecialRequests(text) {
 }
 
 // ── NAV TTS TOGGLE ──
-let navTTSActive = false;
+let navTTSActive = autoRead; // Sync with saved state on load
+
 function toggleNavTTS() {
   autoRead = !autoRead;
-  localStorage.setItem('feng_autoread', autoRead ? 'true' : 'false');
-  
+  navTTSActive = autoRead;
+  localStorage.setItem('feng_autoread', autoRead);
   const btn = document.getElementById('nav-tts-btn');
-  const autoEl = document.getElementById('autoread-toggle');
-  
   if (autoRead) {
     if (btn) {
       btn.style.color = 'var(--accent)';
+      btn.style.background = 'rgba(79,142,247,0.12)';
       btn.style.borderColor = 'var(--accent)';
     }
-    if (autoEl) autoEl.classList.add('on');
-    showToast('🔊 Read aloud ON — AI will speak every response');
-    
-    // If there's already a message, read the last AI response
-    const lastAI = history.filter(m => m.role === 'assistant').slice(-1)[0];
-    if (lastAI) speakText(lastAI.content);
+    showToast('🔊 Read aloud ON');
   } else {
     stopVoice();
     if (btn) {
       btn.style.color = '';
+      btn.style.background = '';
       btn.style.borderColor = '';
     }
-    if (autoEl) autoEl.classList.remove('on');
     showToast('🔇 Read aloud OFF');
   }
 }
@@ -5838,7 +5837,7 @@ function startVoiceConversation() {
   selectMode('standard');
   startMic();
   if (btn) { btn.style.color='var(--danger)'; btn.style.borderColor='var(--danger)'; }
-  showToast('🎤 Voice mode — speak your question');
+  showToast('🎤 Voice mode -- speak your question');
 }
 
 // ── INPUT RESIZE ──
@@ -5870,6 +5869,15 @@ if (modeLbl) modeLbl.textContent = initModeLabels[currentMode] || 'Standard ⚡'
 if (currentMode !== 'standard') selectMode(currentMode);
 if (currentUser) { const sb = document.querySelector('.sb-name'); if (sb) sb.textContent = currentUser.name; }
 renderSmartSuggestions();
+// Restore nav TTS button visual state
+if (autoRead) {
+  const ttsBtn = document.getElementById('nav-tts-btn');
+  if (ttsBtn) {
+    ttsBtn.style.color = 'var(--accent)';
+    ttsBtn.style.background = 'rgba(79,142,247,0.12)';
+    ttsBtn.style.borderColor = 'var(--accent)';
+  }
+}
 </script>
 </body>
 </html>

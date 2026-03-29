@@ -4193,13 +4193,15 @@ let currentAudio = null; // For ElevenLabs audio playback
 
 // Real ElevenLabs voices mapped to our character names
 const FENG_VOICES = [
-  { id:'luna',  name:'Luna',  preview:"Hi this is Luna. How's your day? Wanna talk?",           elId:'21m00Tcm4TlvDq8ikWAM', gender:'female', desc:'Warm & friendly'    },
-  { id:'aria',  name:'Aria',  preview:"Hello! I'm Aria, your Feng AI assistant. Ask me anything!", elId:'9BWtsMINqrJLrRacOk9x', gender:'female', desc:'Soft & expressive'  },
-  { id:'nova',  name:'Nova',  preview:"Hey there! Nova here. What can I help you explore today?", elId:'FGY2WhTYpPnrIDTdsKH5', gender:'female', desc:'Energetic & clear'   },
-  { id:'jade',  name:'Jade',  preview:"Hi there! What a day! So what are we going to do next?",  elId:'XB0fDUnXU5powFXDhCwa', gender:'female', desc:'Bright & cheerful'  },
-  { id:'kai',   name:'Kai',   preview:"Hey, how's everything going? Should we talk?",             elId:'ErXwobaYiN019PkySvjV', gender:'male',   desc:'Smooth & natural'  },
-  { id:'cole',  name:'Cole',  preview:"Hello! I'm Cole. You can ask me everything you need.",    elId:'TxGEqnHWrfWFTfGW9XjX', gender:'male',   desc:'Deep & confident'  },
-  { id:'rex',   name:'Rex',   preview:"Good to see you! What are we working on today?",          elId:'pqHfZKP75CvOlQylNhV4', gender:'male',   desc:'Strong & crisp'    },
+  // Female voices
+  { id:'luna',  name:'Luna',  preview:"Hi this is Luna. How's your day? Wanna talk?",            elId:'21m00Tcm4TlvDq8ikWAM', gender:'female', desc:'Warm & friendly'   },
+  { id:'aria',  name:'Aria',  preview:"Hello! I'm Aria, your Feng AI assistant. Ask me anything!", elId:'9BWtsMINqrJLrRacOk9x',  gender:'female', desc:'Soft & expressive' },
+  { id:'nova',  name:'Nova',  preview:"Hey there! Nova here. What can I help you explore today?",  elId:'FGY2WhTYpPnrIDTdsKH5',  gender:'female', desc:'Energetic & clear'  },
+  { id:'jade',  name:'Jade',  preview:"Hi there! What a day! So what are we going to do next?",   elId:'XB0fDUnXU5powFXDhCwa',  gender:'female', desc:'Bright & cheerful' },
+  // Male voices
+  { id:'kai',   name:'Kai',   preview:"Hey, how's everything going? Should we talk?",              elId:'ErXwobaYiN019PkySvjV',  gender:'male',   desc:'Smooth & natural'  },
+  { id:'cole',  name:'Cole',  preview:"Hello! I'm Cole. You can ask me everything you need.",     elId:'TxGEqnHWrfWFTfGW9XjX',  gender:'male',   desc:'Deep & confident'  },
+  { id:'rex',   name:'Rex',   preview:"Good to see you! What are we working on today?",           elId:'pqHfZKP75CvOlQylNhV4',  gender:'male',   desc:'Strong & crisp'    },
 ];
 
 let selectedVoiceName = localStorage.getItem('feng_voice_name') || 'luna';
@@ -4212,7 +4214,7 @@ function getSelectedFengVoice() {
 // ── ELEVENLABS TTS ──
 async function elevenLabsSpeak(text, voiceElId) {
   try {
-    const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + voiceElId, {
+    const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + voiceElId + '/stream?output_format=mp3_44100_128', {
       method: 'POST',
       headers: {
         'xi-api-key': ELEVENLABS_KEY,
@@ -4223,25 +4225,37 @@ async function elevenLabsSpeak(text, voiceElId) {
         text: text.slice(0, 2500),
         model_id: 'eleven_multilingual_v2',
         voice_settings: {
-          stability: 0.35,
-          similarity_boost: 0.85,
-          style: 0.45,
+          stability: 0.3,
+          similarity_boost: 0.9,
+          style: 0.5,
           use_speaker_boost: true
         }
       })
     });
-    if (!res.ok) throw new Error('ElevenLabs ' + res.status);
+    if (!res.ok) {
+      const err = await res.text().catch(()=>'');
+      console.warn('ElevenLabs error', res.status, err);
+      showToast('Voice: using device TTS (ElevenLabs ' + res.status + ')');
+      return false;
+    }
     const blob = await res.blob();
+    if (!blob.size) { showToast('Voice: empty audio from ElevenLabs'); return false; }
     const url = URL.createObjectURL(blob);
-    if (currentAudio) { currentAudio.pause(); }
+    if (currentAudio) { currentAudio.pause(); URL.revokeObjectURL(currentAudio._blobUrl || ''); }
     currentAudio = new Audio(url);
-    currentAudio.playbackRate = voiceSpeed;
+    currentAudio._blobUrl = url;
+    // Don't change playbackRate — ElevenLabs handles speed naturally
     voiceActive = true;
     currentAudio.onended = () => { voiceActive = false; URL.revokeObjectURL(url); };
-    currentAudio.onerror = () => { voiceActive = false; };
-    await currentAudio.play();
+    currentAudio.onerror = (e) => {
+      voiceActive = false;
+      console.warn('Audio play error:', e);
+    };
+    const playPromise = currentAudio.play();
+    if (playPromise) await playPromise.catch(e => { console.warn('Play blocked:', e); });
     return true;
   } catch(e) {
+    console.warn('ElevenLabs fetch failed:', e.message);
     return false;
   }
 }

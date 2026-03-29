@@ -930,11 +930,12 @@ body.light .source-item:hover{background:#f8fafc;}
 
 /* ── SPLASH SCREEN ── */
 #splash{
-  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  position:fixed;inset:0;background:var(--bg);z-index:99999;
   display:flex;align-items:center;justify-content:center;
   flex-direction:column;gap:0;
-  transition:opacity 0.5s ease, visibility 0.5s;
+  pointer-events:all;
 }
+#splash.hidden{display:none;}
 #splash.hidden{opacity:0;visibility:hidden;pointer-events:none;}
 .splash-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
 .splash-name{
@@ -981,14 +982,12 @@ body.light .source-item:hover{background:#f8fafc;}
 
 <!-- SPLASH SCREEN -->
 <div id="splash">
-  <div class="splash-inner">
-    <div class="logo-icon hero-icon-lg">
-      <div class="logo-bar long"></div>
-      <div class="logo-bar mid"></div>
-      <div class="logo-dots"><div class="logo-dot"></div><div class="logo-dot small"></div></div>
-    </div>
-    <div class="splash-name">Feng <span>AI</span></div>
-    <div class="splash-loader"><div class="splash-bar"></div></div>
+  <div class="splash-inner" style="gap:20px;text-align:center;padding:0 32px;">
+    <div style="font-size:4rem;line-height:1;">🤖</div>
+    <div class="splash-name" style="-webkit-text-fill-color:var(--text);background:none;">Feng <span style="-webkit-text-fill-color:var(--accent);background:none;color:var(--accent);">AI</span></div>
+    <div style="font-size:1.15rem;font-weight:700;color:var(--text);font-family:'Syne',sans-serif;">Under Maintenance</div>
+    <div style="font-size:0.88rem;color:var(--muted);line-height:1.7;max-width:280px;">We're working hard to bring you something amazing. Please check back soon!</div>
+    <div style="margin-top:8px;padding:12px 28px;background:var(--surface2);border:1px solid var(--border);border-radius:50px;font-size:0.78rem;color:var(--muted);">🔧 Back soon</div>
   </div>
 </div>
 
@@ -2293,54 +2292,17 @@ let loginMode = 'login';
 
 function renderLoginPage() {
   const body = document.getElementById('login-body');
-  if (currentUser) {
-    body.innerHTML =
-      '<div class="login-profile">' +
-        '<div class="profile-av">' + currentUser.name.charAt(0).toUpperCase() + '</div>' +
-        '<div class="profile-name">' + esc(currentUser.name) + '</div>' +
-        '<div class="profile-email">' + esc(currentUser.email) + '</div>' +
-        '<button class="logout-btn" onclick="logoutUser()">Sign Out</button>' +
-      '</div>';
-    return;
-  }
+  if (!body) return;
   body.innerHTML =
-    '<div style="display:flex;justify-content:center;margin-bottom:8px;">' +
-      '<div style="display:flex;align-items:center;gap:10px;">' +
-        '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#5eb8ff,#2563eb);display:flex;flex-direction:column;justify-content:center;padding:9px 9px 7px;gap:5px;flex-shrink:0;">' +
-          '<div style="height:4.5px;border-radius:2px;background:rgba(255,255,255,0.95);width:100%;"></div>' +
-          '<div style="height:4.5px;border-radius:2px;background:rgba(255,255,255,0.95);width:72%;"></div>' +
-          '<div style="display:flex;gap:5px;margin-top:1px;"><div style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.92);"></div><div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.6);"></div></div>' +
-        '</div>' +
-        '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:1.5rem;background:linear-gradient(90deg,#7ec8f8,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Feng AI</span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="login-sub">' + (loginMode==='login'?'Welcome back! Sign in to continue.':'Create your Feng AI account.') + '</div>' +
-    '<div class="login-form">' +
-      (loginMode==='signup'?'<input class="login-input" id="li-name" type="text" placeholder="Your name"/>':'') +
-      '<input class="login-input" id="li-email" type="email" placeholder="Email address"/>' +
-      '<input class="login-input" id="li-pass" type="password" placeholder="Password"/>' +
-      '<button class="login-btn" onclick="submitLogin()">' + (loginMode==='login'?'Sign In':'Create Account') + '</button>' +
-      '<div class="login-divider"><span>or</span></div>' +
-      '<div class="login-toggle">' + (loginMode==='login'?'Don\'t have an account? <a onclick="switchLogin()">Sign up</a>':'Already have an account? <a onclick="switchLogin()">Sign in</a>') + '</div>' +
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;gap:16px;">' +
+      '<div style="font-size:3.5rem;">🤖</div>' +
+      '<div style="font-family:Syne,sans-serif;font-size:1.2rem;font-weight:700;color:var(--text);">Under Maintenance</div>' +
+      '<div style="font-size:0.9rem;color:var(--muted);line-height:1.6;max-width:260px;">Sorry, accounts are currently under maintenance. Check back soon!</div>' +
     '</div>';
 }
-function switchLogin() { loginMode = loginMode==='login'?'signup':'login'; renderLoginPage(); }
-function submitLogin() {
-  const email = document.getElementById('li-email')?.value.trim();
-  const pass = document.getElementById('li-pass')?.value.trim();
-  const name = document.getElementById('li-name')?.value.trim() || email.split('@')[0];
-  if (!email || !pass) { alert('Please fill in all fields.'); return; }
-  if (pass.length < 6) { alert('Password must be at least 6 characters.'); return; }
-  currentUser = { name, email };
-  localStorage.setItem('feng_user', JSON.stringify(currentUser));
-  const sb = document.querySelector('.sb-name');
-  if (sb) sb.textContent = name;
-  renderLoginPage();
-}
-function logoutUser() {
-  currentUser = null; localStorage.removeItem('feng_user');
-  loginMode = 'login'; renderLoginPage();
-}
+function switchLogin() {}
+function submitLogin() { showToast('Sorry, under maintenance'); }
+function logoutUser() { showToast('Sorry, under maintenance'); }
 
 // ── LANGUAGES ──
 const LANGUAGES = ['Afrikaans','Albanian','Amharic','Arabic','Armenian','Azerbaijani','Basque','Belarusian','Bengali','Bosnian','Bulgarian','Catalan','Cebuano','Chichewa','Chinese (Simplified)','Chinese (Traditional)','Corsican','Croatian','Czech','Danish','Dutch','English','Esperanto','Estonian','Filipino','Finnish','French','Frisian','Galician','Georgian','German','Greek','Gujarati','Haitian Creole','Hausa','Hawaiian','Hebrew','Hindi','Hmong','Hungarian','Icelandic','Igbo','Indonesian','Irish','Italian','Japanese','Javanese','Kannada','Kazakh','Khmer','Kinyarwanda','Korean','Kurdish','Kyrgyz','Lao','Latin','Latvian','Lithuanian','Luxembourgish','Macedonian','Malagasy','Malay','Malayalam','Maltese','Maori','Marathi','Mongolian','Myanmar (Burmese)','Nepali','Norwegian','Odia','Pashto','Persian','Polish','Portuguese','Punjabi','Romanian','Russian','Samoan','Scots Gaelic','Serbian','Sesotho','Shona','Sindhi','Sinhala','Slovak','Slovenian','Somali','Spanish','Sundanese','Swahili','Swedish','Tajik','Tamil','Tatar','Telugu','Thai','Turkish','Turkmen','Ukrainian','Urdu','Uyghur','Uzbek','Vietnamese','Welsh','Xhosa','Yiddish','Yoruba','Zulu'];
@@ -3654,10 +3616,9 @@ function detectUserLanguage(text) {
 
 // ── SPLASH SCREEN ──
 function hideSplash() {
-  const splash = document.getElementById('splash');
-  if (splash) {
-    setTimeout(() => splash.classList.add('hidden'), 1800);
-  }
+  // MAINTENANCE MODE -- do not hide splash screen
+  // Remove this line when maintenance is over:
+  // document.getElementById('splash')?.classList.add('hidden');
 }
 
 // ── STOP GENERATING ──
